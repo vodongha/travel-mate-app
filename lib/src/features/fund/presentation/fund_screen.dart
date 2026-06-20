@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/actions.dart';
 import '../../../core/app_error.dart';
 import '../../../core/app_error_view.dart';
 import '../../../core/labels.dart';
@@ -74,9 +75,31 @@ class FundScreen extends ConsumerWidget {
     }
   }
 
+  Future<void> _delete(
+      BuildContext context, WidgetRef ref, Future<void> Function() op) async {
+    final RowAction? action = await showRowActions(context, allowEdit: false);
+    if (action != RowAction.delete || !context.mounted) {
+      return;
+    }
+    if (!await confirmDelete(context) || !context.mounted) {
+      return;
+    }
+    try {
+      await op();
+      _refresh(ref);
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(friendlyError(context, error))));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);
+    final bool canEdit =
+        ref.watch(tripProvider(tripRid)).valueOrNull?.myRole != 'VIEWER';
     final AsyncValue<FundBalance> balance =
         ref.watch(fundBalanceProvider(tripRid));
     final AsyncValue<List<Contribution>> contributions =
@@ -96,16 +119,18 @@ class FundScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l10n.navFund),
         actions: [
-          IconButton(
-            tooltip: l10n.fundAddContribution,
-            icon: const Icon(Icons.volunteer_activism_outlined),
-            onPressed: () => _addContribution(context, ref, base),
-          ),
-          IconButton(
-            tooltip: l10n.fundAddExpense,
-            icon: const Icon(Icons.shopping_cart_outlined),
-            onPressed: () => _addFundExpense(context, ref, base),
-          ),
+          if (canEdit) ...[
+            IconButton(
+              tooltip: l10n.fundAddContribution,
+              icon: const Icon(Icons.volunteer_activism_outlined),
+              onPressed: () => _addContribution(context, ref, base),
+            ),
+            IconButton(
+              tooltip: l10n.fundAddExpense,
+              icon: const Icon(Icons.shopping_cart_outlined),
+              onPressed: () => _addFundExpense(context, ref, base),
+            ),
+          ],
         ],
       ),
       body: SafeArea(
@@ -145,24 +170,36 @@ class FundScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   Text(l10n.fundContributions,
                       style: Theme.of(context).textTheme.titleMedium),
-                  _section(
+                  _section<Contribution>(
                     context,
+                    ref,
                     contributions,
                     base,
                     (c) => memberNames[c.memberRid] ?? '—',
                     (c) => c.amountBase,
                     l10n.fundEmpty,
+                    canEdit
+                        ? (c) => ref
+                            .read(fundRepositoryProvider)
+                            .deleteContribution(tripRid, c.rid)
+                        : null,
                   ),
                   const SizedBox(height: 16),
                   Text(l10n.fundExpensesLabel,
                       style: Theme.of(context).textTheme.titleMedium),
-                  _section(
+                  _section<FundExpense>(
                     context,
+                    ref,
                     expenses,
                     base,
                     (e) => e.title,
                     (e) => e.amountBase,
                     l10n.fundEmpty,
+                    canEdit
+                        ? (e) => ref
+                            .read(fundRepositoryProvider)
+                            .deleteFundExpense(tripRid, e.rid)
+                        : null,
                   ),
                 ],
               ),
@@ -175,11 +212,13 @@ class FundScreen extends ConsumerWidget {
 
   Widget _section<T>(
     BuildContext context,
+    WidgetRef ref,
     AsyncValue<List<T>> async,
     String currency,
     String Function(T) label,
     num Function(T) amount,
     String emptyText,
+    Future<void> Function(T)? onDelete,
   ) {
     return async.when(
       loading: () => const Padding(
@@ -191,15 +230,32 @@ class FundScreen extends ConsumerWidget {
       data: (list) => list.isEmpty
           ? Padding(padding: const EdgeInsets.all(12), child: Text(emptyText))
           : Column(
-              children: list
-                  .map((item) => ListTile(
-                        dense: true,
-                        title: Text(label(item)),
-                        trailing: Text(Money.format(amount(item), currency),
+              children: list.map((item) {
+                final VoidCallback? onMenu = onDelete == null
+                    ? null
+                    : () => _delete(context, ref, () => onDelete(item));
+                return GestureDetector(
+                  onLongPress: onMenu,
+                  child: ListTile(
+                    dense: true,
+                    title: Text(label(item)),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(Money.format(amount(item), currency),
                             style:
                                 const TextStyle(fontWeight: FontWeight.w600)),
-                      ))
-                  .toList(),
+                        if (onMenu != null)
+                          IconButton(
+                            icon: const Icon(Icons.more_vert),
+                            tooltip: AppLocalizations.of(context).actionDelete,
+                            onPressed: onMenu,
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
     );
   }

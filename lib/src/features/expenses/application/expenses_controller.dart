@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../dashboard/data/dashboard_repository.dart';
+import '../../report/data/report_repository.dart';
 import '../../settlement/data/settlement_repository.dart';
 import '../data/expense_repository.dart';
 
@@ -36,10 +37,41 @@ class ExpensesController
       participants: participants,
       spentAtIso: spentAtIso,
     );
+    _invalidateDerived();
+    await future;
+  }
+
+  /// Edits an expense's metadata (title/category/type). Money + split are immutable
+  /// on the backend, so they are not part of this call.
+  Future<void> edit({
+    required String expenseRid,
+    required String title,
+    required String category,
+    required String expenseType,
+  }) async {
+    await _repo.update(
+      arg,
+      expenseRid,
+      title: title,
+      category: category,
+      expenseType: expenseType,
+    );
+    _invalidateDerived();
+    await future;
+  }
+
+  Future<void> remove(String expenseRid) async {
+    await _repo.delete(arg, expenseRid);
+    _invalidateDerived();
+    await future;
+  }
+
+  /// Expenses feed the settlement, dashboard and report views, so refresh all of them.
+  void _invalidateDerived() {
     ref.invalidateSelf();
     ref.invalidate(settlementProvider(arg));
     ref.invalidate(dashboardProvider(arg));
-    await future;
+    ref.invalidate(reportProvider(arg));
   }
 }
 

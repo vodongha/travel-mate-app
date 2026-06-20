@@ -49,6 +49,27 @@ class BudgetRepository {
       throw toApiException(e);
     }
   }
+
+  /// Only the planned amount is mutable; the category is changed by delete + recreate.
+  Future<void> update(
+      String tripRid, String budgetRid, num plannedAmount) async {
+    try {
+      await _dio.patch<dynamic>(
+        '/trips/$tripRid/budgets/$budgetRid',
+        data: {'plannedAmount': plannedAmount},
+      );
+    } on DioException catch (e) {
+      throw toApiException(e);
+    }
+  }
+
+  Future<void> delete(String tripRid, String budgetRid) async {
+    try {
+      await _dio.delete<dynamic>('/trips/$tripRid/budgets/$budgetRid');
+    } on DioException catch (e) {
+      throw toApiException(e);
+    }
+  }
 }
 
 final budgetRepositoryProvider = Provider<BudgetRepository>((ref) {
