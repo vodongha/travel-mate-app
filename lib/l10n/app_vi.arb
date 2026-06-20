@@ -227,5 +227,8 @@
   "ptAIRPORT": "Sân bay",
   "ptSTATION": "Nhà ga / bến",
   "ptSHOPPING": "Mua sắm",
-  "ptOTHER": "Khác"
+  "ptOTHER": "Khác",
+  "authOr": "hoặc",
+  "authGoogle": "Tiếp tục với Google",
+  "googleNotConfigured": "Đăng nhập Google chưa được cấu hình."
 }

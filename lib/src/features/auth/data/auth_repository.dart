@@ -20,6 +20,12 @@ class AuthRepository {
         '/auth/register', {'name': name, 'email': email, 'password': password});
   }
 
+  /// Exchanges a Google ID token (obtained client-side) for an app session
+  /// (`POST /auth/google`). The backend verifies the token and links/creates the user.
+  Future<AuthSession> googleLogin(String idToken) async {
+    return _session('/auth/google', {'idToken': idToken});
+  }
+
   Future<AuthUser> me() async {
     try {
       final Response<dynamic> res = await _dio.get<dynamic>('/users/me');
