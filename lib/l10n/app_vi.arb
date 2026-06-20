@@ -179,5 +179,9 @@
   "settingsOpenFailed": "Không mở được liên kết.",
   "settingsMainCurrency": "Tiền tệ chính",
   "settingsRates": "Tỷ giá",
-  "settingsRatesRefreshed": "Đã cập nhật tỷ giá"
+  "settingsRatesRefreshed": "Đã cập nhật tỷ giá",
+  "currencySearchHint": "Tìm tiền tệ",
+  "currencyNoMatch": "Không tìm thấy tiền tệ",
+  "timelineUpcoming": "Sắp tới",
+  "timelinePast": "Đã qua"
 }
