@@ -227,5 +227,8 @@
   "ptAIRPORT": "Airport",
   "ptSTATION": "Station",
   "ptSHOPPING": "Shopping",
-  "ptOTHER": "Other"
+  "ptOTHER": "Other",
+  "authOr": "or",
+  "authGoogle": "Continue with Google",
+  "googleNotConfigured": "Google sign-in isn't set up yet."
 }
