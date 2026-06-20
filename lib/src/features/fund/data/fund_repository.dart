@@ -103,6 +103,13 @@ class FundRepository {
     });
   }
 
+  // Fund entries have no PATCH on the backend, so they are delete-only (no edit).
+  Future<void> deleteContribution(String tripRid, String rid) =>
+      _delete('/trips/$tripRid/fund/contributions/$rid');
+
+  Future<void> deleteFundExpense(String tripRid, String rid) =>
+      _delete('/trips/$tripRid/fund/expenses/$rid');
+
   Future<T> _get<T>(String path, T Function(Map<String, dynamic>) parse) async {
     try {
       final Response<dynamic> res = await _dio.get<dynamic>(path);
@@ -126,6 +133,14 @@ class FundRepository {
   Future<void> _post(String path, Map<String, dynamic> body) async {
     try {
       await _dio.post<dynamic>(path, data: body);
+    } on DioException catch (e) {
+      throw toApiException(e);
+    }
+  }
+
+  Future<void> _delete(String path) async {
+    try {
+      await _dio.delete<dynamic>(path);
     } on DioException catch (e) {
       throw toApiException(e);
     }

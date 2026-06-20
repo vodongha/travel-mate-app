@@ -8,7 +8,9 @@ import '../features/auth/presentation/register_screen.dart';
 import '../features/budget/presentation/budget_screen.dart';
 import '../features/checklist/presentation/checklist_screen.dart';
 import '../features/dashboard/presentation/dashboard_screen.dart';
+import '../features/expenses/data/expense_repository.dart';
 import '../features/expenses/presentation/add_expense_screen.dart';
+import '../features/expenses/presentation/edit_expense_screen.dart';
 import '../features/expenses/presentation/expenses_screen.dart';
 import '../features/fund/presentation/fund_screen.dart';
 import '../features/members/presentation/accept_invite_screen.dart';
@@ -19,6 +21,7 @@ import '../features/settlement/presentation/settlement_screen.dart';
 import '../features/timeline/data/event_repository.dart';
 import '../features/timeline/presentation/add_event_screen.dart';
 import '../features/timeline/presentation/timeline_screen.dart';
+import '../features/trips/domain/trip.dart';
 import '../features/trips/presentation/create_trip_screen.dart';
 import '../features/trips/presentation/trip_detail_screen.dart';
 import '../features/trips/presentation/trips_screen.dart';
@@ -83,6 +86,13 @@ final routerProvider = Provider<GoRouter>((ref) {
             AddExpenseScreen(tripRid: state.pathParameters['rid']!),
       ),
       GoRoute(
+        path: '/trips/:rid/expenses/:expenseRid/edit',
+        builder: (context, state) => EditExpenseScreen(
+          tripRid: state.pathParameters['rid']!,
+          expense: state.extra as ExpenseItem,
+        ),
+      ),
+      GoRoute(
         path: '/trips/:rid/expenses',
         builder: (context, state) =>
             ExpensesScreen(tripRid: state.pathParameters['rid']!),
@@ -133,6 +143,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/trips/:rid/members',
         builder: (context, state) =>
             MembersScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/edit',
+        builder: (context, state) =>
+            CreateTripScreen(existing: state.extra as Trip?),
       ),
       GoRoute(
         path: '/trips/:rid',

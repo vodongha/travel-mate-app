@@ -6,6 +6,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error.dart';
 import '../../../core/app_error_view.dart';
 import '../../../core/responsive.dart';
+import '../../trips/application/trips_controller.dart';
 import '../../trips/presentation/trip_format.dart';
 import '../application/members_controller.dart';
 import '../domain/member.dart';
@@ -71,11 +72,34 @@ class MembersScreen extends ConsumerWidget {
     }
   }
 
+  Future<void> _changeRole(
+      BuildContext context, WidgetRef ref, Member member) async {
+    final String? role = await showDialog<String>(
+      context: context,
+      builder: (_) => _ChangeRoleDialog(current: member.role),
+    );
+    if (role == null || role == member.role || !context.mounted) {
+      return;
+    }
+    try {
+      await ref
+          .read(membersControllerProvider(tripRid).notifier)
+          .changeRole(member.rid, role);
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(friendlyError(context, error))));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final AsyncValue<List<Member>> members =
         ref.watch(membersControllerProvider(tripRid));
+    final bool isOwner =
+        ref.watch(tripProvider(tripRid)).valueOrNull?.myRole == 'OWNER';
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.navMembers),
@@ -108,7 +132,9 @@ class MembersScreen extends ConsumerWidget {
                     separatorBuilder: (_, __) => const Divider(height: 1),
                     itemBuilder: (context, i) => _MemberTile(
                       member: list[i],
+                      isOwner: isOwner,
                       onRemove: () => _remove(context, ref, list[i]),
+                      onChangeRole: () => _changeRole(context, ref, list[i]),
                     ),
                   ),
           ),
@@ -118,16 +144,28 @@ class MembersScreen extends ConsumerWidget {
   }
 }
 
+enum _MemberAction { changeRole, remove }
+
 class _MemberTile extends StatelessWidget {
-  const _MemberTile({required this.member, required this.onRemove});
+  const _MemberTile({
+    required this.member,
+    required this.isOwner,
+    required this.onRemove,
+    required this.onChangeRole,
+  });
 
   final Member member;
+  final bool isOwner;
   final VoidCallback onRemove;
+  final VoidCallback onChangeRole;
 
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final ColorScheme scheme = Theme.of(context).colorScheme;
+    // The OWNER manages every other member's role and membership; non-owners and
+    // the OWNER's own row have no actions.
+    final bool showActions = isOwner && member.role != 'OWNER';
     return ListTile(
       leading: CircleAvatar(
         backgroundColor: member.ghost
@@ -152,13 +190,79 @@ class _MemberTile extends StatelessWidget {
           ],
         ],
       ),
-      trailing: member.role == 'OWNER'
+      trailing: !showActions
           ? null
-          : IconButton(
-              icon: const Icon(Icons.delete_outline),
-              tooltip: l10n.actionRemove,
-              onPressed: onRemove,
+          : PopupMenuButton<_MemberAction>(
+              icon: const Icon(Icons.more_vert),
+              tooltip: l10n.actionEdit,
+              onSelected: (a) =>
+                  a == _MemberAction.changeRole ? onChangeRole() : onRemove(),
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: _MemberAction.changeRole,
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.badge_outlined),
+                    title: Text(l10n.memberChangeRole),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: _MemberAction.remove,
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.delete_outline, color: scheme.error),
+                    title: Text(l10n.actionRemove,
+                        style: TextStyle(color: scheme.error)),
+                  ),
+                ),
+              ],
             ),
+    );
+  }
+}
+
+/// OWNER-only role picker. Only EDITOR/VIEWER are assignable — ownership transfer
+/// is out of scope (the backend keeps a single OWNER).
+class _ChangeRoleDialog extends StatefulWidget {
+  const _ChangeRoleDialog({required this.current});
+
+  final String current;
+
+  @override
+  State<_ChangeRoleDialog> createState() => _ChangeRoleDialogState();
+}
+
+class _ChangeRoleDialogState extends State<_ChangeRoleDialog> {
+  late String _role = widget.current == 'EDITOR' || widget.current == 'VIEWER'
+      ? widget.current
+      : 'VIEWER';
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    return AlertDialog(
+      title: Text(l10n.memberChangeRole),
+      content: DropdownButtonFormField<String>(
+        initialValue: _role,
+        decoration: InputDecoration(labelText: l10n.inviteRoleToGrant),
+        items: [
+          DropdownMenuItem(
+              value: 'VIEWER', child: Text(roleLabel(context, 'VIEWER'))),
+          DropdownMenuItem(
+              value: 'EDITOR', child: Text(roleLabel(context, 'EDITOR'))),
+        ],
+        onChanged: (v) => setState(() => _role = v ?? 'VIEWER'),
+      ),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.actionCancel)),
+        FilledButton(
+            onPressed: () => Navigator.pop(context, _role),
+            child: Text(l10n.actionSave)),
+      ],
     );
   }
 }

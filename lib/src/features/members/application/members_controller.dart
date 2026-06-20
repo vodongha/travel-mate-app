@@ -21,6 +21,12 @@ class MembersController extends FamilyAsyncNotifier<List<Member>, String> {
     ref.invalidateSelf();
     await future;
   }
+
+  Future<void> changeRole(String memberRid, String role) async {
+    await _repo.updateRole(arg, memberRid, role);
+    ref.invalidateSelf();
+    await future;
+  }
 }
 
 final membersControllerProvider =
