@@ -29,6 +29,53 @@ class AuthRepository {
     }
   }
 
+  /// Updates the profile (name / phone / defaultCurrency). Only non-null fields
+  /// are sent. Returns the refreshed user.
+  Future<AuthUser> saveProfile({
+    String? name,
+    String? phone,
+    String? defaultCurrency,
+  }) async {
+    final Map<String, dynamic> body = {
+      if (name != null) 'name': name,
+      if (phone != null) 'phone': phone,
+      if (defaultCurrency != null) 'defaultCurrency': defaultCurrency,
+    };
+    try {
+      final Response<dynamic> res =
+          await _dio.patch<dynamic>('/users/me', data: body);
+      return AuthUser.fromJson(_data(res));
+    } on DioException catch (e) {
+      throw toApiException(e);
+    }
+  }
+
+  /// Changes the password, or sets the first one when [currentPassword] is null
+  /// (an OAuth-only account with `hasPassword == false`). 204 on success.
+  Future<void> changePassword({
+    String? currentPassword,
+    required String newPassword,
+  }) async {
+    final Map<String, dynamic> body = {
+      if (currentPassword != null) 'currentPassword': currentPassword,
+      'newPassword': newPassword,
+    };
+    try {
+      await _dio.post<dynamic>('/auth/change-password', data: body);
+    } on DioException catch (e) {
+      throw toApiException(e);
+    }
+  }
+
+  /// Permanently deletes the signed-in account (204). The caller clears tokens.
+  Future<void> deleteAccount() async {
+    try {
+      await _dio.delete<dynamic>('/users/me');
+    } on DioException catch (e) {
+      throw toApiException(e);
+    }
+  }
+
   Future<AuthSession> _session(String path, Map<String, dynamic> body) async {
     try {
       final Response<dynamic> res = await _dio.post<dynamic>(path, data: body);
