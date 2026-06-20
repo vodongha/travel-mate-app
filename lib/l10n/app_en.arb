@@ -179,5 +179,9 @@
   "settingsOpenFailed": "Couldn't open the link.",
   "settingsMainCurrency": "Main currency",
   "settingsRates": "Exchange rates",
-  "settingsRatesRefreshed": "Exchange rates updated"
+  "settingsRatesRefreshed": "Exchange rates updated",
+  "currencySearchHint": "Search currency",
+  "currencyNoMatch": "No matching currency",
+  "timelineUpcoming": "Upcoming",
+  "timelinePast": "Past"
 }

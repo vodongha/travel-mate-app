@@ -6,6 +6,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error.dart';
 import '../../../core/currencies.dart';
+import '../../../core/currency_picker.dart';
 import '../../../core/prefs.dart';
 import '../../../core/responsive.dart';
 import '../data/rates_repository.dart';
@@ -142,23 +143,7 @@ class SettingsScreen extends ConsumerWidget {
 
   Future<void> _pickDisplayCurrency(
       BuildContext context, WidgetRef ref, String current) async {
-    final String? picked = await showModalBottomSheet<String>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (ctx) => SizedBox(
-        height: MediaQuery.of(ctx).size.height * 0.7,
-        child: ListView(
-          children: Currencies.supported
-              .map((c) => ListTile(
-                    title: Text(Currencies.label(c)),
-                    trailing: c == current ? const Icon(Icons.check) : null,
-                    onTap: () => Navigator.pop(ctx, c),
-                  ))
-              .toList(),
-        ),
-      ),
-    );
+    final String? picked = await showCurrencyPicker(context, current);
     if (picked != null) {
       await ref
           .read(displayCurrencyControllerProvider.notifier)
