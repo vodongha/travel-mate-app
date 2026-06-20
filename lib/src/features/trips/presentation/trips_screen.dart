@@ -23,6 +23,11 @@ class TripsScreen extends ConsumerWidget {
         title: Text(l10n.navMyTrips),
         actions: [
           IconButton(
+            tooltip: l10n.inviteJoinTitle,
+            icon: const Icon(Icons.group_add_outlined),
+            onPressed: () => context.go('/join'),
+          ),
+          IconButton(
             tooltip: l10n.actionLogout,
             icon: const Icon(Icons.logout),
             onPressed: () => ref.read(authControllerProvider.notifier).logout(),
