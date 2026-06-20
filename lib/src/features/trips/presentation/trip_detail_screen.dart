@@ -110,15 +110,35 @@ class TripDetailScreen extends ConsumerWidget {
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () => context.go('/trips/$tripRid/settlement'),
                       ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.timeline_outlined),
+                        title: Text(l10n.navTimeline),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.go('/trips/$tripRid/timeline'),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.checklist_outlined),
+                        title: Text(l10n.navChecklist),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.go('/trips/$tripRid/checklist'),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.savings_outlined),
+                        title: Text(l10n.navFund),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.go('/trips/$tripRid/fund'),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.summarize_outlined),
+                        title: Text(l10n.navReport),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.go('/trips/$tripRid/report'),
+                      ),
                     ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Center(
-                  child: Text(
-                    l10n.comingSoon,
-                    style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
                 ),
               ],
