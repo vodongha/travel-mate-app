@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,6 +6,8 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/api_client.dart';
 import '../../../core/app_error.dart';
 import '../application/auth_controller.dart';
+import 'web_google_button_stub.dart'
+    if (dart.library.js_interop) 'web_google_button_web.dart';
 
 /// "Continue with Google" button + an "or" separator above it. Wired to
 /// [AuthController.signInWithGoogle]; on success the router redirect navigates. While Google Sign-In
@@ -27,20 +30,36 @@ class _GoogleSignInButtonState extends ConsumerState<GoogleSignInButton> {
     try {
       await ref.read(authControllerProvider.notifier).signInWithGoogle();
     } catch (error) {
-      if (mounted) {
-        final AppLocalizations l10n = AppLocalizations.of(context);
-        final String message =
-            error is ApiException && error.code == 'GOOGLE_NOT_CONFIGURED'
-                ? l10n.googleNotConfigured
-                : friendlyError(context, error);
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(message)));
-      }
+      _showError(error);
     } finally {
       if (mounted) {
         setState(() => _busy = false);
       }
     }
+  }
+
+  /// Web flow: the Google-rendered button supplies the ID token; exchange it for a session.
+  Future<void> _onWebIdToken(String idToken) async {
+    try {
+      await ref
+          .read(authControllerProvider.notifier)
+          .exchangeGoogleIdToken(idToken);
+    } catch (error) {
+      _showError(error);
+    }
+  }
+
+  void _showError(Object error) {
+    if (!mounted) {
+      return;
+    }
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final String message =
+        error is ApiException && error.code == 'GOOGLE_NOT_CONFIGURED'
+            ? l10n.googleNotConfigured
+            : friendlyError(context, error);
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -64,18 +83,22 @@ class _GoogleSignInButtonState extends ConsumerState<GoogleSignInButton> {
           ],
         ),
         const SizedBox(height: 20),
-        OutlinedButton.icon(
-          onPressed: on ? _signIn : null,
-          style:
-              OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(50)),
-          icon: _busy
-              ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2.4))
-              : const Icon(Icons.g_mobiledata, size: 28),
-          label: Text(l10n.authGoogle),
-        ),
+        if (kIsWeb)
+          // Web must use Google's own rendered button (GIS); centre it under the divider.
+          Align(child: buildWebGoogleButton(_onWebIdToken))
+        else
+          OutlinedButton.icon(
+            onPressed: on ? _signIn : null,
+            style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(50)),
+            icon: _busy
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2.4))
+                : const Icon(Icons.g_mobiledata, size: 28),
+            label: Text(l10n.authGoogle),
+          ),
       ],
     );
   }
