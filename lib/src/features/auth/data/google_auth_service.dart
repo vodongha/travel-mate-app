@@ -1,6 +1,9 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api_client.dart';
+import '../../../core/config.dart';
+import 'google_sign_in_auth_service.dart';
 
 /// Obtains a Google **ID token** from the device's Google account, to be exchanged for an app
 /// session at `POST /auth/google`.
@@ -31,8 +34,10 @@ class StubGoogleAuthService implements GoogleAuthService {
 }
 
 final googleAuthServiceProvider = Provider<GoogleAuthService>((ref) {
-  // TODO(config): once `google_sign_in` is added and GOOGLE_SERVER_CLIENT_ID is supplied, return the
-  // real implementation, e.g.:
-  //   return GoogleSignInAuthService(serverClientId: AppConfig.googleServerClientId);
-  return const StubGoogleAuthService();
+  // Web is not yet wired (google_sign_in 6.x needs a rendered button on web), and a missing client
+  // id disables the feature — both fall back to the stub, which reports "not configured".
+  if (kIsWeb || !AppConfig.googleSignInEnabled) {
+    return const StubGoogleAuthService();
+  }
+  return GoogleSignInAuthService(AppConfig.googleServerClientId);
 });

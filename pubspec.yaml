@@ -36,6 +36,8 @@ dependencies:
   phone_form_field: ^10.0.17
   # Scan a ticket QR into its decoded string (camera). We store the string, render on view.
   mobile_scanner: ^5.2.3
+  # Google Sign-In: returns a Google ID token the backend verifies (POST /auth/google).
+  google_sign_in: ^6.2.2
 
 dev_dependencies:
   flutter_test:
