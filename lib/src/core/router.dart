@@ -5,6 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../features/auth/application/auth_controller.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
+import '../features/dashboard/presentation/dashboard_screen.dart';
+import '../features/members/presentation/accept_invite_screen.dart';
+import '../features/members/presentation/invite_screen.dart';
+import '../features/members/presentation/members_screen.dart';
 import '../features/trips/presentation/create_trip_screen.dart';
 import '../features/trips/presentation/trip_detail_screen.dart';
 import '../features/trips/presentation/trips_screen.dart';
@@ -47,7 +51,27 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
       GoRoute(path: '/', builder: (_, __) => const TripsScreen()),
+      GoRoute(
+        path: '/join',
+        builder: (context, state) =>
+            AcceptInviteScreen(token: state.uri.queryParameters['token']),
+      ),
       GoRoute(path: '/trips/new', builder: (_, __) => const CreateTripScreen()),
+      GoRoute(
+        path: '/trips/:rid/dashboard',
+        builder: (context, state) =>
+            DashboardScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/members/invite',
+        builder: (context, state) =>
+            InviteScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/members',
+        builder: (context, state) =>
+            MembersScreen(tripRid: state.pathParameters['rid']!),
+      ),
       GoRoute(
         path: '/trips/:rid',
         builder: (context, state) =>
