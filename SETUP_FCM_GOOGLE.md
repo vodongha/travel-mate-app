@@ -5,6 +5,14 @@ The app ships with the **framework** for push notifications and Google Sign-In w
 (`POST /auth/google`, `POST /users/me/devices`, FCM dispatch). This file lists exactly what to do
 to switch the stubs for real implementations.
 
+## Status (2026-06-20)
+- **Google Sign-In on mobile (Android): WIRED & building.** Uses `google_sign_in` with the Web OAuth
+  client id as `serverClientId` (`AppConfig.googleServerClientId`, default = the project's web client
+  id). Backend must set env `GOOGLE_CLIENT_ID` to the **same** web client id. Test on a real device.
+- **Pending**: Google Sign-In on **web** (`google_sign_in` 6.x needs a rendered button on web — kept
+  on the stub for now), and **FCM push** (needs `firebase_core` + `firebase_messaging` + VAPID key +
+  the backend service-account JSON).
+
 ## What's already in place (no config needed)
 - `auth_repository.googleLogin(idToken)` → `POST /auth/google` (full).
 - `push_repository.registerDevice(fcmToken, platform)` → `POST /users/me/devices` (full).
