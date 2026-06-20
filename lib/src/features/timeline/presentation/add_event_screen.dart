@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error.dart';
+import '../../../core/form_buttons.dart';
 import '../../../core/labels.dart';
 import '../../../core/responsive.dart';
 import '../../auth/presentation/auth_validators.dart';
@@ -184,14 +185,12 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                       prefixIcon: const Icon(Icons.notes_outlined)),
                 ),
                 const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: _submitting ? null : _submit,
-                  child: _submitting
-                      ? const SizedBox(
-                          height: 22,
-                          width: 22,
-                          child: CircularProgressIndicator(strokeWidth: 2.4))
-                      : Text(l10n.actionSave),
+                FormButtons(
+                  primaryLabel: l10n.actionSave,
+                  loading: _submitting,
+                  onPrimary: _submit,
+                  onCancel: () =>
+                      context.canPop() ? context.pop() : context.go('/'),
                 ),
               ],
             ),

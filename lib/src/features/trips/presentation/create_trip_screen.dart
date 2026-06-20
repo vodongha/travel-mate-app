@@ -5,22 +5,13 @@ import 'package:intl/intl.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error.dart';
+import '../../../core/currencies.dart';
+import '../../../core/currency_picker.dart';
+import '../../../core/form_buttons.dart';
 import '../../../core/responsive.dart';
 import '../../auth/presentation/auth_validators.dart';
 import '../application/trips_controller.dart';
 import '../domain/trip.dart';
-
-const List<String> _currencies = [
-  'VND',
-  'USD',
-  'EUR',
-  'JPY',
-  'GBP',
-  'CNY',
-  'KRW',
-  'THB',
-  'SGD'
-];
 
 class CreateTripScreen extends ConsumerStatefulWidget {
   const CreateTripScreen({super.key, this.existing});
@@ -139,7 +130,6 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final DateFormat fmt =
         DateFormat.yMMMd(Localizations.localeOf(context).toLanguageTag());
-    final List<String> currencies = {_currency, ..._currencies}.toList();
     return Scaffold(
       appBar: AppBar(title: Text(_editing ? l10n.tripEditTitle : l10n.tripNew)),
       body: SafeArea(
@@ -169,16 +159,21 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
                         prefixIcon: const Icon(Icons.place_outlined)),
                   ),
                   const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    initialValue: _currency,
-                    decoration: InputDecoration(
-                        labelText: l10n.tripBaseCurrency,
-                        prefixIcon: const Icon(Icons.payments_outlined)),
-                    items: currencies
-                        .map((c) =>
-                            DropdownMenuItem<String>(value: c, child: Text(c)))
-                        .toList(),
-                    onChanged: (v) => setState(() => _currency = v ?? 'VND'),
+                  InkWell(
+                    onTap: () async {
+                      final String? c =
+                          await showCurrencyPicker(context, _currency);
+                      if (c != null) {
+                        setState(() => _currency = c);
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(14),
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                          labelText: l10n.tripBaseCurrency,
+                          prefixIcon: const Icon(Icons.payments_outlined)),
+                      child: Text(Currencies.label(_currency)),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -201,14 +196,13 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
                     ],
                   ),
                   const SizedBox(height: 28),
-                  FilledButton(
-                    onPressed: _submitting ? null : _submit,
-                    child: _submitting
-                        ? const SizedBox(
-                            height: 22,
-                            width: 22,
-                            child: CircularProgressIndicator(strokeWidth: 2.4))
-                        : Text(_editing ? l10n.actionSave : l10n.actionCreate),
+                  FormButtons(
+                    primaryLabel:
+                        _editing ? l10n.actionSave : l10n.actionCreate,
+                    loading: _submitting,
+                    onPrimary: _submit,
+                    onCancel: () =>
+                        context.canPop() ? context.pop() : context.go('/'),
                   ),
                 ],
               ),
