@@ -176,5 +176,12 @@
   "settingsDeleteAccount": "Delete account",
   "settingsDeleteConfirm": "Permanently delete your account and all your data? This can't be undone.",
   "settingsSaved": "Saved",
-  "settingsOpenFailed": "Couldn't open the link."
+  "settingsOpenFailed": "Couldn't open the link.",
+  "settingsMainCurrency": "Main currency",
+  "settingsRates": "Exchange rates",
+  "settingsRatesRefreshed": "Exchange rates updated",
+  "currencySearchHint": "Search currency",
+  "currencyNoMatch": "No matching currency",
+  "timelineUpcoming": "Upcoming",
+  "timelinePast": "Past"
 }
