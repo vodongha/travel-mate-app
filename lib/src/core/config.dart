@@ -24,7 +24,11 @@ class AppConfig {
   /// Sign-In disabled (the button reports "not configured").
   static const String googleServerClientId = String.fromEnvironment(
     'GOOGLE_SERVER_CLIENT_ID',
-    defaultValue: '',
+    // The project's **Web** OAuth client ID — public (it ships to clients) so it's a safe default.
+    // The Google ID token's `aud` equals this; the backend must verify against the SAME id
+    // (env `GOOGLE_CLIENT_ID`).
+    defaultValue:
+        '542406829306-4f37t1brg750jdoksjidh197hkbopnuj.apps.googleusercontent.com',
   );
 
   /// Whether Google Sign-In is wired up (a client id was provided at build time).
