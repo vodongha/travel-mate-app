@@ -5,6 +5,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/actions.dart';
 import '../../../core/app_error.dart';
 import '../../../core/app_error_view.dart';
+import '../../../core/form_buttons.dart';
 import '../../../core/responsive.dart';
 import '../application/checklist_controller.dart';
 import '../data/checklist_repository.dart';
@@ -156,20 +157,23 @@ class _AddItemDialogState extends State<_AddItemDialog> {
     final bool editing = widget.initial != null;
     return AlertDialog(
       title: Text(editing ? l10n.checklistEditTitle : l10n.checklistAddTitle),
-      content: TextField(
-        controller: _controller,
-        autofocus: true,
-        decoration: InputDecoration(labelText: l10n.checklistItem),
-        onSubmitted: (v) => Navigator.pop(context, v),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            decoration: InputDecoration(labelText: l10n.checklistItem),
+            onSubmitted: (v) => Navigator.pop(context, v),
+          ),
+          const SizedBox(height: 20),
+          FormButtons(
+            primaryLabel: editing ? l10n.actionSave : l10n.actionAdd,
+            onPrimary: () => Navigator.pop(context, _controller.text),
+            onCancel: () => Navigator.pop(context),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.actionCancel)),
-        FilledButton(
-            onPressed: () => Navigator.pop(context, _controller.text),
-            child: Text(editing ? l10n.actionSave : l10n.actionAdd)),
-      ],
     );
   }
 }
