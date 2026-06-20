@@ -34,6 +34,8 @@ dependencies:
   package_info_plus: ^8.1.1
   # Phone input with country picker + E.164 validation (mirrors family-budget-app).
   phone_form_field: ^10.0.17
+  # Scan a ticket QR into its decoded string (camera). We store the string, render on view.
+  mobile_scanner: ^5.2.3
 
 dev_dependencies:
   flutter_test:

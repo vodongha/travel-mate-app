@@ -1,6 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- The app talks to the backend over HTTP(S). -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Scanning ticket/booking QR codes (mobile_scanner). -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <application
         android:label="TravelMate"
         android:name="${applicationName}"

@@ -70,6 +70,53 @@ class Labels {
     }
   }
 
+  static const List<String> transportTypes = [
+    'FLIGHT', 'TRAIN', 'BUS', 'FERRY', 'TAXI', 'RENTAL_VEHICLE', //
+  ];
+
+  static String transportType(BuildContext context, String value) {
+    final AppLocalizations l = AppLocalizations.of(context);
+    switch (value) {
+      case 'FLIGHT':
+        return l.ttFLIGHT;
+      case 'TRAIN':
+        return l.ttTRAIN;
+      case 'BUS':
+        return l.ttBUS;
+      case 'FERRY':
+        return l.ttFERRY;
+      case 'TAXI':
+        return l.ttTAXI;
+      default:
+        return l.ttRENTAL_VEHICLE;
+    }
+  }
+
+  static const List<String> placeTypes = [
+    'HOTEL', 'RESTAURANT', 'ATTRACTION', 'AIRPORT', 'STATION', 'SHOPPING',
+    'OTHER', //
+  ];
+
+  static String placeType(BuildContext context, String value) {
+    final AppLocalizations l = AppLocalizations.of(context);
+    switch (value) {
+      case 'HOTEL':
+        return l.ptHOTEL;
+      case 'RESTAURANT':
+        return l.ptRESTAURANT;
+      case 'ATTRACTION':
+        return l.ptATTRACTION;
+      case 'AIRPORT':
+        return l.ptAIRPORT;
+      case 'STATION':
+        return l.ptSTATION;
+      case 'SHOPPING':
+        return l.ptSHOPPING;
+      default:
+        return l.ptOTHER;
+    }
+  }
+
   static String splitType(BuildContext context, String value) {
     final AppLocalizations l = AppLocalizations.of(context);
     switch (value) {
