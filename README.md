@@ -12,10 +12,10 @@ actual spending, manage the shared fund, and view who-owes-whom settlement.
 > Backend lives in a separate repo: **[vodongha/travel-mate](https://github.com/vodongha/travel-mate)**.
 > This repo is the mobile frontend only — the server is the source of truth (especially for money).
 
-> **Status:** scaffolding stage. The Flutter project (`lib/`, `pubspec.yaml`, platform folders for
-> **Android + Web**) lands with milestone **M9** of the backend roadmap; this repo currently holds
-> the conventions and API contract the app will follow. The backend is already at M3 (auth + trips
-> & members).
+> **Status:** **M9 in progress** — the Flutter project exists for **Android + Web**. Done: the core
+> layer (Dio + auth/refresh interceptor, secure token storage, go_router guard, Material 3 theme,
+> en/vi localization) and the first slices — **auth** (login/register) and **trips** (list / create /
+> detail). More feature screens land in follow-up slices. The backend (M1–M8) is complete.
 
 ---
 
