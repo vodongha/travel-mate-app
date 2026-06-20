@@ -6,6 +6,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/actions.dart';
 import '../../../core/app_error.dart';
 import '../../../core/app_error_view.dart';
+import '../../../core/form_buttons.dart';
 import '../../../core/labels.dart';
 import '../../../core/money.dart';
 import '../../../core/responsive.dart';
@@ -308,25 +309,22 @@ class _AddContributionDialogState extends State<_AddContributionDialog> {
             ),
             const SizedBox(height: 12),
             _amountField(context, _amount),
+            const SizedBox(height: 20),
+            FormButtons(
+              primaryLabel: l10n.actionSave,
+              onPrimary: () {
+                if (_formKey.currentState!.validate()) {
+                  Navigator.pop(
+                      context,
+                      _ContributionInput(
+                          _memberRid, num.parse(_amount.text.trim())));
+                }
+              },
+              onCancel: () => Navigator.pop(context),
+            ),
           ],
         ),
       ),
-      actions: [
-        TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.actionCancel)),
-        FilledButton(
-          onPressed: () {
-            if (_formKey.currentState!.validate()) {
-              Navigator.pop(
-                  context,
-                  _ContributionInput(
-                      _memberRid, num.parse(_amount.text.trim())));
-            }
-          },
-          child: Text(l10n.actionSave),
-        ),
-      ],
     );
   }
 }
@@ -387,25 +385,22 @@ class _AddFundExpenseDialogState extends State<_AddFundExpenseDialog> {
             ),
             const SizedBox(height: 12),
             _amountField(context, _amount),
+            const SizedBox(height: 20),
+            FormButtons(
+              primaryLabel: l10n.actionSave,
+              onPrimary: () {
+                if (_formKey.currentState!.validate()) {
+                  Navigator.pop(
+                      context,
+                      _FundExpenseInput(_title.text.trim(), _category,
+                          num.parse(_amount.text.trim())));
+                }
+              },
+              onCancel: () => Navigator.pop(context),
+            ),
           ],
         ),
       ),
-      actions: [
-        TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.actionCancel)),
-        FilledButton(
-          onPressed: () {
-            if (_formKey.currentState!.validate()) {
-              Navigator.pop(
-                  context,
-                  _FundExpenseInput(_title.text.trim(), _category,
-                      num.parse(_amount.text.trim())));
-            }
-          },
-          child: Text(l10n.actionSave),
-        ),
-      ],
     );
   }
 }
