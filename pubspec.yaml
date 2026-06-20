@@ -1,0 +1,39 @@
+name: travel_mate_app
+description: "TravelMate — group-trip planning & shared-expense (Android + Web)."
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+  flutter: ">=3.24.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Localization (en/vi) — generated AppLocalizations from lib/l10n/*.arb.
+  flutter_localizations:
+    sdk: flutter
+  # State management — one controller per feature, mirrors the backend service layer.
+  flutter_riverpod: ^2.6.1
+  # HTTP — one configured Dio with a bearer-token + refresh interceptor.
+  dio: ^5.7.0
+  # Declarative routing with an auth-aware redirect guard.
+  go_router: ^14.6.2
+  # JWT access + refresh tokens stored encrypted at rest (Keychain / Keystore).
+  flutter_secure_storage: ^9.2.2
+  # Persists the chosen language.
+  shared_preferences: ^2.3.3
+  # Money + date formatting (the app only formats; the backend owns the maths).
+  intl: any
+  # QR: render an invite/ticket from its string; scan a QR into its decoded string
+  # (SPEC §2.7 — we store strings, never images).
+  qr_flutter: ^4.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  generate: true
