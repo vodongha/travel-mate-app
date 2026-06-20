@@ -88,6 +88,28 @@ class TripDetailScreen extends ConsumerWidget {
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () => context.go('/trips/$tripRid/members'),
                       ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.receipt_long_outlined),
+                        title: Text(l10n.navExpenses),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.go('/trips/$tripRid/expenses'),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading:
+                            const Icon(Icons.account_balance_wallet_outlined),
+                        title: Text(l10n.navBudget),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.go('/trips/$tripRid/budgets'),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.swap_horiz),
+                        title: Text(l10n.navSettlement),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.go('/trips/$tripRid/settlement'),
+                      ),
                     ],
                   ),
                 ),
