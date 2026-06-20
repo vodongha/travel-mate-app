@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
+import 'form_buttons.dart';
 
 /// A row action chosen from the long-press / overflow sheet.
 enum RowAction { edit, delete }
@@ -59,18 +60,19 @@ Future<bool> confirmDelete(BuildContext context, {String? message}) async {
     context: context,
     builder: (ctx) => AlertDialog(
       title: Text(l10n.deleteConfirmTitle),
-      content: Text(message ?? l10n.deleteConfirmMessage),
-      actions: [
-        TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.actionCancel)),
-        FilledButton(
-          style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error),
-          onPressed: () => Navigator.pop(ctx, true),
-          child: Text(l10n.actionDelete),
-        ),
-      ],
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(message ?? l10n.deleteConfirmMessage),
+          const SizedBox(height: 20),
+          FormButtons(
+            primaryLabel: l10n.actionDelete,
+            primaryDanger: true,
+            onPrimary: () => Navigator.pop(ctx, true),
+            onCancel: () => Navigator.pop(ctx, false),
+          ),
+        ],
+      ),
     ),
   );
   return ok ?? false;
