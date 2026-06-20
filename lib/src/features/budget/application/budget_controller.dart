@@ -14,6 +14,18 @@ class BudgetController extends FamilyAsyncNotifier<List<Budget>, String> {
     ref.invalidateSelf();
     await future;
   }
+
+  Future<void> edit(String budgetRid, num plannedAmount) async {
+    await _repo.update(arg, budgetRid, plannedAmount);
+    ref.invalidateSelf();
+    await future;
+  }
+
+  Future<void> remove(String budgetRid) async {
+    await _repo.delete(arg, budgetRid);
+    ref.invalidateSelf();
+    await future;
+  }
 }
 
 final budgetControllerProvider =

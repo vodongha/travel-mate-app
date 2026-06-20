@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/actions.dart';
 import '../../../core/app_error.dart';
 import '../../../core/app_error_view.dart';
 import '../../../core/labels.dart';
@@ -38,20 +39,67 @@ class BudgetScreen extends ConsumerWidget {
     }
   }
 
+  Future<void> _rowActions(
+      BuildContext context, WidgetRef ref, Budget budget) async {
+    final RowAction? action = await showRowActions(context,
+        title: Labels.category(context, budget.category));
+    if (action == null || !context.mounted) {
+      return;
+    }
+    if (action == RowAction.edit) {
+      final _BudgetInput? input = await showDialog<_BudgetInput>(
+        context: context,
+        builder: (_) => _AddBudgetDialog(initial: budget),
+      );
+      if (input == null || !context.mounted) {
+        return;
+      }
+      await _run(
+          context,
+          () => ref
+              .read(budgetControllerProvider(tripRid).notifier)
+              .edit(budget.rid, input.amount));
+    } else {
+      if (!await confirmDelete(context) || !context.mounted) {
+        return;
+      }
+      await _run(
+          context,
+          () => ref
+              .read(budgetControllerProvider(tripRid).notifier)
+              .remove(budget.rid));
+    }
+  }
+
+  Future<void> _run(BuildContext context, Future<void> Function() op) async {
+    try {
+      await op();
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(friendlyError(context, error))));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final AsyncValue<List<Budget>> budgets =
         ref.watch(budgetControllerProvider(tripRid));
+    final String? myRole = ref.watch(tripProvider(tripRid)).valueOrNull?.myRole;
+    final bool canEdit = myRole != 'VIEWER';
     final String currency =
         ref.watch(tripProvider(tripRid)).valueOrNull?.baseCurrency ?? 'VND';
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navBudget)),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _add(context, ref, currency),
-        icon: const Icon(Icons.add),
-        label: Text(l10n.actionAdd),
-      ),
+      floatingActionButton: canEdit
+          ? FloatingActionButton.extended(
+              onPressed: () => _add(context, ref, currency),
+              icon: const Icon(Icons.add),
+              label: Text(l10n.actionAdd),
+            )
+          : null,
       body: SafeArea(
         child: ResponsiveCenter(
           child: budgets.when(
@@ -68,12 +116,27 @@ class BudgetScreen extends ConsumerWidget {
                     separatorBuilder: (_, __) => const Divider(height: 1),
                     itemBuilder: (context, i) {
                       final Budget b = list[i];
-                      return ListTile(
-                        leading: const Icon(Icons.category_outlined),
-                        title: Text(Labels.category(context, b.category)),
-                        trailing: Text(Money.format(b.plannedAmount, currency),
-                            style:
-                                const TextStyle(fontWeight: FontWeight.w700)),
+                      return GestureDetector(
+                        onLongPress:
+                            canEdit ? () => _rowActions(context, ref, b) : null,
+                        child: ListTile(
+                          leading: const Icon(Icons.category_outlined),
+                          title: Text(Labels.category(context, b.category)),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(Money.format(b.plannedAmount, currency),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w700)),
+                              if (canEdit)
+                                IconButton(
+                                  icon: const Icon(Icons.more_vert),
+                                  tooltip: l10n.actionEdit,
+                                  onPressed: () => _rowActions(context, ref, b),
+                                ),
+                            ],
+                          ),
+                        ),
                       );
                     },
                   ),
@@ -91,7 +154,11 @@ class _BudgetInput {
 }
 
 class _AddBudgetDialog extends StatefulWidget {
-  const _AddBudgetDialog();
+  const _AddBudgetDialog({this.initial});
+
+  /// When non-null the dialog is in edit mode: the category is fixed (only the
+  /// planned amount is mutable on the backend) and the amount is prefilled.
+  final Budget? initial;
 
   @override
   State<_AddBudgetDialog> createState() => _AddBudgetDialogState();
@@ -99,8 +166,13 @@ class _AddBudgetDialog extends StatefulWidget {
 
 class _AddBudgetDialogState extends State<_AddBudgetDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _amount = TextEditingController();
-  String _category = 'FOOD';
+  late final TextEditingController _amount = TextEditingController(
+      text: widget.initial == null
+          ? ''
+          : widget.initial!.plannedAmount.toString());
+  late String _category = widget.initial?.category ?? 'FOOD';
+
+  bool get _editing => widget.initial != null;
 
   @override
   void dispose() {
@@ -112,7 +184,7 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     return AlertDialog(
-      title: Text(l10n.budgetAddTitle),
+      title: Text(_editing ? l10n.budgetEditTitle : l10n.budgetAddTitle),
       content: Form(
         key: _formKey,
         child: Column(
@@ -125,7 +197,9 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
                   .map((c) => DropdownMenuItem(
                       value: c, child: Text(Labels.category(context, c))))
                   .toList(),
-              onChanged: (v) => setState(() => _category = v ?? 'OTHER'),
+              onChanged: _editing
+                  ? null
+                  : (v) => setState(() => _category = v ?? 'OTHER'),
             ),
             const SizedBox(height: 12),
             TextFormField(

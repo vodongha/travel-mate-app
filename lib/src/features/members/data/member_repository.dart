@@ -44,6 +44,18 @@ class MemberRepository {
     }
   }
 
+  /// OWNER-only: change a member's role (backend `PATCH /trips/{tripRid}/members/{memberRid}`).
+  Future<void> updateRole(String tripRid, String memberRid, String role) async {
+    try {
+      await _dio.patch<dynamic>(
+        '/trips/$tripRid/members/$memberRid',
+        data: {'role': role},
+      );
+    } on DioException catch (e) {
+      throw toApiException(e);
+    }
+  }
+
   Future<Invitation> createInvitation(
       String tripRid, String role, int maxUses) async {
     try {
