@@ -71,7 +71,27 @@ class TripDetailScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
+                Card(
+                  child: Column(
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.dashboard_outlined),
+                        title: Text(l10n.navDashboard),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.go('/trips/$tripRid/dashboard'),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.group_outlined),
+                        title: Text(l10n.navMembers),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.go('/trips/$tripRid/members'),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
                 Center(
                   child: Text(
                     l10n.comingSoon,
