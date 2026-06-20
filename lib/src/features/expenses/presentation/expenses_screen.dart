@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/actions.dart';
+import '../../../core/app_error.dart';
 import '../../../core/app_error_view.dart';
 import '../../../core/labels.dart';
 import '../../../core/money.dart';
@@ -16,20 +18,49 @@ class ExpensesScreen extends ConsumerWidget {
 
   final String tripRid;
 
+  Future<void> _rowActions(
+      BuildContext context, WidgetRef ref, ExpenseItem item) async {
+    final RowAction? action = await showRowActions(context, title: item.title);
+    if (action == null || !context.mounted) {
+      return;
+    }
+    if (action == RowAction.edit) {
+      context.go('/trips/$tripRid/expenses/${item.rid}/edit', extra: item);
+      return;
+    }
+    if (!await confirmDelete(context) || !context.mounted) {
+      return;
+    }
+    try {
+      await ref
+          .read(expensesControllerProvider(tripRid).notifier)
+          .remove(item.rid);
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(friendlyError(context, error))));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final AsyncValue<List<ExpenseItem>> expenses =
         ref.watch(expensesControllerProvider(tripRid));
+    final String? myRole = ref.watch(tripProvider(tripRid)).valueOrNull?.myRole;
+    final bool canEdit = myRole != 'VIEWER';
     final String baseCurrency =
         ref.watch(tripProvider(tripRid)).valueOrNull?.baseCurrency ?? 'VND';
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navExpenses)),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.go('/trips/$tripRid/expenses/new'),
-        icon: const Icon(Icons.add),
-        label: Text(l10n.expenseNew),
-      ),
+      floatingActionButton: canEdit
+          ? FloatingActionButton.extended(
+              onPressed: () => context.go('/trips/$tripRid/expenses/new'),
+              icon: const Icon(Icons.add),
+              label: Text(l10n.expenseNew),
+            )
+          : null,
       body: SafeArea(
         child: ResponsiveCenter(
           child: expenses.when(
@@ -48,7 +79,12 @@ class ExpensesScreen extends ConsumerWidget {
                       itemCount: list.length,
                       separatorBuilder: (_, __) => const Divider(height: 1),
                       itemBuilder: (context, i) => _ExpenseTile(
-                          item: list[i], baseCurrency: baseCurrency),
+                        item: list[i],
+                        baseCurrency: baseCurrency,
+                        onMenu: canEdit
+                            ? () => _rowActions(context, ref, list[i])
+                            : null,
+                      ),
                     ),
                   ),
           ),
@@ -59,10 +95,12 @@ class ExpensesScreen extends ConsumerWidget {
 }
 
 class _ExpenseTile extends StatelessWidget {
-  const _ExpenseTile({required this.item, required this.baseCurrency});
+  const _ExpenseTile(
+      {required this.item, required this.baseCurrency, this.onMenu});
 
   final ExpenseItem item;
   final String baseCurrency;
+  final VoidCallback? onMenu;
 
   @override
   Widget build(BuildContext context) {
@@ -70,17 +108,31 @@ class _ExpenseTile extends StatelessWidget {
     final String subtitle = foreign
         ? '${Labels.category(context, item.category)} · ${Money.format(item.amount, item.currency)}'
         : Labels.category(context, item.category);
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-        foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,
-        child: Text(Labels.category(context, item.category).characters.first),
-      ),
-      title: Text(item.title),
-      subtitle: Text(subtitle),
-      trailing: Text(
-        Money.format(item.amountBase, baseCurrency),
-        style: const TextStyle(fontWeight: FontWeight.w700),
+    return GestureDetector(
+      onLongPress: onMenu,
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+          foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,
+          child: Text(Labels.category(context, item.category).characters.first),
+        ),
+        title: Text(item.title),
+        subtitle: Text(subtitle),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              Money.format(item.amountBase, baseCurrency),
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            if (onMenu != null)
+              IconButton(
+                icon: const Icon(Icons.more_vert),
+                tooltip: AppLocalizations.of(context).actionEdit,
+                onPressed: onMenu,
+              ),
+          ],
+        ),
       ),
     );
   }

@@ -51,6 +51,38 @@ class TripRepository {
     }
   }
 
+  /// Partial trip update (OWNER only on the backend). Only the passed fields are sent.
+  Future<Trip> update(
+    String tripRid, {
+    required String name,
+    required String baseCurrency,
+    String? destination,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      final Response<dynamic> res =
+          await _dio.patch<dynamic>('/trips/$tripRid', data: {
+        'name': name,
+        'baseCurrency': baseCurrency,
+        'destination': destination ?? '',
+        if (startDate != null) 'startDate': _isoDate(startDate),
+        if (endDate != null) 'endDate': _isoDate(endDate),
+      });
+      return Trip.fromJson(_data(res));
+    } on DioException catch (e) {
+      throw toApiException(e);
+    }
+  }
+
+  Future<void> delete(String tripRid) async {
+    try {
+      await _dio.delete<dynamic>('/trips/$tripRid');
+    } on DioException catch (e) {
+      throw toApiException(e);
+    }
+  }
+
   Map<String, dynamic> _data(Response<dynamic> res) =>
       (res.data as Map)['data'] as Map<String, dynamic>;
 

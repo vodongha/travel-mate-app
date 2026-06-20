@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/actions.dart';
+import '../../../core/app_error.dart';
 import '../../../core/app_error_view.dart';
 import '../../../core/responsive.dart';
 import '../application/trips_controller.dart';
@@ -15,17 +17,54 @@ class TripDetailScreen extends ConsumerWidget {
 
   final String tripRid;
 
+  Future<void> _delete(BuildContext context, WidgetRef ref) async {
+    if (!await confirmDelete(context) || !context.mounted) {
+      return;
+    }
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    try {
+      await ref.read(tripsControllerProvider.notifier).remove(tripRid);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.tripDeleted)));
+        context.go('/');
+      }
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(friendlyError(context, error))));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final AsyncValue<Trip> trip = ref.watch(tripProvider(tripRid));
+    final Trip? loaded = trip.valueOrNull;
+    final bool isOwner = loaded?.myRole == 'OWNER';
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/'),
         ),
-        title: Text(trip.valueOrNull?.name ?? l10n.tripOverview),
+        title: Text(loaded?.name ?? l10n.tripOverview),
+        actions: [
+          if (isOwner && loaded != null) ...[
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: l10n.actionEdit,
+              onPressed: () =>
+                  context.go('/trips/$tripRid/edit', extra: loaded),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              tooltip: l10n.actionDelete,
+              onPressed: () => _delete(context, ref),
+            ),
+          ],
+        ],
       ),
       body: SafeArea(
         child: ResponsiveCenter(
