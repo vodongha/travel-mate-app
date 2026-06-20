@@ -9,9 +9,15 @@ to switch the stubs for real implementations.
 - **Google Sign-In on mobile (Android): WIRED & building.** Uses `google_sign_in` with the Web OAuth
   client id as `serverClientId` (`AppConfig.googleServerClientId`, default = the project's web client
   id). Backend must set env `GOOGLE_CLIENT_ID` to the **same** web client id. Test on a real device.
+- **FCM push: WIRED for Android.** `firebase_core` + `firebase_messaging`; config in
+  `lib/firebase_options.dart`; `FirebasePushService` requests permission, gets the token, and
+  registers it (`POST /users/me/devices`) on login. Android only end-to-end (backend
+  `DevicePlatform` has no WEB) — web push is skipped client-side until the backend adds it.
+  Backend still needs the **service-account JSON** (Firebase → Project Settings → Service accounts →
+  Generate new private key) to actually *send* pushes.
 - **Pending**: Google Sign-In on **web** (`google_sign_in` 6.x needs a rendered button on web — kept
-  on the stub for now), and **FCM push** (needs `firebase_core` + `firebase_messaging` + VAPID key +
-  the backend service-account JSON).
+  on the stub for now); web push (needs backend WEB platform + the Firebase Web Push **VAPID** key
+  from the console, and a `web/firebase-messaging-sw.js`).
 
 ## What's already in place (no config needed)
 - `auth_repository.googleLogin(idToken)` → `POST /auth/google` (full).
