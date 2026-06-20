@@ -55,6 +55,23 @@ class ChecklistRepository {
       throw toApiException(e);
     }
   }
+
+  Future<void> rename(String tripRid, String itemRid, String title) async {
+    try {
+      await _dio.patch<dynamic>('/trips/$tripRid/checklist/$itemRid',
+          data: {'title': title});
+    } on DioException catch (e) {
+      throw toApiException(e);
+    }
+  }
+
+  Future<void> delete(String tripRid, String itemRid) async {
+    try {
+      await _dio.delete<dynamic>('/trips/$tripRid/checklist/$itemRid');
+    } on DioException catch (e) {
+      throw toApiException(e);
+    }
+  }
 }
 
 final checklistRepositoryProvider = Provider<ChecklistRepository>((ref) {
