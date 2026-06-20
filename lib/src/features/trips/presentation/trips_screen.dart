@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error_view.dart';
 import '../../../core/responsive.dart';
-import '../../auth/application/auth_controller.dart';
 import '../application/trips_controller.dart';
 import '../domain/trip.dart';
 import 'trip_format.dart';
@@ -28,9 +27,9 @@ class TripsScreen extends ConsumerWidget {
             onPressed: () => context.go('/join'),
           ),
           IconButton(
-            tooltip: l10n.actionLogout,
-            icon: const Icon(Icons.logout),
-            onPressed: () => ref.read(authControllerProvider.notifier).logout(),
+            tooltip: l10n.navSettings,
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => context.go('/settings'),
           ),
         ],
       ),

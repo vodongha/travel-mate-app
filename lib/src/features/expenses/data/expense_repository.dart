@@ -97,6 +97,35 @@ class ExpenseRepository {
       throw toApiException(e);
     }
   }
+
+  /// Updates an expense's metadata only (title, category, type). The backend's
+  /// `PATCH /expenses/{rid}` cannot change the money or split — those require
+  /// delete + re-create — so this never touches amount/currency/participants.
+  Future<void> update(
+    String tripRid,
+    String expenseRid, {
+    required String title,
+    required String category,
+    required String expenseType,
+  }) async {
+    try {
+      await _dio.patch<dynamic>('/trips/$tripRid/expenses/$expenseRid', data: {
+        'title': title,
+        'category': category,
+        'expenseType': expenseType,
+      });
+    } on DioException catch (e) {
+      throw toApiException(e);
+    }
+  }
+
+  Future<void> delete(String tripRid, String expenseRid) async {
+    try {
+      await _dio.delete<dynamic>('/trips/$tripRid/expenses/$expenseRid');
+    } on DioException catch (e) {
+      throw toApiException(e);
+    }
+  }
 }
 
 final expenseRepositoryProvider = Provider<ExpenseRepository>((ref) {

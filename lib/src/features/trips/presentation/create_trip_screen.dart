@@ -23,7 +23,10 @@ const List<String> _currencies = [
 ];
 
 class CreateTripScreen extends ConsumerStatefulWidget {
-  const CreateTripScreen({super.key});
+  const CreateTripScreen({super.key, this.existing});
+
+  /// When non-null the screen edits this trip instead of creating a new one.
+  final Trip? existing;
 
   @override
   ConsumerState<CreateTripScreen> createState() => _CreateTripScreenState();
@@ -37,6 +40,21 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
   DateTime? _start;
   DateTime? _end;
   bool _submitting = false;
+
+  bool get _editing => widget.existing != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final Trip? t = widget.existing;
+    if (t != null) {
+      _name.text = t.name;
+      _destination.text = t.destination ?? '';
+      _currency = t.baseCurrency;
+      _start = t.startDate;
+      _end = t.endDate;
+    }
+  }
 
   @override
   void dispose() {
@@ -82,13 +100,25 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
     }
     setState(() => _submitting = true);
     try {
-      final Trip trip = await ref.read(tripsControllerProvider.notifier).create(
-            name: _name.text,
-            baseCurrency: _currency,
-            destination: _destination.text,
-            startDate: _start,
-            endDate: _end,
-          );
+      final Trip trip;
+      if (_editing) {
+        trip = await ref.read(tripsControllerProvider.notifier).edit(
+              widget.existing!.rid,
+              name: _name.text,
+              baseCurrency: _currency,
+              destination: _destination.text,
+              startDate: _start,
+              endDate: _end,
+            );
+      } else {
+        trip = await ref.read(tripsControllerProvider.notifier).create(
+              name: _name.text,
+              baseCurrency: _currency,
+              destination: _destination.text,
+              startDate: _start,
+              endDate: _end,
+            );
+      }
       if (mounted) {
         context.go('/trips/${trip.rid}');
       }
@@ -109,8 +139,9 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final DateFormat fmt =
         DateFormat.yMMMd(Localizations.localeOf(context).toLanguageTag());
+    final List<String> currencies = {_currency, ..._currencies}.toList();
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.tripNew)),
+      appBar: AppBar(title: Text(_editing ? l10n.tripEditTitle : l10n.tripNew)),
       body: SafeArea(
         child: ResponsiveCenter(
           maxWidth: 520,
@@ -143,7 +174,7 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
                     decoration: InputDecoration(
                         labelText: l10n.tripBaseCurrency,
                         prefixIcon: const Icon(Icons.payments_outlined)),
-                    items: _currencies
+                    items: currencies
                         .map((c) =>
                             DropdownMenuItem<String>(value: c, child: Text(c)))
                         .toList(),
@@ -177,7 +208,7 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
                             height: 22,
                             width: 22,
                             child: CircularProgressIndicator(strokeWidth: 2.4))
-                        : Text(l10n.actionCreate),
+                        : Text(_editing ? l10n.actionSave : l10n.actionCreate),
                   ),
                 ],
               ),

@@ -27,6 +27,33 @@ class TripsController extends AsyncNotifier<List<Trip>> {
     ref.invalidateSelf();
     return trip;
   }
+
+  Future<Trip> edit(
+    String tripRid, {
+    required String name,
+    required String baseCurrency,
+    String? destination,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    final Trip trip = await _repo.update(
+      tripRid,
+      name: name,
+      baseCurrency: baseCurrency,
+      destination: destination,
+      startDate: startDate,
+      endDate: endDate,
+    );
+    ref.invalidateSelf();
+    ref.invalidate(tripProvider(tripRid));
+    return trip;
+  }
+
+  Future<void> remove(String tripRid) async {
+    await _repo.delete(tripRid);
+    ref.invalidateSelf();
+    ref.invalidate(tripProvider(tripRid));
+  }
 }
 
 final tripsControllerProvider =
