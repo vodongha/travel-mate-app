@@ -40,13 +40,19 @@ class AuthController extends AsyncNotifier<AuthUser?> {
     await _persist(session);
   }
 
-  /// Signs in with Google: gets an ID token from the device, exchanges it at `/auth/google`.
+  /// Signs in with Google (mobile): gets an ID token from the device, exchanges it at `/auth/google`.
   /// Does nothing if the user cancels the Google account picker.
   Future<void> signInWithGoogle() async {
     final String? idToken = await _google.signInGetIdToken();
     if (idToken == null) {
       return;
     }
+    await exchangeGoogleIdToken(idToken);
+  }
+
+  /// Exchanges an already-obtained Google ID token for an app session. Used by the web sign-in flow,
+  /// where the token comes from the Google-rendered button rather than an imperative call.
+  Future<void> exchangeGoogleIdToken(String idToken) async {
     final AuthSession session = await _repo.googleLogin(idToken);
     await _persist(session);
   }
