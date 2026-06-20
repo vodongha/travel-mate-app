@@ -16,6 +16,7 @@ import '../features/members/presentation/invite_screen.dart';
 import '../features/members/presentation/members_screen.dart';
 import '../features/report/presentation/report_screen.dart';
 import '../features/settlement/presentation/settlement_screen.dart';
+import '../features/timeline/data/event_repository.dart';
 import '../features/timeline/presentation/add_event_screen.dart';
 import '../features/timeline/presentation/timeline_screen.dart';
 import '../features/trips/presentation/create_trip_screen.dart';
@@ -100,6 +101,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/trips/:rid/timeline/new',
         builder: (context, state) =>
             AddEventScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/timeline/:eventRid/edit',
+        builder: (context, state) => AddEventScreen(
+          tripRid: state.pathParameters['rid']!,
+          existing: state.extra as EventItem?,
+        ),
       ),
       GoRoute(
         path: '/trips/:rid/timeline',

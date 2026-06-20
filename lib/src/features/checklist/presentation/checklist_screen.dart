@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/actions.dart';
 import '../../../core/app_error.dart';
 import '../../../core/app_error_view.dart';
 import '../../../core/responsive.dart';
@@ -18,13 +19,50 @@ class ChecklistScreen extends ConsumerWidget {
       context: context,
       builder: (_) => const _AddItemDialog(),
     );
-    if (title == null || title.trim().isEmpty) {
+    if (title == null || title.trim().isEmpty || !context.mounted) {
       return;
     }
+    await _run(
+        context,
+        () => ref
+            .read(checklistControllerProvider(tripRid).notifier)
+            .add(title.trim()));
+  }
+
+  Future<void> _rowActions(
+      BuildContext context, WidgetRef ref, ChecklistItem item) async {
+    final RowAction? action = await showRowActions(context, title: item.title);
+    if (action == null || !context.mounted) {
+      return;
+    }
+    if (action == RowAction.edit) {
+      final String? title = await showDialog<String>(
+        context: context,
+        builder: (_) => _AddItemDialog(initial: item.title),
+      );
+      if (title == null || title.trim().isEmpty || !context.mounted) {
+        return;
+      }
+      await _run(
+          context,
+          () => ref
+              .read(checklistControllerProvider(tripRid).notifier)
+              .rename(item.rid, title.trim()));
+    } else {
+      if (!await confirmDelete(context) || !context.mounted) {
+        return;
+      }
+      await _run(
+          context,
+          () => ref
+              .read(checklistControllerProvider(tripRid).notifier)
+              .remove(item.rid));
+    }
+  }
+
+  Future<void> _run(BuildContext context, Future<void> Function() op) async {
     try {
-      await ref
-          .read(checklistControllerProvider(tripRid).notifier)
-          .add(title.trim());
+      await op();
     } catch (error) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -58,19 +96,31 @@ class ChecklistScreen extends ConsumerWidget {
                 : ListView(
                     padding: const EdgeInsets.fromLTRB(8, 8, 8, 96),
                     children: list
-                        .map((item) => CheckboxListTile(
-                              value: item.completed,
-                              title: Text(
-                                item.title,
-                                style: item.completed
-                                    ? const TextStyle(
-                                        decoration: TextDecoration.lineThrough)
-                                    : null,
+                        .map((item) => GestureDetector(
+                              onLongPress: () =>
+                                  _rowActions(context, ref, item),
+                              child: CheckboxListTile(
+                                value: item.completed,
+                                title: Text(
+                                  item.title,
+                                  style: item.completed
+                                      ? const TextStyle(
+                                          decoration:
+                                              TextDecoration.lineThrough)
+                                      : null,
+                                ),
+                                secondary: IconButton(
+                                  icon: const Icon(Icons.more_vert),
+                                  tooltip:
+                                      AppLocalizations.of(context).actionEdit,
+                                  onPressed: () =>
+                                      _rowActions(context, ref, item),
+                                ),
+                                onChanged: (v) => ref
+                                    .read(checklistControllerProvider(tripRid)
+                                        .notifier)
+                                    .toggle(item.rid, v ?? false),
                               ),
-                              onChanged: (v) => ref
-                                  .read(checklistControllerProvider(tripRid)
-                                      .notifier)
-                                  .toggle(item.rid, v ?? false),
                             ))
                         .toList(),
                   ),
@@ -82,14 +132,17 @@ class ChecklistScreen extends ConsumerWidget {
 }
 
 class _AddItemDialog extends StatefulWidget {
-  const _AddItemDialog();
+  const _AddItemDialog({this.initial});
+
+  final String? initial;
 
   @override
   State<_AddItemDialog> createState() => _AddItemDialogState();
 }
 
 class _AddItemDialogState extends State<_AddItemDialog> {
-  final _controller = TextEditingController();
+  late final TextEditingController _controller =
+      TextEditingController(text: widget.initial ?? '');
 
   @override
   void dispose() {
@@ -100,8 +153,9 @@ class _AddItemDialogState extends State<_AddItemDialog> {
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
+    final bool editing = widget.initial != null;
     return AlertDialog(
-      title: Text(l10n.checklistAddTitle),
+      title: Text(editing ? l10n.checklistEditTitle : l10n.checklistAddTitle),
       content: TextField(
         controller: _controller,
         autofocus: true,
@@ -114,7 +168,7 @@ class _AddItemDialogState extends State<_AddItemDialog> {
             child: Text(l10n.actionCancel)),
         FilledButton(
             onPressed: () => Navigator.pop(context, _controller.text),
-            child: Text(l10n.actionAdd)),
+            child: Text(editing ? l10n.actionSave : l10n.actionAdd)),
       ],
     );
   }

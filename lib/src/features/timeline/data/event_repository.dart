@@ -72,6 +72,36 @@ class EventRepository {
       throw toApiException(e);
     }
   }
+
+  Future<void> update(
+    String tripRid,
+    String eventRid, {
+    required String title,
+    required String eventType,
+    required DateTime startTimeUtc,
+    DateTime? endTimeUtc,
+    String? note,
+  }) async {
+    try {
+      await _dio.patch<dynamic>('/trips/$tripRid/events/$eventRid', data: {
+        'title': title,
+        'eventType': eventType,
+        'startTime': startTimeUtc.toIso8601String(),
+        'endTime': endTimeUtc?.toIso8601String(),
+        'note': note ?? '',
+      });
+    } on DioException catch (e) {
+      throw toApiException(e);
+    }
+  }
+
+  Future<void> delete(String tripRid, String eventRid) async {
+    try {
+      await _dio.delete<dynamic>('/trips/$tripRid/events/$eventRid');
+    } on DioException catch (e) {
+      throw toApiException(e);
+    }
+  }
 }
 
 final eventRepositoryProvider = Provider<EventRepository>((ref) {
