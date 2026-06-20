@@ -29,6 +29,35 @@ class EventsController extends FamilyAsyncNotifier<List<EventItem>, String> {
     ref.invalidate(dashboardProvider(arg));
     await future;
   }
+
+  Future<void> edit({
+    required String eventRid,
+    required String title,
+    required String eventType,
+    required DateTime startTimeUtc,
+    DateTime? endTimeUtc,
+    String? note,
+  }) async {
+    await _repo.update(
+      arg,
+      eventRid,
+      title: title,
+      eventType: eventType,
+      startTimeUtc: startTimeUtc,
+      endTimeUtc: endTimeUtc,
+      note: note,
+    );
+    ref.invalidateSelf();
+    ref.invalidate(dashboardProvider(arg));
+    await future;
+  }
+
+  Future<void> delete(String eventRid) async {
+    await _repo.delete(arg, eventRid);
+    ref.invalidateSelf();
+    ref.invalidate(dashboardProvider(arg));
+    await future;
+  }
 }
 
 final eventsControllerProvider =
