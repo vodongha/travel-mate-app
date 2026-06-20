@@ -14,4 +14,11 @@ class AppConfig {
 
   /// API base path — every endpoint is nested under this (backend SPEC §4).
   static const String apiPrefix = '/api/v1';
+
+  /// Community & support forum, opened from Settings.
+  static const String communityUrl = 'https://vodongha.forumvi.com';
+
+  /// The backend-served, bilingual privacy policy (LegalController). [lang] is `vi` or `en`.
+  static String privacyUrl(String lang) =>
+      '$apiBaseUrl$apiPrefix/privacy?lang=${lang == 'en' ? 'en' : 'vi'}';
 }

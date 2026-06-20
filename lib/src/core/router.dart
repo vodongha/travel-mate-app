@@ -17,6 +17,7 @@ import '../features/members/presentation/accept_invite_screen.dart';
 import '../features/members/presentation/invite_screen.dart';
 import '../features/members/presentation/members_screen.dart';
 import '../features/report/presentation/report_screen.dart';
+import '../features/settings/presentation/settings_screen.dart';
 import '../features/settlement/presentation/settlement_screen.dart';
 import '../features/timeline/data/event_repository.dart';
 import '../features/timeline/presentation/add_event_screen.dart';
@@ -69,6 +70,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) =>
             AcceptInviteScreen(token: state.uri.queryParameters['token']),
       ),
+      GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
       GoRoute(path: '/trips/new', builder: (_, __) => const CreateTripScreen()),
       GoRoute(
         path: '/trips/:rid/dashboard',
