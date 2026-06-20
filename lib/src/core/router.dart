@@ -6,13 +6,18 @@ import '../features/auth/application/auth_controller.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
 import '../features/budget/presentation/budget_screen.dart';
+import '../features/checklist/presentation/checklist_screen.dart';
 import '../features/dashboard/presentation/dashboard_screen.dart';
 import '../features/expenses/presentation/add_expense_screen.dart';
 import '../features/expenses/presentation/expenses_screen.dart';
+import '../features/fund/presentation/fund_screen.dart';
 import '../features/members/presentation/accept_invite_screen.dart';
 import '../features/members/presentation/invite_screen.dart';
 import '../features/members/presentation/members_screen.dart';
+import '../features/report/presentation/report_screen.dart';
 import '../features/settlement/presentation/settlement_screen.dart';
+import '../features/timeline/presentation/add_event_screen.dart';
+import '../features/timeline/presentation/timeline_screen.dart';
 import '../features/trips/presentation/create_trip_screen.dart';
 import '../features/trips/presentation/trip_detail_screen.dart';
 import '../features/trips/presentation/trips_screen.dart';
@@ -90,6 +95,31 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/trips/:rid/settlement',
         builder: (context, state) =>
             SettlementScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/timeline/new',
+        builder: (context, state) =>
+            AddEventScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/timeline',
+        builder: (context, state) =>
+            TimelineScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/checklist',
+        builder: (context, state) =>
+            ChecklistScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/fund',
+        builder: (context, state) =>
+            FundScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/report',
+        builder: (context, state) =>
+            ReportScreen(tripRid: state.pathParameters['rid']!),
       ),
       GoRoute(
         path: '/trips/:rid/members',

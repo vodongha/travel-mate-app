@@ -40,6 +40,36 @@ class Labels {
     return value == 'UNEXPECTED' ? l.typeUNEXPECTED : l.typePLANNED;
   }
 
+  static const List<String> eventTypes = [
+    'TRANSPORT',
+    'HOTEL',
+    'FOOD',
+    'ACTIVITY',
+    'SIGHTSEEING',
+    'SHOPPING',
+    'OTHER',
+  ];
+
+  static String eventType(BuildContext context, String value) {
+    final AppLocalizations l = AppLocalizations.of(context);
+    switch (value) {
+      case 'TRANSPORT':
+        return l.evtTRANSPORT;
+      case 'HOTEL':
+        return l.evtHOTEL;
+      case 'FOOD':
+        return l.evtFOOD;
+      case 'ACTIVITY':
+        return l.evtACTIVITY;
+      case 'SIGHTSEEING':
+        return l.evtSIGHTSEEING;
+      case 'SHOPPING':
+        return l.evtSHOPPING;
+      default:
+        return l.evtOTHER;
+    }
+  }
+
   static String splitType(BuildContext context, String value) {
     final AppLocalizations l = AppLocalizations.of(context);
     switch (value) {
