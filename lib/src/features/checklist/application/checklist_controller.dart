@@ -21,6 +21,18 @@ class ChecklistController
     ref.invalidateSelf();
     await future;
   }
+
+  Future<void> rename(String itemRid, String title) async {
+    await _repo.rename(arg, itemRid, title);
+    ref.invalidateSelf();
+    await future;
+  }
+
+  Future<void> remove(String itemRid) async {
+    await _repo.delete(arg, itemRid);
+    ref.invalidateSelf();
+    await future;
+  }
 }
 
 final checklistControllerProvider = AsyncNotifierProvider.family<

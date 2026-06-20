@@ -9,11 +9,13 @@ import '../../../core/labels.dart';
 import '../../../core/responsive.dart';
 import '../../auth/presentation/auth_validators.dart';
 import '../application/events_controller.dart';
+import '../data/event_repository.dart';
 
 class AddEventScreen extends ConsumerStatefulWidget {
-  const AddEventScreen({super.key, required this.tripRid});
+  const AddEventScreen({super.key, required this.tripRid, this.existing});
 
   final String tripRid;
+  final EventItem? existing;
 
   @override
   ConsumerState<AddEventScreen> createState() => _AddEventScreenState();
@@ -27,6 +29,21 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
   DateTime? _start;
   DateTime? _end;
   bool _submitting = false;
+
+  bool get _editing => widget.existing != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final EventItem? e = widget.existing;
+    if (e != null) {
+      _title.text = e.title;
+      _note.text = e.note ?? '';
+      _eventType = e.eventType;
+      _start = e.startTime?.toLocal();
+      _end = e.endTime?.toLocal();
+    }
+  }
 
   @override
   void dispose() {
@@ -66,13 +83,26 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
     }
     setState(() => _submitting = true);
     try {
-      await ref.read(eventsControllerProvider(widget.tripRid).notifier).create(
-            title: _title.text.trim(),
-            eventType: _eventType,
-            startTimeUtc: _start!.toUtc(),
-            endTimeUtc: _end?.toUtc(),
-            note: _note.text.trim(),
-          );
+      final controller =
+          ref.read(eventsControllerProvider(widget.tripRid).notifier);
+      if (_editing) {
+        await controller.edit(
+          eventRid: widget.existing!.rid,
+          title: _title.text.trim(),
+          eventType: _eventType,
+          startTimeUtc: _start!.toUtc(),
+          endTimeUtc: _end?.toUtc(),
+          note: _note.text.trim(),
+        );
+      } else {
+        await controller.create(
+          title: _title.text.trim(),
+          eventType: _eventType,
+          startTimeUtc: _start!.toUtc(),
+          endTimeUtc: _end?.toUtc(),
+          note: _note.text.trim(),
+        );
+      }
       if (mounted) {
         context.go('/trips/${widget.tripRid}/timeline');
       }
@@ -95,7 +125,8 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
         DateFormat.MMMEd(Localizations.localeOf(context).toLanguageTag())
             .add_Hm();
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.eventNew)),
+      appBar:
+          AppBar(title: Text(_editing ? l10n.eventEditTitle : l10n.eventNew)),
       body: SafeArea(
         child: ResponsiveCenter(
           maxWidth: 520,

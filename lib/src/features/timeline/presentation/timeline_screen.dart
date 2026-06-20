@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/actions.dart';
+import '../../../core/app_error.dart';
 import '../../../core/app_error_view.dart';
 import '../../../core/labels.dart';
 import '../../../core/responsive.dart';
@@ -14,6 +16,31 @@ class TimelineScreen extends ConsumerWidget {
   const TimelineScreen({super.key, required this.tripRid});
 
   final String tripRid;
+
+  Future<void> _rowActions(
+      BuildContext context, WidgetRef ref, EventItem event) async {
+    final RowAction? action = await showRowActions(context, title: event.title);
+    if (action == null || !context.mounted) {
+      return;
+    }
+    if (action == RowAction.edit) {
+      context.go('/trips/$tripRid/timeline/${event.rid}/edit', extra: event);
+      return;
+    }
+    if (!await confirmDelete(context) || !context.mounted) {
+      return;
+    }
+    try {
+      await ref
+          .read(eventsControllerProvider(tripRid).notifier)
+          .delete(event.rid);
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(friendlyError(context, error))));
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -44,7 +71,13 @@ class TimelineScreen extends ConsumerWidget {
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
                       itemCount: list.length,
                       separatorBuilder: (_, __) => const SizedBox(height: 8),
-                      itemBuilder: (context, i) => _EventCard(event: list[i]),
+                      itemBuilder: (context, i) => GestureDetector(
+                        onLongPress: () => _rowActions(context, ref, list[i]),
+                        child: _EventCard(
+                          event: list[i],
+                          onMenu: () => _rowActions(context, ref, list[i]),
+                        ),
+                      ),
                     ),
                   ),
           ),
@@ -55,9 +88,10 @@ class TimelineScreen extends ConsumerWidget {
 }
 
 class _EventCard extends StatelessWidget {
-  const _EventCard({required this.event});
+  const _EventCard({required this.event, this.onMenu});
 
   final EventItem event;
+  final VoidCallback? onMenu;
 
   @override
   Widget build(BuildContext context) {
@@ -75,6 +109,14 @@ class _EventCard extends StatelessWidget {
         title: Text(event.title),
         subtitle: Text('${Labels.eventType(context, event.eventType)}'
             '${when.isEmpty ? '' : ' · $when'}'),
+        trailing: onMenu == null
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.more_vert),
+                tooltip: AppLocalizations.of(context).actionEdit,
+                onPressed: onMenu,
+              ),
+        onTap: onMenu,
       ),
     );
   }
