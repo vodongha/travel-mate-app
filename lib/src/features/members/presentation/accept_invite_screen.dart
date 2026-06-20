@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error.dart';
+import '../../../core/form_buttons.dart';
 import '../../../core/responsive.dart';
 import '../../trips/application/trips_controller.dart';
 import '../data/member_repository.dart';
@@ -89,14 +90,12 @@ class _AcceptInviteScreenState extends ConsumerState<AcceptInviteScreen> {
                 onSubmitted: (_) => _join(),
               ),
               const SizedBox(height: 24),
-              FilledButton(
-                onPressed: _joining ? null : _join,
-                child: _joining
-                    ? const SizedBox(
-                        height: 22,
-                        width: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2.4))
-                    : Text(l10n.actionJoin),
+              FormButtons(
+                primaryLabel: l10n.actionJoin,
+                loading: _joining,
+                onPrimary: _join,
+                onCancel: () =>
+                    context.canPop() ? context.pop() : context.go('/'),
               ),
             ],
           ),
