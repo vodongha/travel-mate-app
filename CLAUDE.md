@@ -14,9 +14,12 @@ currency conversion, and settlement).
 and desktop web. Treat a responsive layout (width-capped content, adaptive navigation) as a baseline
 requirement, not an afterthought.
 
-**Status:** scaffolding stage. The Flutter project itself (`lib/`, `pubspec.yaml`, platform folders)
-lands with milestone **M9** of the backend roadmap. Until then this file records the conventions and
-API contract the app will follow. The backend spec is the source of truth:
+**Status:** **M9 in progress** — the Flutter project exists (Android + Web). Done: the core layer
+(Dio client + bearer/refresh interceptor, secure token storage, go_router auth guard, Material 3
+theme, en/vi l10n) and the first vertical slices — **auth** (login/register, session restore) and
+**trips** (list / create / detail). Remaining feature screens (planning, money, fund, settlement,
+dashboard, report, notifications, Google sign-in, QR scan) land in follow-up slices. The backend
+(M1–M8) is complete; its spec is the source of truth:
 [vodongha/travel-mate › docs/SPEC.md](https://github.com/vodongha/travel-mate/blob/master/docs/SPEC.md).
 
 ## Tech stack (planned)
