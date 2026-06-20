@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'firebase_push_service.dart';
+
 /// Owns the device-side push lifecycle: obtain the FCM token (`firebase_messaging`), ask the OS for
 /// notification permission, and register the token with the backend (`POST /users/me/devices`) after
 /// sign-in; clear it on logout.
@@ -27,7 +29,5 @@ class StubPushService implements PushService {
 }
 
 final pushServiceProvider = Provider<PushService>((ref) {
-  // TODO(config): once firebase_messaging is wired, return the real implementation that reads the
-  // FCM token and calls ref.read(pushRepositoryProvider).registerDevice(...).
-  return const StubPushService();
+  return FirebasePushService(ref);
 });

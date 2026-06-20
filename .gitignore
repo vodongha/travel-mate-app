@@ -38,3 +38,7 @@ ios/Flutter/Flutter.podspec
 
 # macOS
 .DS_Store
+
+# Firebase service-account private keys (NEVER commit)
+*firebase-adminsdk*.json
+serviceAccount*.json

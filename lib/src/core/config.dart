@@ -34,6 +34,14 @@ class AppConfig {
   /// Whether Google Sign-In is wired up (a client id was provided at build time).
   static bool get googleSignInEnabled => googleServerClientId.isNotEmpty;
 
+  /// Web Push (VAPID) **public** key — required by `getToken` on web only. Must be the key pair from
+  /// Firebase Console → Cloud Messaging → Web Push certificates. Empty = web push disabled.
+  static const String webPushVapidKey = String.fromEnvironment(
+    'WEB_PUSH_VAPID_KEY',
+    defaultValue:
+        'BFzFkKDu8m8Z5p1xJCI23CYsh0v4KlJMdgH3y60lbpprUJwGclR-DOn8wYxVS_bCSisHK5iwbQ4fR4hMtWfOzoA',
+  );
+
   /// The backend-served, bilingual privacy policy (LegalController). [lang] is `vi` or `en`.
   static String privacyUrl(String lang) =>
       '$apiBaseUrl$apiPrefix/privacy?lang=${lang == 'en' ? 'en' : 'vi'}';
