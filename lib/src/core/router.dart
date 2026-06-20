@@ -5,10 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../features/auth/application/auth_controller.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
+import '../features/budget/presentation/budget_screen.dart';
 import '../features/dashboard/presentation/dashboard_screen.dart';
+import '../features/expenses/presentation/add_expense_screen.dart';
+import '../features/expenses/presentation/expenses_screen.dart';
 import '../features/members/presentation/accept_invite_screen.dart';
 import '../features/members/presentation/invite_screen.dart';
 import '../features/members/presentation/members_screen.dart';
+import '../features/settlement/presentation/settlement_screen.dart';
 import '../features/trips/presentation/create_trip_screen.dart';
 import '../features/trips/presentation/trip_detail_screen.dart';
 import '../features/trips/presentation/trips_screen.dart';
@@ -66,6 +70,26 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/trips/:rid/members/invite',
         builder: (context, state) =>
             InviteScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/expenses/new',
+        builder: (context, state) =>
+            AddExpenseScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/expenses',
+        builder: (context, state) =>
+            ExpensesScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/budgets',
+        builder: (context, state) =>
+            BudgetScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/settlement',
+        builder: (context, state) =>
+            SettlementScreen(tripRid: state.pathParameters['rid']!),
       ),
       GoRoute(
         path: '/trips/:rid/members',
