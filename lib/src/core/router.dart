@@ -1,0 +1,58 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../features/auth/application/auth_controller.dart';
+import '../features/auth/presentation/login_screen.dart';
+import '../features/auth/presentation/register_screen.dart';
+import '../features/trips/presentation/create_trip_screen.dart';
+import '../features/trips/presentation/trip_detail_screen.dart';
+import '../features/trips/presentation/trips_screen.dart';
+import 'splash_screen.dart';
+
+/// Bridges auth-state changes to go_router so the redirect re-runs on login/logout.
+class _AuthListenable extends ChangeNotifier {
+  _AuthListenable(Ref ref) {
+    ref.listen(authControllerProvider, (_, __) => notifyListeners());
+  }
+}
+
+/// App router with an auth-aware redirect: unauthenticated users are sent to /login; while the
+/// stored session resolves on startup, a splash is shown.
+final routerProvider = Provider<GoRouter>((ref) {
+  final _AuthListenable listenable = _AuthListenable(ref);
+  ref.onDispose(listenable.dispose);
+
+  return GoRouter(
+    initialLocation: '/',
+    refreshListenable: listenable,
+    redirect: (context, state) {
+      final AsyncValue<Object?> auth = ref.read(authControllerProvider);
+      if (auth.isLoading) {
+        return '/splash';
+      }
+      final bool loggedIn = auth.valueOrNull != null;
+      final String loc = state.matchedLocation;
+      final bool atAuth = loc == '/login' || loc == '/register';
+      if (!loggedIn) {
+        return atAuth ? null : '/login';
+      }
+      if (atAuth || loc == '/splash') {
+        return '/';
+      }
+      return null;
+    },
+    routes: [
+      GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
+      GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+      GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
+      GoRoute(path: '/', builder: (_, __) => const TripsScreen()),
+      GoRoute(path: '/trips/new', builder: (_, __) => const CreateTripScreen()),
+      GoRoute(
+        path: '/trips/:rid',
+        builder: (context, state) =>
+            TripDetailScreen(tripRid: state.pathParameters['rid']!),
+      ),
+    ],
+  );
+});
