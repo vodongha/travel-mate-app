@@ -15,4 +15,17 @@ class Money {
       ..maximumFractionDigits = dec;
     return '${f.format(amount)} $currency';
   }
+
+  /// Grouped digits only (no currency code), for a live preview under an amount
+  /// input — e.g. `90000` → `90,000`. Returns null for empty/invalid input.
+  static String? grouped(String input, String currency) {
+    final num? n = num.tryParse(input.trim());
+    if (n == null) {
+      return null;
+    }
+    final int dec = _zeroDecimal.contains(currency) ? 0 : 2;
+    final NumberFormat f = NumberFormat.decimalPattern()
+      ..maximumFractionDigits = dec;
+    return f.format(n);
+  }
 }
