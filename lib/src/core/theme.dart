@@ -11,6 +11,10 @@ class AppTheme {
   static const BorderRadius buttonRadius =
       BorderRadius.all(Radius.circular(14));
 
+  /// Shared height for all primary form buttons (and the web Google button row),
+  /// so they all line up. Mirrored by FormButtons and the button themes below.
+  static const double buttonHeight = 50;
+
   static ThemeData light() => _build(Brightness.light);
 
   static ThemeData dark() => _build(Brightness.dark);

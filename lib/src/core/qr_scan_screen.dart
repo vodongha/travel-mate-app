@@ -95,7 +95,7 @@ class _QrScanScreenState extends State<QrScanScreen> {
         MobileScanner(
           controller: _controller,
           onDetect: _onDetect,
-          errorBuilder: (context, error, child) =>
+          errorBuilder: (context, error) =>
               _PermissionDenied(l10n: l10n, onRetry: _init),
         ),
         Padding(
