@@ -198,6 +198,7 @@
   "fieldName": "Tên",
   "fieldAddress": "Địa chỉ",
   "fieldBookingCode": "Mã đặt chỗ",
+  "fieldSeat": "Số ghế",
   "fieldType": "Loại",
   "navTransport": "Di chuyển",
   "transportNew": "Thêm chuyến đi",
