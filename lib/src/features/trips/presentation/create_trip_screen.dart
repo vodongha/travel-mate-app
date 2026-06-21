@@ -14,6 +14,7 @@ import '../../../core/responsive.dart';
 import '../../auth/presentation/auth_validators.dart';
 import '../application/trips_controller.dart';
 import '../domain/trip.dart';
+import 'trip_format.dart';
 
 class CreateTripScreen extends ConsumerStatefulWidget {
   const CreateTripScreen({super.key, this.existing});
@@ -32,7 +33,15 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
   String _currency = 'VND';
   DateTime? _start;
   DateTime? _end;
+  String _status = 'PLANNING';
   bool _submitting = false;
+
+  static const List<String> _statuses = [
+    'PLANNING',
+    'ONGOING',
+    'COMPLETED',
+    'CANCELLED'
+  ];
 
   bool get _editing => widget.existing != null;
 
@@ -46,6 +55,7 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
       _currency = t.baseCurrency;
       _start = t.startDate;
       _end = t.endDate;
+      _status = t.status;
     }
   }
 
@@ -101,6 +111,7 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
               destination: _destination.text,
               startDate: _start,
               endDate: _end,
+              status: _status,
             );
       } else {
         trip = await ref.read(tripsControllerProvider.notifier).create(
@@ -190,6 +201,23 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
                         : '${fmt.format(_start!)}  –  ${fmt.format(_end!)}',
                     onTap: _pickDateRange,
                   ),
+                  if (_editing) ...[
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      initialValue: _status,
+                      decoration: InputDecoration(
+                        labelText: l10n.tripStatus,
+                        prefixIcon: const Icon(Icons.flag_outlined),
+                      ),
+                      items: _statuses
+                          .map((s) => DropdownMenuItem(
+                              value: s,
+                              child: Text(tripStatusLabel(context, s))))
+                          .toList(),
+                      onChanged: (v) =>
+                          setState(() => _status = v ?? 'PLANNING'),
+                    ),
+                  ],
                   const SizedBox(height: 28),
                   FormButtons(
                     primaryLabel:

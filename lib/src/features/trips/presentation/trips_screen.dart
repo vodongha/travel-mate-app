@@ -60,10 +60,10 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
       appBar: AppBar(
         title: Text(l10n.navMyTrips),
         actions: [
-          IconButton(
-            tooltip: l10n.inviteJoinTitle,
-            icon: const Icon(Icons.airplane_ticket_outlined),
+          TextButton.icon(
             onPressed: () => context.push('/join'),
+            icon: const Icon(Icons.group_add_outlined, size: 20),
+            label: Text(l10n.actionJoin),
           ),
           const AccountMenu(),
           const SizedBox(width: 8),
