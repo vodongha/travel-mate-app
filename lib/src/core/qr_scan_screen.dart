@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -14,11 +16,20 @@ class QrScanScreen extends StatefulWidget {
   State<QrScanScreen> createState() => _QrScanScreenState();
 }
 
-class _QrScanScreenState extends State<QrScanScreen> {
+class _QrScanScreenState extends State<QrScanScreen>
+    with SingleTickerProviderStateMixin {
   MobileScannerController? _controller;
   bool _checking = true;
   bool _denied = false;
   bool _handled = false;
+
+  // Drives the sweeping scan line inside the framing window.
+  late final AnimationController _scanCtl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1800),
+  )..repeat(reverse: true);
+  late final Animation<double> _scan =
+      CurvedAnimation(parent: _scanCtl, curve: Curves.easeInOut);
 
   @override
   void initState() {
@@ -73,6 +84,7 @@ class _QrScanScreenState extends State<QrScanScreen> {
 
   @override
   void dispose() {
+    _scanCtl.dispose();
     _controller?.dispose();
     super.dispose();
   }
@@ -102,35 +114,153 @@ class _QrScanScreenState extends State<QrScanScreen> {
   }
 
   Widget _scanner(AppLocalizations l10n) {
-    return Stack(
-      alignment: Alignment.bottomCenter,
-      children: [
-        MobileScanner(
-          controller: _controller,
-          onDetect: _onDetect,
-          errorBuilder: (context, error) => _CameraProblem(
-            l10n: l10n,
-            onRetry: _init,
-            permission: false,
-            detail: _describe(error),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(24),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.black54,
-              borderRadius: BorderRadius.circular(12),
+    final Color accent = Theme.of(context).colorScheme.primary;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // A centred 1:1 framing window, sized to the viewport.
+        final double side =
+            (math.min(constraints.maxWidth, constraints.maxHeight) * 0.72)
+                .clamp(220.0, 340.0);
+        final Rect window = Rect.fromCenter(
+          center:
+              Offset(constraints.maxWidth / 2, constraints.maxHeight / 2 - 24),
+          width: side,
+          height: side,
+        );
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: MobileScanner(
+                controller: _controller,
+                onDetect: _onDetect,
+                errorBuilder: (context, error) => _CameraProblem(
+                  l10n: l10n,
+                  onRetry: _init,
+                  permission: false,
+                  detail: _describe(error),
+                ),
+              ),
             ),
-            child: Text(l10n.qrScanHint,
-                style: const TextStyle(color: Colors.white),
-                textAlign: TextAlign.center),
-          ),
-        ),
-      ],
+            // Dimmed mask + corner brackets around the window.
+            Positioned.fill(
+              child: CustomPaint(painter: _FramePainter(window, accent)),
+            ),
+            // Sweeping, glowing scan line.
+            AnimatedBuilder(
+              animation: _scan,
+              builder: (context, _) {
+                final double y =
+                    window.top + 6 + _scan.value * (window.height - 12);
+                return Positioned(
+                  left: window.left + 14,
+                  width: window.width - 28,
+                  top: y,
+                  child: Container(
+                    height: 2.5,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(2),
+                      gradient: LinearGradient(colors: [
+                        accent.withValues(alpha: 0),
+                        accent,
+                        accent.withValues(alpha: 0),
+                      ]),
+                      boxShadow: [
+                        BoxShadow(
+                          color: accent.withValues(alpha: 0.7),
+                          blurRadius: 10,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+            // Hint just below the window.
+            Positioned(
+              top: window.bottom + 28,
+              left: 24,
+              right: 24,
+              child: Center(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(l10n.qrScanHint,
+                      style: const TextStyle(color: Colors.white),
+                      textAlign: TextAlign.center),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
+}
+
+/// Paints the dim overlay with a transparent rounded-square cutout (the framing
+/// window) and a bright corner bracket at each corner.
+class _FramePainter extends CustomPainter {
+  _FramePainter(this.window, this.accent);
+
+  final Rect window;
+  final Color accent;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const double radius = 22;
+    final RRect hole =
+        RRect.fromRectAndRadius(window, const Radius.circular(radius));
+
+    // Dim everything outside the window.
+    final Path mask = Path.combine(
+      PathOperation.difference,
+      Path()..addRect(Offset.zero & size),
+      Path()..addRRect(hole),
+    );
+    canvas.drawPath(mask, Paint()..color = const Color(0xB3000000));
+
+    // A faint outline around the window.
+    canvas.drawRRect(
+      hole,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1
+        ..color = Colors.white24,
+    );
+
+    // Corner brackets.
+    final Paint p = Paint()
+      ..color = accent
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    const double arm = 30; // length of each bracket arm
+    const double r = radius; // follow the window's rounded corners
+    final Rect w = window;
+
+    // Two straight arms per corner, offset inward by the corner radius.
+    void drawCorner(Offset c, double sx, double sy) {
+      final double bx = c.dx + sx * r;
+      final double by = c.dy + sy * r;
+      canvas.drawLine(Offset(bx, by), Offset(bx + sx * arm, by), p);
+      canvas.drawLine(Offset(bx, by), Offset(bx, by + sy * arm), p);
+    }
+
+    drawCorner(w.topLeft, 1, 1);
+    drawCorner(w.topRight, -1, 1);
+    drawCorner(w.bottomLeft, 1, -1);
+    drawCorner(w.bottomRight, -1, -1);
+  }
+
+  @override
+  bool shouldRepaint(covariant _FramePainter old) =>
+      old.window != window || old.accent != accent;
 }
 
 /// Shown when the camera can't be used. For a denied permission it explains how
