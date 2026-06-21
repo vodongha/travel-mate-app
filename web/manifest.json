@@ -1,11 +1,11 @@
 {
-    "name": "travel_mate_app",
-    "short_name": "travel_mate_app",
+    "name": "Travel Mate",
+    "short_name": "Travel Mate",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#4F46E5",
     "theme_color": "#4F46E5",
-    "description": "TravelMate — group-trip planning & shared-expense (Android + Web)",
+    "description": "Travel Mate — group-trip planning & shared-expense (Android + Web)",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
