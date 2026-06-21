@@ -11,6 +11,26 @@ import '../../../core/responsive.dart';
 import '../application/place_controller.dart';
 import '../data/place_repository.dart';
 
+/// Icon for a place type — shared with the places map.
+IconData placeIcon(String? type) {
+  switch (type) {
+    case 'HOTEL':
+      return Icons.hotel_outlined;
+    case 'RESTAURANT':
+      return Icons.restaurant_outlined;
+    case 'ATTRACTION':
+      return Icons.attractions_outlined;
+    case 'AIRPORT':
+      return Icons.local_airport_outlined;
+    case 'STATION':
+      return Icons.directions_transit_outlined;
+    case 'SHOPPING':
+      return Icons.shopping_bag_outlined;
+    default:
+      return Icons.place_outlined;
+  }
+}
+
 class PlacesScreen extends ConsumerWidget {
   const PlacesScreen({super.key, required this.tripRid});
 
@@ -41,32 +61,22 @@ class PlacesScreen extends ConsumerWidget {
     }
   }
 
-  static IconData _iconOf(String? type) {
-    switch (type) {
-      case 'HOTEL':
-        return Icons.hotel_outlined;
-      case 'RESTAURANT':
-        return Icons.restaurant_outlined;
-      case 'ATTRACTION':
-        return Icons.attractions_outlined;
-      case 'AIRPORT':
-        return Icons.local_airport_outlined;
-      case 'STATION':
-        return Icons.directions_transit_outlined;
-      case 'SHOPPING':
-        return Icons.shopping_bag_outlined;
-      default:
-        return Icons.place_outlined;
-    }
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final AsyncValue<List<PlaceItem>> items =
         ref.watch(placeControllerProvider(tripRid));
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.navPlaces)),
+      appBar: AppBar(
+        title: Text(l10n.navPlaces),
+        actions: [
+          IconButton(
+            tooltip: l10n.placesMapAction,
+            icon: const Icon(Icons.map_outlined),
+            onPressed: () => context.push('/trips/$tripRid/places/map'),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/trips/$tripRid/places/new'),
         icon: const Icon(Icons.add),
@@ -103,7 +113,7 @@ class PlacesScreen extends ConsumerWidget {
                             leading: CircleAvatar(
                               backgroundColor: scheme.secondaryContainer,
                               foregroundColor: scheme.onSecondaryContainer,
-                              child: Icon(_iconOf(p.placeType)),
+                              child: Icon(placeIcon(p.placeType)),
                             ),
                             title: Text(p.name,
                                 maxLines: 1, overflow: TextOverflow.ellipsis),
