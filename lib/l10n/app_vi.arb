@@ -284,6 +284,7 @@
   "expenseAttachEvent": "Gắn vào lịch trình",
   "expenseNoEvent": "Không gắn",
   "timelineCosts": "Chi phí",
+  "qrCameraError": "Không mở được camera. Kiểm tra quyền camera trong Cài đặt.",
   "ticketCode": "Mã vé hoặc QR",
   "ticketCodeHint": "Nhập mã hoặc quét QR",
   "locationMyLocation": "Vị trí của tôi",

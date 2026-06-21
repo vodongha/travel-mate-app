@@ -6,10 +6,11 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/config.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../auth/domain/auth_user.dart';
+import '../../auth/presentation/avatar.dart';
 import 'account_dialogs.dart';
 
-/// A two-letter avatar in the AppBar that opens the account menu (edit profile, settings, privacy,
-/// community, log out, delete account).
+/// The AppBar avatar. Tapping it opens the account menu as a bottom sheet (rises from the bottom),
+/// matching family-budget-app.
 class AccountMenu extends ConsumerWidget {
   const AccountMenu({super.key});
 
@@ -17,78 +18,175 @@ class AccountMenu extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final AuthUser? user = ref.watch(authControllerProvider).valueOrNull;
-    final ColorScheme scheme = Theme.of(context).colorScheme;
-
-    return PopupMenuButton<String>(
-      tooltip: l10n.settingsAccount,
-      offset: const Offset(0, 48),
-      icon: CircleAvatar(
-        radius: 16,
-        backgroundColor: scheme.primaryContainer,
-        foregroundColor: scheme.onPrimaryContainer,
-        child: Text(_initials(user),
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-      ),
-      onSelected: (value) {
-        switch (value) {
-          case 'profile':
-            showEditProfile(context, ref);
-          case 'settings':
-            context.push('/settings');
-          case 'about':
-            context.push('/about');
-          case 'privacy':
-            openExternal(
-                context,
-                AppConfig.privacyUrl(
-                    Localizations.localeOf(context).languageCode));
-          case 'community':
-            openWebPage(
-                context, l10n.settingsCommunity, AppConfig.communityUrl);
-          case 'logout':
-            ref.read(authControllerProvider.notifier).logout();
-          case 'delete':
-            confirmDeleteAccount(context, ref);
-        }
-      },
-      itemBuilder: (context) => [
-        _item('profile', Icons.person_outline, l10n.settingsEditProfile),
-        _item('settings', Icons.settings_outlined, l10n.navSettings),
-        _item('privacy', Icons.privacy_tip_outlined, l10n.settingsPrivacy),
-        _item('community', Icons.forum_outlined, l10n.settingsCommunity),
-        _item('about', Icons.info_outline, l10n.about),
-        const PopupMenuDivider(),
-        _item('logout', Icons.logout, l10n.actionLogout),
-        _item(
-            'delete', Icons.delete_forever_outlined, l10n.settingsDeleteAccount,
-            color: scheme.error),
-      ],
-    );
-  }
-
-  PopupMenuItem<String> _item(String value, IconData icon, String label,
-      {Color? color}) {
-    return PopupMenuItem<String>(
-      value: value,
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: color),
-          const SizedBox(width: 12),
-          Text(label, style: TextStyle(color: color)),
-        ],
-      ),
-    );
-  }
-
-  static String _initials(AuthUser? user) {
-    final String src = (user?.name.trim().isNotEmpty == true)
+    final String name = (user?.name.trim().isNotEmpty == true)
         ? user!.name.trim()
         : (user?.email ?? '?');
-    final List<String> parts =
-        src.split(RegExp(r'\s+')).where((e) => e.isNotEmpty).toList();
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
+    return IconButton(
+      tooltip: l10n.settingsAccount,
+      padding: EdgeInsets.zero,
+      icon: UserAvatar(name: name, radius: 16),
+      onPressed: () => showAccountSheet(context, ref),
+    );
+  }
+}
+
+/// Opens the account menu sheet: edit profile, settings, privacy, community, about, sign out, and
+/// (separated) delete account.
+Future<void> showAccountSheet(BuildContext context, WidgetRef ref) {
+  return showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    builder: (_) => _AccountSheet(parentContext: context),
+  );
+}
+
+class _AccountSheet extends ConsumerWidget {
+  const _AccountSheet({required this.parentContext});
+
+  /// The screen context (outlives the sheet) used for navigation + snackbars.
+  final BuildContext parentContext;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final ColorScheme cs = Theme.of(context).colorScheme;
+    final AuthUser? user = ref.watch(authControllerProvider).valueOrNull;
+    if (user == null) {
+      return const SizedBox.shrink();
     }
-    return src.substring(0, src.length >= 2 ? 2 : 1).toUpperCase();
+    final String name =
+        user.name.trim().isNotEmpty ? user.name.trim() : user.email;
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                UserAvatar(name: name, radius: 26),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name,
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                          overflow: TextOverflow.ellipsis),
+                      Text(user.email,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(color: cs.onSurfaceVariant),
+                          overflow: TextOverflow.ellipsis),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _Tile(
+              icon: Icons.person_outline,
+              label: l10n.settingsEditProfile,
+              onTap: () {
+                Navigator.pop(context);
+                parentContext.push('/profile');
+              },
+            ),
+            _Tile(
+              icon: Icons.settings_outlined,
+              label: l10n.navSettings,
+              onTap: () {
+                Navigator.pop(context);
+                parentContext.push('/settings');
+              },
+            ),
+            _Tile(
+              icon: Icons.privacy_tip_outlined,
+              label: l10n.settingsPrivacy,
+              onTap: () {
+                Navigator.pop(context);
+                openExternal(
+                    parentContext,
+                    AppConfig.privacyUrl(
+                        Localizations.localeOf(parentContext).languageCode));
+              },
+            ),
+            _Tile(
+              icon: Icons.forum_outlined,
+              label: l10n.settingsCommunity,
+              onTap: () {
+                Navigator.pop(context);
+                openWebPage(parentContext, l10n.settingsCommunity,
+                    AppConfig.communityUrl);
+              },
+            ),
+            _Tile(
+              icon: Icons.info_outline,
+              label: l10n.about,
+              onTap: () {
+                Navigator.pop(context);
+                parentContext.push('/about');
+              },
+            ),
+            _Tile(
+              icon: Icons.logout,
+              label: l10n.actionLogout,
+              onTap: () {
+                Navigator.pop(context);
+                ref.read(authControllerProvider.notifier).logout();
+              },
+            ),
+            const SizedBox(height: 8),
+            const Divider(),
+            const SizedBox(height: 8),
+            _Tile(
+              icon: Icons.delete_forever_outlined,
+              label: l10n.settingsDeleteAccount,
+              danger: true,
+              onTap: () {
+                Navigator.pop(context);
+                confirmDeleteAccount(parentContext, ref);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Tile extends StatelessWidget {
+  const _Tile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.danger = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool danger;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme cs = Theme.of(context).colorScheme;
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+      leading: Icon(icon, color: danger ? cs.error : cs.primary),
+      title: Text(label,
+          style: TextStyle(
+              color: danger ? cs.error : cs.onSurface,
+              fontWeight: FontWeight.w500)),
+      trailing:
+          danger ? null : Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
+      onTap: onTap,
+    );
   }
 }
