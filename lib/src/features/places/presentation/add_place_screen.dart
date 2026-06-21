@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error.dart';
 import '../../../core/form_buttons.dart';
+import '../../../core/geocoding.dart';
 import '../../../core/labels.dart';
+import '../../../core/location_picker.dart';
 import '../../../core/responsive.dart';
 import '../../auth/presentation/auth_validators.dart';
 import '../application/place_controller.dart';
@@ -26,9 +28,9 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
   final _address = TextEditingController();
-  final _lat = TextEditingController();
-  final _lng = TextEditingController();
   String _type = 'OTHER';
+  double? _lat;
+  double? _lng;
   bool _submitting = false;
 
   bool get _editing => widget.existing != null;
@@ -40,8 +42,8 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
     if (p != null) {
       _name.text = p.name;
       _address.text = p.address ?? '';
-      _lat.text = p.latitude?.toString() ?? '';
-      _lng.text = p.longitude?.toString() ?? '';
+      _lat = p.latitude;
+      _lng = p.longitude;
       _type = p.placeType ?? 'OTHER';
     }
   }
@@ -50,24 +52,31 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
   void dispose() {
     _name.dispose();
     _address.dispose();
-    _lat.dispose();
-    _lng.dispose();
     super.dispose();
   }
 
   String? _trim(TextEditingController c) =>
       c.text.trim().isEmpty ? null : c.text.trim();
 
-  String? _coordValidator(String? v, double min, double max) {
-    if (v == null || v.trim().isEmpty) {
-      return null;
+  Future<void> _pickLocation() async {
+    final GeoResult? r = await showLocationPicker(
+      context,
+      initialPoint: _lat != null && _lng != null ? LatLng(_lat!, _lng!) : null,
+      initialName: _name.text.trim().isEmpty ? null : _name.text.trim(),
+    );
+    if (r == null) {
+      return;
     }
-    final double? n = double.tryParse(v.trim());
-    final AppLocalizations l10n = AppLocalizations.of(context);
-    if (n == null || n < min || n > max) {
-      return l10n.validationInvalid;
-    }
-    return null;
+    setState(() {
+      _lat = r.point.latitude;
+      _lng = r.point.longitude;
+      if (_name.text.trim().isEmpty && r.name.isNotEmpty) {
+        _name.text = r.name;
+      }
+      if (_address.text.trim().isEmpty && r.displayName.isNotEmpty) {
+        _address.text = r.displayName;
+      }
+    });
   }
 
   Future<void> _submit() async {
@@ -78,30 +87,28 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
     try {
       final controller =
           ref.read(placeControllerProvider(widget.tripRid).notifier);
-      final double? lat =
-          _lat.text.trim().isEmpty ? null : double.tryParse(_lat.text.trim());
-      final double? lng =
-          _lng.text.trim().isEmpty ? null : double.tryParse(_lng.text.trim());
       if (_editing) {
         await controller.edit(
           rid: widget.existing!.rid,
           name: _name.text.trim(),
           address: _trim(_address),
-          latitude: lat,
-          longitude: lng,
+          latitude: _lat,
+          longitude: _lng,
           placeType: _type,
         );
       } else {
         await controller.create(
           name: _name.text.trim(),
           address: _trim(_address),
-          latitude: lat,
-          longitude: lng,
+          latitude: _lat,
+          longitude: _lng,
           placeType: _type,
         );
       }
       if (mounted) {
-        context.go('/trips/${widget.tripRid}/places');
+        context.canPop()
+            ? context.pop()
+            : context.go('/trips/${widget.tripRid}/places');
       }
     } catch (error) {
       if (mounted) {
@@ -118,11 +125,8 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    const TextInputType coordType =
-        TextInputType.numberWithOptions(signed: true, decimal: true);
-    final List<TextInputFormatter> coordFmt = [
-      FilteringTextInputFormatter.allow(RegExp(r'[0-9.\-]')),
-    ];
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final bool hasPin = _lat != null && _lng != null;
     return Scaffold(
       appBar:
           AppBar(title: Text(_editing ? l10n.placeEditTitle : l10n.placeNew)),
@@ -155,35 +159,32 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
                   onChanged: (v) => setState(() => _type = v ?? 'OTHER'),
                 ),
                 const SizedBox(height: 16),
+                // Pick a pin on the map instead of typing latitude/longitude.
+                InkWell(
+                  onTap: _pickLocation,
+                  borderRadius: BorderRadius.circular(14),
+                  child: InputDecorator(
+                    decoration: InputDecoration(
+                      labelText: l10n.placeLocation,
+                      prefixIcon: const Icon(Icons.map_outlined),
+                      suffixIcon: const Icon(Icons.chevron_right),
+                    ),
+                    child: Text(
+                      hasPin
+                          ? '${_lat!.toStringAsFixed(5)}, ${_lng!.toStringAsFixed(5)}'
+                          : l10n.placePickLocation,
+                      style: hasPin
+                          ? null
+                          : TextStyle(color: scheme.onSurfaceVariant),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 TextFormField(
                   controller: _address,
                   decoration: InputDecoration(
                       labelText: l10n.fieldAddress,
-                      prefixIcon: const Icon(Icons.map_outlined)),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _lat,
-                        keyboardType: coordType,
-                        inputFormatters: coordFmt,
-                        decoration: InputDecoration(labelText: l10n.placeLat),
-                        validator: (v) => _coordValidator(v, -90, 90),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _lng,
-                        keyboardType: coordType,
-                        inputFormatters: coordFmt,
-                        decoration: InputDecoration(labelText: l10n.placeLng),
-                        validator: (v) => _coordValidator(v, -180, 180),
-                      ),
-                    ),
-                  ],
+                      prefixIcon: const Icon(Icons.signpost_outlined)),
                 ),
                 const SizedBox(height: 24),
                 FormButtons(

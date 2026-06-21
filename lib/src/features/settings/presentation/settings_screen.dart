@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error.dart';
+import '../../../core/config.dart';
 import '../../../core/currencies.dart';
 import '../../../core/currency_picker.dart';
 import '../../../core/prefs.dart';
@@ -60,6 +62,19 @@ class SettingsScreen extends ConsumerWidget {
                 onTap: () => showChangePassword(context, ref),
               ),
               _label(context, l10n.settingsAbout),
+              ListTile(
+                leading: const Icon(Icons.info_outline),
+                title: Text(l10n.about),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/about'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.forum_outlined),
+                title: Text(l10n.settingsCommunity),
+                trailing: const Icon(Icons.open_in_new, size: 18),
+                onTap: () => openWebPage(
+                    context, l10n.settingsCommunity, AppConfig.communityUrl),
+              ),
               const _VersionTile(),
             ],
           ),

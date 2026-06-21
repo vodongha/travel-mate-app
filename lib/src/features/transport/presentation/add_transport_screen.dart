@@ -6,7 +6,9 @@ import 'package:intl/intl.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error.dart';
 import '../../../core/form_buttons.dart';
+import '../../../core/geocoding.dart';
 import '../../../core/labels.dart';
+import '../../../core/location_picker.dart';
 import '../../../core/qr.dart';
 import '../../../core/responsive.dart';
 import '../application/transport_controller.dart';
@@ -86,6 +88,14 @@ class _AddTransportScreenState extends ConsumerState<AddTransportScreen> {
   String? _trim(TextEditingController c) =>
       c.text.trim().isEmpty ? null : c.text.trim();
 
+  Future<void> _pickInto(TextEditingController c) async {
+    final GeoResult? r = await showLocationPicker(context,
+        initialName: c.text.trim().isEmpty ? null : c.text.trim());
+    if (r != null) {
+      setState(() => c.text = r.name.isEmpty ? r.displayName : r.name);
+    }
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -121,7 +131,9 @@ class _AddTransportScreenState extends ConsumerState<AddTransportScreen> {
         );
       }
       if (mounted) {
-        context.go('/trips/${widget.tripRid}/transports');
+        context.canPop()
+            ? context.pop()
+            : context.go('/trips/${widget.tripRid}/transports');
       }
     } catch (error) {
       if (mounted) {
@@ -168,15 +180,27 @@ class _AddTransportScreenState extends ConsumerState<AddTransportScreen> {
                 TextFormField(
                   controller: _from,
                   decoration: InputDecoration(
-                      labelText: l10n.transportFrom,
-                      prefixIcon: const Icon(Icons.trip_origin)),
+                    labelText: l10n.transportFrom,
+                    prefixIcon: const Icon(Icons.trip_origin),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.map_outlined),
+                      tooltip: l10n.placePickLocation,
+                      onPressed: () => _pickInto(_from),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _to,
                   decoration: InputDecoration(
-                      labelText: l10n.transportTo,
-                      prefixIcon: const Icon(Icons.place_outlined)),
+                    labelText: l10n.transportTo,
+                    prefixIcon: const Icon(Icons.place_outlined),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.map_outlined),
+                      tooltip: l10n.placePickLocation,
+                      onPressed: () => _pickInto(_to),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 _DateTimeField(

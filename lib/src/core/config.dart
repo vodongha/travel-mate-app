@@ -26,6 +26,10 @@ class AppConfig {
   /// Community & support forum, opened from Settings.
   static const String communityUrl = 'https://vodongha.forumvi.com';
 
+  /// Publisher name + website, shown on the About screen.
+  static const String publisherName = 'Võ Đông Hà';
+  static const String publisherWebsite = 'https://vodongha.id.vn';
+
   /// Google OAuth **Web client ID** (from Google Cloud → Credentials). Required for Google Sign-In:
   /// on web it is the client id; on Android it is the `serverClientId` so the backend can verify the
   /// returned ID token. Supply with `--dart-define=GOOGLE_SERVER_CLIENT_ID=...`. Empty = Google
