@@ -50,46 +50,47 @@ class _WebGoogleButtonState extends State<_WebGoogleButton> {
     // restyled to match the app. So we draw the app's own Google button (identical to the mobile
     // OutlinedButton) and lay the real GIS button on top, fully transparent — on web it's a DOM
     // element above the Flutter canvas, so it still receives the click and runs the sign-in flow.
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final double width =
-            constraints.maxWidth.isFinite ? constraints.maxWidth : 360.0;
-        return SizedBox(
-          height: AppTheme.buttonHeight,
-          width: width,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // What the user sees — matches the rest of the app's buttons.
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: OutlinedButton.icon(
-                    onPressed: () {},
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(AppTheme.buttonHeight),
-                    ),
-                    icon: const Icon(Icons.g_mobiledata, size: 28),
-                    label: Text(l10n.authGoogle),
-                  ),
-                ),
-              ),
-              // The real (invisible) GIS button that actually handles the click.
-              Opacity(
-                opacity: 0.0,
-                child: web.renderButton(
-                  configuration: web.GSIButtonConfiguration(
-                    theme: web.GSIButtonTheme.outline,
-                    size: web.GSIButtonSize.large,
-                    text: web.GSIButtonText.continueWith,
-                    shape: web.GSIButtonShape.rectangular,
-                    minimumWidth: width,
-                  ),
-                ),
-              ),
-            ],
+    return Stack(
+      children: [
+        // Visual layer — matches the app's other buttons (and the mobile Google
+        // button). Ignores pointers so taps fall through to the GIS button above.
+        IgnorePointer(
+          child: OutlinedButton.icon(
+            onPressed: () {},
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(AppTheme.buttonHeight),
+            ),
+            icon: const Icon(Icons.g_mobiledata, size: 28),
+            label: Text(l10n.authGoogle),
           ),
-        );
-      },
+        ),
+        // Click layer — the real GIS button, stretched to fill the whole area and
+        // made all-but-invisible (a hair above 0 so the DOM element stays
+        // clickable). Tapping anywhere on the visible button hits it.
+        Positioned.fill(
+          child: Opacity(
+            opacity: 0.01,
+            child: LayoutBuilder(
+              builder: (context, constraints) => FittedBox(
+                fit: BoxFit.fill,
+                child: SizedBox(
+                  width: constraints.maxWidth,
+                  height: 40,
+                  child: web.renderButton(
+                    configuration: web.GSIButtonConfiguration(
+                      theme: web.GSIButtonTheme.outline,
+                      size: web.GSIButtonSize.large,
+                      text: web.GSIButtonText.continueWith,
+                      shape: web.GSIButtonShape.rectangular,
+                      minimumWidth: constraints.maxWidth,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
