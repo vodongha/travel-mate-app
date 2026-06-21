@@ -50,6 +50,35 @@ String tripStatusLabel(BuildContext context, String status) {
   }
 }
 
+/// The status to *display*, derived from the trip's dates so it updates itself
+/// automatically: before the start day it's PLANNING, between start and end
+/// (inclusive) ONGOING, after the end day COMPLETED. A trip explicitly marked
+/// CANCELLED stays cancelled. Falls back to the stored status when there are no
+/// dates to reason about.
+String tripEffectiveStatus(Trip trip) {
+  if (trip.status == 'CANCELLED') {
+    return 'CANCELLED';
+  }
+  final DateTime? start = trip.startDate;
+  final DateTime? end = trip.endDate;
+  if (start == null && end == null) {
+    return trip.status;
+  }
+  final DateTime now = DateTime.now();
+  final DateTime today = DateTime(now.year, now.month, now.day);
+  DateTime dayOf(DateTime d) => DateTime(d.year, d.month, d.day);
+  final DateTime? startDay = start == null ? null : dayOf(start);
+  final DateTime? endDay = end == null ? null : dayOf(end);
+  if (startDay != null && today.isBefore(startDay)) {
+    return 'PLANNING';
+  }
+  if (endDay != null && today.isAfter(endDay)) {
+    return 'COMPLETED';
+  }
+  // Within [start, end] inclusive (or started with no end set).
+  return 'ONGOING';
+}
+
 /// A colour for a trip status, drawn from the theme's colour scheme so it adapts
 /// to light/dark. Returns the (background, foreground) pair for a status chip.
 ({Color bg, Color fg}) tripStatusColors(BuildContext context, String status) {

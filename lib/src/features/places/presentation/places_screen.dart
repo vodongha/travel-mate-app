@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/actions.dart';
 import '../../../core/app_error.dart';
+import '../../../core/maps.dart';
 import '../../../core/app_error_view.dart';
 import '../../../core/labels.dart';
 import '../../../core/responsive.dart';
@@ -128,6 +129,13 @@ class PlacesScreen extends ConsumerWidget {
                               onPressed: () => _rowActions(context, ref, p),
                             ),
                             onTap: () => _rowActions(context, ref, p),
+                            // Long-press opens the place in Google Maps.
+                            onLongPress: () => openInGoogleMaps(
+                              context,
+                              lat: p.latitude,
+                              lng: p.longitude,
+                              query: p.address ?? p.name,
+                            ),
                           ),
                         );
                       },
