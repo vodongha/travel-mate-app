@@ -278,5 +278,9 @@
   "timelineUndated": "No time set",
   "expenseAttachEvent": "Attach to itinerary",
   "expenseNoEvent": "Not attached",
-  "timelineCosts": "Costs"
+  "timelineCosts": "Costs",
+  "ticketCode": "Ticket code or QR",
+  "ticketCodeHint": "Type a code or scan a QR",
+  "locationMyLocation": "My location",
+  "locationPermissionDenied": "Location permission denied"
 }
