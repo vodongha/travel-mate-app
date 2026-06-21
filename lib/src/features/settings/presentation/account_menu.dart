@@ -54,9 +54,9 @@ class AccountMenu extends ConsumerWidget {
       itemBuilder: (context) => [
         _item('profile', Icons.person_outline, l10n.settingsEditProfile),
         _item('settings', Icons.settings_outlined, l10n.navSettings),
-        _item('about', Icons.info_outline, l10n.about),
         _item('privacy', Icons.privacy_tip_outlined, l10n.settingsPrivacy),
         _item('community', Icons.forum_outlined, l10n.settingsCommunity),
+        _item('about', Icons.info_outline, l10n.about),
         const PopupMenuDivider(),
         _item('logout', Icons.logout, l10n.actionLogout),
         _item(

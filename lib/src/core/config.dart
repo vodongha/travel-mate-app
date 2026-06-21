@@ -26,6 +26,11 @@ class AppConfig {
   /// Community & support forum, opened from Settings.
   static const String communityUrl = 'https://vodongha.forumvi.com';
 
+  /// Android application id + its Play Store listing (opened when tapping the version).
+  static const String androidAppId = 'vn.trippo.mate';
+  static const String playStoreUrl =
+      'https://play.google.com/store/apps/details?id=vn.trippo.mate';
+
   /// Publisher name + website, shown on the About screen.
   static const String publisherName = 'Võ Đông Hà';
   static const String publisherWebsite = 'https://vodongha.id.vn';
