@@ -272,5 +272,8 @@
   "placePickLocation": "Chọn trên bản đồ",
   "placesMapTitle": "Bản đồ địa điểm",
   "placesMapEmpty": "Chưa có địa điểm nào có vị trí",
-  "placesMapAction": "Bản đồ"
+  "placesMapAction": "Bản đồ",
+  "placePickNew": "Tìm địa điểm mới trên bản đồ",
+  "eventLocation": "Địa điểm",
+  "timelineUndated": "Chưa đặt giờ"
 }

@@ -9,6 +9,8 @@ import '../../../core/form_buttons.dart';
 import '../../../core/labels.dart';
 import '../../../core/responsive.dart';
 import '../../auth/presentation/auth_validators.dart';
+import '../../places/application/place_controller.dart';
+import '../../places/presentation/place_picker.dart';
 import '../application/events_controller.dart';
 import '../data/event_repository.dart';
 
@@ -29,6 +31,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
   String _eventType = 'ACTIVITY';
   DateTime? _start;
   DateTime? _end;
+  String? _placeRid;
   bool _submitting = false;
 
   bool get _editing => widget.existing != null;
@@ -43,6 +46,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
       _eventType = e.eventType;
       _start = e.startTime?.toLocal();
       _end = e.endTime?.toLocal();
+      _placeRid = e.placeRid;
     }
   }
 
@@ -93,6 +97,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
           eventType: _eventType,
           startTimeUtc: _start!.toUtc(),
           endTimeUtc: _end?.toUtc(),
+          placeRid: _placeRid,
           note: _note.text.trim(),
         );
       } else {
@@ -101,6 +106,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
           eventType: _eventType,
           startTimeUtc: _start!.toUtc(),
           endTimeUtc: _end?.toUtc(),
+          placeRid: _placeRid,
           note: _note.text.trim(),
         );
       }
@@ -124,9 +130,23 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
+    final ColorScheme scheme = Theme.of(context).colorScheme;
     final DateFormat fmt =
         DateFormat.MMMEd(Localizations.localeOf(context).toLanguageTag())
             .add_Hm();
+    // Resolve the linked place's name for display (the event only stores its rid).
+    final List<dynamic> places =
+        ref.watch(placeControllerProvider(widget.tripRid)).valueOrNull ??
+            const [];
+    String? placeName;
+    if (_placeRid != null) {
+      for (final p in places) {
+        if (p.rid == _placeRid) {
+          placeName = p.name as String;
+          break;
+        }
+      }
+    }
     return Scaffold(
       appBar:
           AppBar(title: Text(_editing ? l10n.eventEditTitle : l10n.eventNew)),
@@ -177,6 +197,39 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                       setState(() => _end = d);
                     }
                   },
+                ),
+                const SizedBox(height: 16),
+                // Attach a location (a trip place) — picked on the map, not typed.
+                InkWell(
+                  onTap: () async {
+                    final picked =
+                        await showTripPlacePicker(context, widget.tripRid);
+                    if (picked != null) {
+                      setState(() => _placeRid = picked.rid);
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(14),
+                  child: InputDecorator(
+                    decoration: InputDecoration(
+                      labelText: l10n.eventLocation,
+                      prefixIcon: const Icon(Icons.place_outlined),
+                      suffixIcon: _placeRid == null
+                          ? const Icon(Icons.chevron_right)
+                          : IconButton(
+                              icon: const Icon(Icons.clear),
+                              tooltip: l10n.actionRemove,
+                              onPressed: () => setState(() => _placeRid = null),
+                            ),
+                    ),
+                    child: Text(
+                      placeName ?? l10n.placePickLocation,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: placeName == null
+                          ? TextStyle(color: scheme.onSurfaceVariant)
+                          : null,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 TextFormField(

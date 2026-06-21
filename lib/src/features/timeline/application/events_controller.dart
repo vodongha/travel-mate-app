@@ -15,6 +15,7 @@ class EventsController extends FamilyAsyncNotifier<List<EventItem>, String> {
     required String eventType,
     required DateTime startTimeUtc,
     DateTime? endTimeUtc,
+    String? placeRid,
     String? note,
   }) async {
     await _repo.create(
@@ -23,6 +24,7 @@ class EventsController extends FamilyAsyncNotifier<List<EventItem>, String> {
       eventType: eventType,
       startTimeUtc: startTimeUtc,
       endTimeUtc: endTimeUtc,
+      placeRid: placeRid,
       note: note,
     );
     ref.invalidateSelf();
@@ -36,6 +38,7 @@ class EventsController extends FamilyAsyncNotifier<List<EventItem>, String> {
     required String eventType,
     required DateTime startTimeUtc,
     DateTime? endTimeUtc,
+    String? placeRid,
     String? note,
   }) async {
     await _repo.update(
@@ -45,6 +48,7 @@ class EventsController extends FamilyAsyncNotifier<List<EventItem>, String> {
       eventType: eventType,
       startTimeUtc: startTimeUtc,
       endTimeUtc: endTimeUtc,
+      placeRid: placeRid,
       note: note,
     );
     ref.invalidateSelf();
