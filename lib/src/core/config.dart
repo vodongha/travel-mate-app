@@ -4,13 +4,21 @@
 /// backend for web / iOS simulator (`http://localhost:8000`). From an **Android emulator** use
 /// `--dart-define=API_BASE_URL=http://10.0.2.2:8000` (10.0.2.2 maps to the host's localhost); for a
 /// physical device use the host LAN IP; in production point it at the deployed backend.
+///
+/// The production **web** client is served by the backend on the same origin, so it's built with
+/// `--dart-define=SAME_ORIGIN=true` and uses relative URLs — it then works on any host (the
+/// fly.dev URL and trippo.io.vn alike) with no CORS. Mobile builds pass an absolute API_BASE_URL.
 class AppConfig {
   const AppConfig._();
 
-  static const String apiBaseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'http://localhost:8000',
-  );
+  /// When true, call the API on the same origin that served the app (relative URLs). Set for the
+  /// production web build.
+  static const bool sameOrigin = bool.fromEnvironment('SAME_ORIGIN');
+
+  static String get apiBaseUrl => sameOrigin
+      ? ''
+      : const String.fromEnvironment('API_BASE_URL',
+          defaultValue: 'http://localhost:8000');
 
   /// API base path — every endpoint is nested under this (backend SPEC §4).
   static const String apiPrefix = '/api/v1';
