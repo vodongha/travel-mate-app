@@ -112,8 +112,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2.4))
                         : Text(l10n.actionSignIn),
                   ),
-                  const SizedBox(height: 8),
-                  TextButton(
+                  const SizedBox(height: 12),
+                  // Secondary action, same size/radius as the primary button.
+                  FilledButton.tonal(
                     onPressed:
                         _submitting ? null : () => context.go('/register'),
                     child: Text(l10n.authNeedAccount),
