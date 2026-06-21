@@ -24,6 +24,7 @@ class ExpenseItem {
     required this.amount,
     required this.amountBase,
     this.spentAt,
+    this.eventRid,
   });
 
   final String rid;
@@ -34,6 +35,9 @@ class ExpenseItem {
   final num amount;
   final num amountBase;
   final DateTime? spentAt;
+
+  /// The timeline event this expense is attached to, or null (a standalone expense).
+  final String? eventRid;
 
   factory ExpenseItem.fromJson(Map<String, dynamic> json) {
     final Object? spent = json['spentAt'];
@@ -46,6 +50,7 @@ class ExpenseItem {
       amount: (json['amount'] as num?) ?? 0,
       amountBase: (json['amountBase'] as num?) ?? 0,
       spentAt: spent is String ? DateTime.tryParse(spent) : null,
+      eventRid: json['eventRid'] as String?,
     );
   }
 }
@@ -79,6 +84,7 @@ class ExpenseRepository {
     required String splitType,
     required List<ParticipantInput> participants,
     required String spentAtIso,
+    String? eventRid,
   }) async {
     try {
       await _dio.post<dynamic>('/trips/$tripRid/expenses', data: {
@@ -92,6 +98,7 @@ class ExpenseRepository {
         'splitType': splitType,
         'participants': participants.map((p) => p.toJson()).toList(),
         'spentAt': spentAtIso,
+        if (eventRid != null && eventRid.isNotEmpty) 'eventRid': eventRid,
       });
     } on DioException catch (e) {
       throw toApiException(e);
