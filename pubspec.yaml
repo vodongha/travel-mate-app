@@ -59,7 +59,22 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
   generate: true
+
+# App launcher icons + web favicon (run: dart run flutter_launcher_icons).
+# Source art lives in assets/icon/ (a location pin on an indigo gradient).
+flutter_launcher_icons:
+  android: "ic_launcher"
+  image_path: "assets/icon/icon.png"
+  adaptive_icon_background: "#4F46E5"
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+  min_sdk_android: 21
+  web:
+    generate: true
+    image_path: "assets/icon/icon.png"
+    background_color: "#4F46E5"
+    theme_color: "#4F46E5"
