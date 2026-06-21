@@ -6,7 +6,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error.dart';
 import '../../../core/form_buttons.dart';
 import '../../../core/labels.dart';
-import '../../../core/qr.dart';
+import '../../../core/qr_scan_screen.dart';
 import '../../../core/responsive.dart';
 import '../../members/application/members_controller.dart';
 import '../../members/domain/member.dart';
@@ -31,8 +31,8 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
   final _formKey = GlobalKey<FormState>();
   final _title = TextEditingController();
   final _note = TextEditingController();
+  final _code = TextEditingController();
   String _type = 'OTHER';
-  String? _qrData;
   // null ⇒ "myself" (server omits memberRid); otherwise the chosen member's rid.
   String? _memberRid;
   bool _submitting = false;
@@ -47,7 +47,7 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
       _title.text = t.title;
       _note.text = t.note ?? '';
       _type = t.ticketType;
-      _qrData = t.qrData;
+      _code.text = t.qrData ?? '';
       _memberRid = t.mine ? null : t.memberRid;
     }
   }
@@ -56,11 +56,21 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
   void dispose() {
     _title.dispose();
     _note.dispose();
+    _code.dispose();
     super.dispose();
   }
 
   String? _trim(TextEditingController c) =>
       c.text.trim().isEmpty ? null : c.text.trim();
+
+  Future<void> _scanCode() async {
+    final String? code = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (_) => const QrScanScreen()),
+    );
+    if (code != null && code.isNotEmpty) {
+      setState(() => _code.text = code);
+    }
+  }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
@@ -76,7 +86,7 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
           memberRid: _memberRid,
           title: _title.text.trim(),
           ticketType: _type,
-          qrData: _qrData,
+          qrData: _trim(_code),
           note: _trim(_note),
         );
       } else {
@@ -84,7 +94,7 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
           memberRid: _memberRid,
           title: _title.text.trim(),
           ticketType: _type,
-          qrData: _qrData,
+          qrData: _trim(_code),
           note: _trim(_note),
         );
       }
@@ -148,9 +158,19 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
                   onChanged: (v) => setState(() => _type = v ?? 'OTHER'),
                 ),
                 const SizedBox(height: 16),
-                QrField(
-                  value: _qrData,
-                  onChanged: (v) => setState(() => _qrData = v),
+                // A ticket can be a plain code (typed) or a scanned QR string.
+                TextFormField(
+                  controller: _code,
+                  decoration: InputDecoration(
+                    labelText: l10n.ticketCode,
+                    hintText: l10n.ticketCodeHint,
+                    prefixIcon: const Icon(Icons.qr_code_2),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.qr_code_scanner),
+                      tooltip: l10n.qrScan,
+                      onPressed: _scanCode,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 if (canAssign)
