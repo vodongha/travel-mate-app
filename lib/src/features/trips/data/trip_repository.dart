@@ -59,6 +59,7 @@ class TripRepository {
     String? destination,
     DateTime? startDate,
     DateTime? endDate,
+    String? status,
   }) async {
     try {
       final Response<dynamic> res =
@@ -68,6 +69,7 @@ class TripRepository {
         'destination': destination ?? '',
         if (startDate != null) 'startDate': _isoDate(startDate),
         if (endDate != null) 'endDate': _isoDate(endDate),
+        if (status != null) 'status': status,
       });
       return Trip.fromJson(_data(res));
     } on DioException catch (e) {
