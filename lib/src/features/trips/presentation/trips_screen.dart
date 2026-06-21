@@ -10,12 +10,50 @@ import '../application/trips_controller.dart';
 import '../domain/trip.dart';
 import 'trip_format.dart';
 
-/// The signed-in landing screen: the user's trips, with a button to create one.
-class TripsScreen extends ConsumerWidget {
+/// The signed-in landing screen: the user's trips, with search, a status filter
+/// and a button to create one.
+class TripsScreen extends ConsumerStatefulWidget {
   const TripsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TripsScreen> createState() => _TripsScreenState();
+}
+
+/// null = "All"; otherwise a TripStatus value.
+const List<String> _statusFilters = [
+  'PLANNING',
+  'ONGOING',
+  'COMPLETED',
+  'CANCELLED'
+];
+
+class _TripsScreenState extends ConsumerState<TripsScreen> {
+  final TextEditingController _search = TextEditingController();
+  String _query = '';
+  String? _status;
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  List<Trip> _filter(List<Trip> list) {
+    final String q = _query.trim().toLowerCase();
+    return list.where((t) {
+      if (_status != null && t.status != _status) {
+        return false;
+      }
+      if (q.isEmpty) {
+        return true;
+      }
+      return t.name.toLowerCase().contains(q) ||
+          (t.destination?.toLowerCase().contains(q) ?? false);
+    }).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final AsyncValue<List<Trip>> trips = ref.watch(tripsControllerProvider);
     return Scaffold(
@@ -44,19 +82,142 @@ class TripsScreen extends ConsumerWidget {
               error: e,
               onRetry: () => ref.invalidate(tripsControllerProvider),
             ),
-            data: (list) => RefreshIndicator(
-              onRefresh: () async => ref.invalidate(tripsControllerProvider),
-              child: list.isEmpty
-                  ? _EmptyState(l10n: l10n)
-                  : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-                      itemCount: list.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
-                      itemBuilder: (context, i) => _TripCard(trip: list[i]),
+            data: (list) {
+              if (list.isEmpty) {
+                return _EmptyState(l10n: l10n);
+              }
+              final List<Trip> filtered = _filter(list);
+              return Column(
+                children: [
+                  _TripsToolbar(
+                    controller: _search,
+                    status: _status,
+                    onQuery: (v) => setState(() => _query = v),
+                    onStatus: (s) => setState(() => _status = s),
+                  ),
+                  Expanded(
+                    child: RefreshIndicator(
+                      onRefresh: () async =>
+                          ref.invalidate(tripsControllerProvider),
+                      child: filtered.isEmpty
+                          ? ListView(
+                              children: [
+                                const SizedBox(height: 80),
+                                Center(
+                                    child: Text(l10n.tripsNoMatch,
+                                        style: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurfaceVariant))),
+                              ],
+                            )
+                          : ListView.separated(
+                              padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
+                              itemCount: filtered.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 12),
+                              itemBuilder: (context, i) =>
+                                  _TripCard(trip: filtered[i]),
+                            ),
                     ),
-            ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Search field + horizontally scrollable status filter chips.
+class _TripsToolbar extends StatelessWidget {
+  const _TripsToolbar({
+    required this.controller,
+    required this.status,
+    required this.onQuery,
+    required this.onStatus,
+  });
+
+  final TextEditingController controller;
+  final String? status;
+  final ValueChanged<String> onQuery;
+  final ValueChanged<String?> onStatus;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Column(
+        children: [
+          TextField(
+            controller: controller,
+            onChanged: onQuery,
+            textInputAction: TextInputAction.search,
+            decoration: InputDecoration(
+              hintText: l10n.tripsSearchHint,
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: controller.text.isEmpty
+                  ? null
+                  : IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        controller.clear();
+                        onQuery('');
+                      },
+                    ),
+              filled: true,
+              isDense: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 36,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                _Chip(
+                  label: l10n.filterAll,
+                  selected: status == null,
+                  onTap: () => onStatus(null),
+                ),
+                for (final String s in _statusFilters)
+                  _Chip(
+                    label: tripStatusLabel(context, s),
+                    selected: status == s,
+                    onTap: () => onStatus(s),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Chip extends StatelessWidget {
+  const _Chip(
+      {required this.label, required this.selected, required this.onTap});
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: ChoiceChip(
+        label: Text(label),
+        selected: selected,
+        onSelected: (_) => onTap(),
       ),
     );
   }
