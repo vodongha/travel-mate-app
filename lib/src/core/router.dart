@@ -21,6 +21,7 @@ import '../features/members/presentation/invite_screen.dart';
 import '../features/members/presentation/members_screen.dart';
 import '../features/places/data/place_repository.dart';
 import '../features/places/presentation/add_place_screen.dart';
+import '../features/places/presentation/places_map_screen.dart';
 import '../features/places/presentation/places_screen.dart';
 import '../features/report/presentation/report_screen.dart';
 import '../features/settings/presentation/about_screen.dart';
@@ -204,6 +205,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/trips/:rid/accommodations',
         builder: (context, state) =>
             AccommodationScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/places/map',
+        builder: (context, state) =>
+            PlacesMapScreen(tripRid: state.pathParameters['rid']!),
       ),
       GoRoute(
         path: '/trips/:rid/places/new',
