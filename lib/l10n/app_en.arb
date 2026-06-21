@@ -263,5 +263,14 @@
   "tkACCOMMODATION": "Accommodation",
   "tkSIGHTSEEING": "Sightseeing",
   "tkEVENT": "Event",
-  "tkOTHER": "Other"
+  "tkOTHER": "Other",
+  "locationPickTitle": "Choose location",
+  "locationSearchHint": "Search for a place…",
+  "locationUse": "Use this location",
+  "locationTapHint": "Tap the map to drop a pin",
+  "placeLocation": "Location",
+  "placePickLocation": "Pick on map",
+  "placesMapTitle": "Places map",
+  "placesMapEmpty": "No places with a location yet",
+  "placesMapAction": "Map"
 }

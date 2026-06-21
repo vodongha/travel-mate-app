@@ -42,6 +42,9 @@ dependencies:
   phone_form_field: ^10.0.17
   # Scan a ticket QR into its decoded string (camera). We store the string, render on view.
   mobile_scanner: ^5.2.3
+  # OpenStreetMap map for trip places (no API key needed). latlong2 supplies LatLng.
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
   # Google Sign-In: returns a Google ID token the backend verifies (POST /auth/google).
   google_sign_in: ^6.2.2
   # Web Google Sign-In uses Google Identity Services' rendered button (web_only.renderButton).
