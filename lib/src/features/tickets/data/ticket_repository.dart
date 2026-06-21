@@ -15,6 +15,7 @@ class Ticket {
     required this.title,
     required this.ticketType,
     this.qrData,
+    this.seat,
     this.note,
   });
 
@@ -25,6 +26,7 @@ class Ticket {
   final String title;
   final String ticketType;
   final String? qrData;
+  final String? seat;
   final String? note;
 
   factory Ticket.fromJson(Map<String, dynamic> json) {
@@ -36,6 +38,7 @@ class Ticket {
       title: json['title'] as String? ?? '',
       ticketType: json['ticketType'] as String? ?? 'OTHER',
       qrData: json['qrData'] as String?,
+      seat: json['seat'] as String?,
       note: json['note'] as String?,
     );
   }
