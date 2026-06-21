@@ -60,14 +60,6 @@ class SettingsScreen extends ConsumerWidget {
                 title: Text(l10n.settingsChangePassword),
                 onTap: () => showChangePassword(context, ref),
               ),
-              _label(context, l10n.settingsAbout),
-              ListTile(
-                leading: const Icon(Icons.forum_outlined),
-                title: Text(l10n.settingsCommunity),
-                trailing: const Icon(Icons.open_in_new, size: 18),
-                onTap: () => openWebPage(
-                    context, l10n.settingsCommunity, AppConfig.communityUrl),
-              ),
               const _VersionTile(),
             ],
           ),
