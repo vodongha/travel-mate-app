@@ -230,5 +230,23 @@
   "ptOTHER": "Khác",
   "authOr": "hoặc",
   "authGoogle": "Tiếp tục với Google",
-  "googleNotConfigured": "Đăng nhập Google chưa được cấu hình."
+  "googleNotConfigured": "Đăng nhập Google chưa được cấu hình.",
+  "about": "Giới thiệu",
+  "aboutBlurb": "Lên kế hoạch cho chuyến đi nhóm và chia sẻ chi phí cùng nhau — lịch trình, địa điểm, di chuyển, chỗ ở và quyết toán công bằng, tất cả trong một ứng dụng.",
+  "aboutPublisher": "Nhà phát hành",
+  "aboutWebsite": "Trang web",
+  "aboutLicense": "Phát hành theo Giấy phép MIT.",
+  "tripStatusPlanning": "Đang lên kế hoạch",
+  "tripStatusOngoing": "Đang diễn ra",
+  "tripStatusCompleted": "Đã hoàn thành",
+  "tripStatusCancelled": "Đã hủy",
+  "tripCountdownIn": "còn {days, plural, other{{days} ngày}}",
+  "@tripCountdownIn": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "tripCountdownStartsToday": "Bắt đầu hôm nay",
+  "tripCountdownOngoing": "Đang diễn ra",
+  "tripCountdownEnded": "Đã kết thúc"
 }

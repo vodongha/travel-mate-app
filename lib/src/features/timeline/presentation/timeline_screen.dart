@@ -24,7 +24,7 @@ class TimelineScreen extends ConsumerWidget {
       return;
     }
     if (action == RowAction.edit) {
-      context.go('/trips/$tripRid/timeline/${event.rid}/edit', extra: event);
+      context.push('/trips/$tripRid/timeline/${event.rid}/edit', extra: event);
       return;
     }
     if (!await confirmDelete(context) || !context.mounted) {
@@ -50,7 +50,7 @@ class TimelineScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navTimeline)),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.go('/trips/$tripRid/timeline/new'),
+        onPressed: () => context.push('/trips/$tripRid/timeline/new'),
         icon: const Icon(Icons.add),
         label: Text(l10n.eventNew),
       ),

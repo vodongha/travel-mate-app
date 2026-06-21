@@ -101,7 +101,9 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
         );
       }
       if (mounted) {
-        context.go('/trips/${widget.tripRid}/places');
+        context.canPop()
+            ? context.pop()
+            : context.go('/trips/${widget.tripRid}/places');
       }
     } catch (error) {
       if (mounted) {
