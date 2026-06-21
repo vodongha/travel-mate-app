@@ -6,6 +6,7 @@ import '../features/accommodation/data/accommodation_repository.dart';
 import '../features/accommodation/presentation/accommodation_screen.dart';
 import '../features/accommodation/presentation/add_accommodation_screen.dart';
 import '../features/auth/application/auth_controller.dart';
+import '../features/auth/presentation/edit_profile_screen.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
 import '../features/budget/presentation/budget_screen.dart';
@@ -99,6 +100,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             AcceptInviteScreen(token: state.uri.queryParameters['token']),
       ),
       GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
+      GoRoute(path: '/profile', builder: (_, __) => const EditProfileScreen()),
       GoRoute(path: '/about', builder: (_, __) => const AboutScreen()),
       GoRoute(
         path: '/web',

@@ -13,7 +13,19 @@ class QrScanScreen extends StatefulWidget {
 }
 
 class _QrScanScreenState extends State<QrScanScreen> {
+  // An explicit controller (auto-starts the camera + requests permission) and a dispose, so the
+  // camera reliably opens/closes across pushes — and errorBuilder surfaces why if it can't.
+  final MobileScannerController _controller = MobileScannerController(
+    formats: const [BarcodeFormat.qrCode],
+    detectionSpeed: DetectionSpeed.noDuplicates,
+  );
   bool _handled = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   void _onDetect(BarcodeCapture capture) {
     if (_handled || capture.barcodes.isEmpty) {
@@ -34,7 +46,27 @@ class _QrScanScreenState extends State<QrScanScreen> {
       body: Stack(
         alignment: Alignment.bottomCenter,
         children: [
-          MobileScanner(onDetect: _onDetect),
+          MobileScanner(
+            controller: _controller,
+            onDetect: _onDetect,
+            errorBuilder: (context, error, child) => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.no_photography_outlined, size: 48),
+                    const SizedBox(height: 16),
+                    Text(l10n.qrCameraError, textAlign: TextAlign.center),
+                    const SizedBox(height: 8),
+                    Text('(${error.errorCode.name})',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodySmall),
+                  ],
+                ),
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.all(24),
             child: Container(
