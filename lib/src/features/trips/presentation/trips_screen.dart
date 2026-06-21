@@ -24,7 +24,7 @@ class TripsScreen extends ConsumerWidget {
         actions: [
           IconButton(
             tooltip: l10n.inviteJoinTitle,
-            icon: const Icon(Icons.group_add_outlined),
+            icon: const Icon(Icons.airplane_ticket_outlined),
             onPressed: () => context.push('/join'),
           ),
           const AccountMenu(),
