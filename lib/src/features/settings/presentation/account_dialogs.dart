@@ -8,39 +8,11 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/actions.dart';
 import '../../../core/app_error.dart';
 import '../../../core/form_buttons.dart';
-import '../../../core/phone_field.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../auth/domain/auth_user.dart';
 
-/// Shared account actions used by both the avatar menu and the Settings screen.
-
-Future<void> showEditProfile(BuildContext context, WidgetRef ref) async {
-  final AuthUser? user = ref.read(authControllerProvider).valueOrNull;
-  if (user == null) {
-    return;
-  }
-  final _ProfileResult? result = await showDialog<_ProfileResult>(
-    context: context,
-    builder: (_) => _EditProfileDialog(user: user),
-  );
-  if (result == null) {
-    return;
-  }
-  try {
-    await ref
-        .read(authControllerProvider.notifier)
-        .saveProfile(name: result.name, phone: result.phone);
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).settingsSaved)));
-    }
-  } catch (error) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(friendlyError(context, error))));
-    }
-  }
-}
+/// Shared account actions used by both the avatar menu and the Settings screen. (Edit profile is its
+/// own screen now — see EditProfileScreen.)
 
 Future<void> showChangePassword(BuildContext context, WidgetRef ref) async {
   final AuthUser? user = ref.read(authControllerProvider).valueOrNull;
@@ -122,81 +94,6 @@ class WebPageArgs {
 }
 
 // ── dialogs ──────────────────────────────────────────────────────────────────
-
-class _ProfileResult {
-  const _ProfileResult(this.name, this.phone);
-  final String name;
-  final String phone; // '' clears the phone on the server
-}
-
-class _EditProfileDialog extends StatefulWidget {
-  const _EditProfileDialog({required this.user});
-  final AuthUser user;
-
-  @override
-  State<_EditProfileDialog> createState() => _EditProfileDialogState();
-}
-
-class _EditProfileDialogState extends State<_EditProfileDialog> {
-  final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _name =
-      TextEditingController(text: widget.user.name);
-  String? _phone;
-
-  @override
-  void initState() {
-    super.initState();
-    _phone = widget.user.phone;
-  }
-
-  @override
-  void dispose() {
-    _name.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final AppLocalizations l10n = AppLocalizations.of(context);
-    return AlertDialog(
-      title: Text(l10n.settingsEditProfile),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _name,
-                decoration: InputDecoration(labelText: l10n.authName),
-                validator: (v) => (v == null || v.trim().isEmpty)
-                    ? l10n.validationRequired
-                    : null,
-              ),
-              const SizedBox(height: 12),
-              AppPhoneField(
-                initialE164: widget.user.phone,
-                label: l10n.settingsPhone,
-                invalidMessage: l10n.validationRequired,
-                onChanged: (e164) => _phone = e164,
-              ),
-              const SizedBox(height: 20),
-              FormButtons(
-                primaryLabel: l10n.actionSave,
-                onPrimary: () {
-                  if (_formKey.currentState!.validate()) {
-                    Navigator.pop(context,
-                        _ProfileResult(_name.text.trim(), _phone ?? ''));
-                  }
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _PasswordResult {
   const _PasswordResult(this.current, this.next);
