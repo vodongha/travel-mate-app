@@ -110,8 +110,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/trips/:rid/expenses/new',
-        builder: (context, state) =>
-            AddExpenseScreen(tripRid: state.pathParameters['rid']!),
+        builder: (context, state) => AddExpenseScreen(
+          tripRid: state.pathParameters['rid']!,
+          // Optional: pre-attach to a timeline event (passed from the timeline "+ expense").
+          eventRid: state.extra as String?,
+        ),
       ),
       GoRoute(
         path: '/trips/:rid/expenses/:expenseRid/edit',
