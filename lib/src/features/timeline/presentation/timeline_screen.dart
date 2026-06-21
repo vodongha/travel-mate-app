@@ -8,6 +8,7 @@ import '../../../core/actions.dart';
 import '../../../core/app_error.dart';
 import '../../../core/app_error_view.dart';
 import '../../../core/labels.dart';
+import '../../../core/maps.dart';
 import '../../../core/money.dart';
 import '../../../core/responsive.dart';
 import '../../accommodation/application/accommodation_controller.dart';
@@ -31,6 +32,7 @@ class _Entry {
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.onLongPress,
   });
 
   final DateTime? when; // local time, null = no time set
@@ -38,6 +40,7 @@ class _Entry {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress; // e.g. open the entry's place in Google Maps
 }
 
 class TimelineScreen extends ConsumerWidget {
@@ -150,8 +153,8 @@ class TimelineScreen extends ConsumerWidget {
     String baseCurrency,
   ) {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    final Map<String, String> placeNames = {
-      for (final PlaceItem p in places) p.rid: p.name
+    final Map<String, PlaceItem> placeByRid = {
+      for (final PlaceItem p in places) p.rid: p
     };
     // Sum each event's attached expenses (already in the trip's base currency).
     final Map<String, num> costByEvent = {};
@@ -164,7 +167,7 @@ class TimelineScreen extends ConsumerWidget {
     final List<_Entry> entries = [];
 
     for (final EventItem e in events) {
-      final String? place = e.placeRid == null ? null : placeNames[e.placeRid];
+      final PlaceItem? pl = e.placeRid == null ? null : placeByRid[e.placeRid];
       final num cost = costByEvent[e.rid] ?? 0;
       entries.add(_Entry(
         when: e.startTime?.toLocal(),
@@ -172,10 +175,15 @@ class TimelineScreen extends ConsumerWidget {
         title: e.title,
         subtitle: [
           Labels.eventType(context, e.eventType),
-          if (place != null && place.isNotEmpty) place,
+          if (pl != null && pl.name.isNotEmpty) pl.name,
           if (cost > 0) Money.format(cost, baseCurrency),
         ].join(' · '),
         onTap: () => _eventActions(context, ref, e),
+        // Long-press an event with a place → open it in Google Maps.
+        onLongPress: pl == null
+            ? null
+            : () => openInGoogleMaps(context,
+                lat: pl.latitude, lng: pl.longitude, query: pl.name),
       ));
     }
     for (final TransportItem t in transports) {
@@ -286,6 +294,24 @@ class _DayTimeline extends StatelessWidget {
     final DateFormat dayFmt = DateFormat.yMMMMEEEEd(locale);
     final DateTime now = DateTime.now();
 
+    // Find the entry happening "now" (the last one that has already started
+    // today) and the next upcoming one, so we can make them stand out.
+    bool sameDay(DateTime a, DateTime b) =>
+        a.year == b.year && a.month == b.month && a.day == b.day;
+    _Entry? currentEntry;
+    _Entry? nextEntry;
+    for (final _Entry e in entries) {
+      final DateTime? w = e.when;
+      if (w == null) {
+        continue;
+      }
+      if (w.isAfter(now)) {
+        nextEntry ??= e;
+      } else if (sameDay(w, now)) {
+        currentEntry = e;
+      }
+    }
+
     // Group consecutive (already time-sorted) entries by calendar day.
     final List<Widget> children = [];
     String? currentKey;
@@ -306,7 +332,8 @@ class _DayTimeline extends StatelessWidget {
           entry: e,
           isFirst: i == 0,
           isLast: i == bucket.length - 1,
-          highlight: e.when != null && !e.when!.isBefore(now) && i == 0,
+          isCurrent: identical(e, currentEntry),
+          isNext: identical(e, nextEntry),
         ));
       }
       bucket = [];
@@ -345,21 +372,38 @@ class _TimelineTile extends StatelessWidget {
     required this.entry,
     required this.isFirst,
     required this.isLast,
-    required this.highlight,
+    required this.isCurrent,
+    required this.isNext,
   });
 
   final _Entry entry;
   final bool isFirst;
   final bool isLast;
-  final bool highlight;
+  final bool isCurrent;
+  final bool isNext;
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     final ColorScheme scheme = Theme.of(context).colorScheme;
     final String locale = Localizations.localeOf(context).toLanguageTag();
     final String time =
         entry.when == null ? '' : DateFormat.Hm(locale).format(entry.when!);
     final Color line = scheme.outlineVariant;
+    final bool highlight = isCurrent || isNext;
+
+    // The "now" item uses the primary accent; the next upcoming one the
+    // tertiary accent, so the two are visually distinct from each other.
+    final Color dotColor = isCurrent
+        ? scheme.primary
+        : isNext
+            ? scheme.tertiary
+            : scheme.tertiary.withValues(alpha: 0.55);
+    final Color? cardColor = isCurrent
+        ? scheme.primaryContainer
+        : isNext
+            ? scheme.tertiaryContainer
+            : null;
 
     return IntrinsicHeight(
       child: Row(
@@ -373,10 +417,10 @@ class _TimelineTile extends StatelessWidget {
                     child: Container(
                         width: 2, color: isFirst ? Colors.transparent : line)),
                 Container(
-                  width: 14,
-                  height: 14,
+                  width: highlight ? 16 : 14,
+                  height: highlight ? 16 : 14,
                   decoration: BoxDecoration(
-                    color: highlight ? scheme.primary : scheme.tertiary,
+                    color: dotColor,
                     shape: BoxShape.circle,
                     border: Border.all(color: scheme.surface, width: 2),
                   ),
@@ -392,11 +436,27 @@ class _TimelineTile extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Card(
-                color: highlight ? scheme.primaryContainer : null,
+                color: cardColor,
                 child: ListTile(
                   leading: Icon(entry.icon),
-                  title: Text(entry.title,
-                      maxLines: 1, overflow: TextOverflow.ellipsis),
+                  title: Row(
+                    children: [
+                      Flexible(
+                        child: Text(entry.title,
+                            maxLines: 1, overflow: TextOverflow.ellipsis),
+                      ),
+                      if (isCurrent || isNext)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: _NowChip(
+                            label: isCurrent
+                                ? l10n.timelineNow
+                                : l10n.timelineUpcoming,
+                            current: isCurrent,
+                          ),
+                        ),
+                    ],
+                  ),
                   subtitle: Text(
                     time.isEmpty ? entry.subtitle : '$time · ${entry.subtitle}',
                     maxLines: 1,
@@ -404,12 +464,38 @@ class _TimelineTile extends StatelessWidget {
                   ),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: entry.onTap,
+                  onLongPress: entry.onLongPress,
                 ),
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+/// A small "Happening now" / "Upcoming" badge on a highlighted timeline tile.
+class _NowChip extends StatelessWidget {
+  const _NowChip({required this.label, required this.current});
+
+  final String label;
+  final bool current;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final Color bg = current ? scheme.primary : scheme.tertiary;
+    final Color fg = current ? scheme.onPrimary : scheme.onTertiary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(label,
+          style:
+              TextStyle(color: fg, fontSize: 11, fontWeight: FontWeight.w600)),
     );
   }
 }

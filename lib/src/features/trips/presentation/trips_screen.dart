@@ -41,7 +41,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
   List<Trip> _filter(List<Trip> list) {
     final String q = _query.trim().toLowerCase();
     return list.where((t) {
-      if (_status != null && t.status != _status) {
+      if (_status != null && tripEffectiveStatus(t) != _status) {
         return false;
       }
       if (q.isEmpty) {
@@ -240,8 +240,10 @@ class _TripCard extends StatelessWidget {
     final ColorScheme scheme = Theme.of(context).colorScheme;
     final TextTheme text = Theme.of(context).textTheme;
     final bool hasDestination = trip.destination?.isNotEmpty == true;
+    // Status shown to the user is derived from the trip's dates (auto-updates).
+    final String effectiveStatus = tripEffectiveStatus(trip);
     final ({Color bg, Color fg}) statusColors =
-        tripStatusColors(context, trip.status);
+        tripStatusColors(context, effectiveStatus);
     final String? countdown = tripCountdown(context, trip);
 
     return Card(
@@ -307,7 +309,7 @@ class _TripCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   _StatusChip(
-                    label: tripStatusLabel(context, trip.status),
+                    label: tripStatusLabel(context, effectiveStatus),
                     bg: statusColors.bg,
                     fg: statusColors.fg,
                   ),
