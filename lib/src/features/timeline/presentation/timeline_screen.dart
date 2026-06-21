@@ -47,12 +47,45 @@ class TimelineScreen extends ConsumerWidget {
 
   Future<void> _eventActions(
       BuildContext context, WidgetRef ref, EventItem event) async {
-    final RowAction? action = await showRowActions(context, title: event.title);
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final String? action = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.add_card_outlined),
+              title: Text(l10n.expenseNew),
+              onTap: () => Navigator.pop(ctx, 'expense'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.edit_outlined),
+              title: Text(l10n.actionEdit),
+              onTap: () => Navigator.pop(ctx, 'edit'),
+            ),
+            ListTile(
+              leading: Icon(Icons.delete_outline,
+                  color: Theme.of(ctx).colorScheme.error),
+              title: Text(l10n.actionDelete,
+                  style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
+              onTap: () => Navigator.pop(ctx, 'delete'),
+            ),
+          ],
+        ),
+      ),
+    );
     if (action == null || !context.mounted) {
       return;
     }
-    if (action == RowAction.edit) {
+    if (action == 'edit') {
       context.push('/trips/$tripRid/timeline/${event.rid}/edit', extra: event);
+      return;
+    }
+    if (action == 'expense') {
+      // Pre-attach the new expense to this event.
+      context.push('/trips/$tripRid/expenses/new', extra: event.rid);
       return;
     }
     if (!await confirmDelete(context) || !context.mounted) {
