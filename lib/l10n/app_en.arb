@@ -275,5 +275,8 @@
   "placesMapAction": "Map",
   "placePickNew": "Search a new place on the map",
   "eventLocation": "Location",
-  "timelineUndated": "No time set"
+  "timelineUndated": "No time set",
+  "expenseAttachEvent": "Attach to itinerary",
+  "expenseNoEvent": "Not attached",
+  "timelineCosts": "Costs"
 }

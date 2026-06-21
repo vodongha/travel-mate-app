@@ -12,14 +12,19 @@ import '../../../core/labels.dart';
 import '../../../core/responsive.dart';
 import '../../members/application/members_controller.dart';
 import '../../members/domain/member.dart';
+import '../../timeline/application/events_controller.dart';
+import '../../timeline/data/event_repository.dart';
 import '../../trips/application/trips_controller.dart';
 import '../application/expenses_controller.dart';
 import '../data/expense_repository.dart';
 
 class AddExpenseScreen extends ConsumerStatefulWidget {
-  const AddExpenseScreen({super.key, required this.tripRid});
+  const AddExpenseScreen({super.key, required this.tripRid, this.eventRid});
 
   final String tripRid;
+
+  /// When opened from a timeline event, the expense is pre-attached to it.
+  final String? eventRid;
 
   @override
   ConsumerState<AddExpenseScreen> createState() => _AddExpenseScreenState();
@@ -36,9 +41,16 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   String _splitType = 'EQUAL';
   String? _currency;
   String? _payerRid;
+  String? _eventRid;
   final Set<String> _selected = {};
   bool _initialized = false;
   bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _eventRid = widget.eventRid;
+  }
 
   @override
   void dispose() {
@@ -102,6 +114,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
             splitType: _splitType,
             participants: participants,
             spentAtIso: DateTime.now().toUtc().toIso8601String(),
+            eventRid: _eventRid,
           );
       if (mounted) {
         context.canPop()
@@ -231,6 +244,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
               onChanged: (v) => setState(() => _payerRid = v),
             ),
             const SizedBox(height: 16),
+            _attachEventField(context, l10n),
+            const SizedBox(height: 16),
             SegmentedButton<String>(
               segments: [
                 ButtonSegment(value: 'PLANNED', label: Text(l10n.typePLANNED)),
@@ -266,6 +281,77 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
         ),
       ),
     );
+  }
+
+  Widget _attachEventField(BuildContext context, AppLocalizations l10n) {
+    final List<EventItem> events =
+        ref.watch(eventsControllerProvider(widget.tripRid)).valueOrNull ??
+            const [];
+    String? title;
+    if (_eventRid != null) {
+      for (final EventItem e in events) {
+        if (e.rid == _eventRid) {
+          title = e.title;
+          break;
+        }
+      }
+    }
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: () => _pickEvent(events),
+      borderRadius: BorderRadius.circular(14),
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: l10n.expenseAttachEvent,
+          prefixIcon: const Icon(Icons.timeline_outlined),
+          suffixIcon: _eventRid == null
+              ? const Icon(Icons.chevron_right)
+              : IconButton(
+                  icon: const Icon(Icons.clear),
+                  tooltip: l10n.actionRemove,
+                  onPressed: () => setState(() => _eventRid = null),
+                ),
+        ),
+        child: Text(
+          title ?? l10n.expenseNoEvent,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style:
+              title == null ? TextStyle(color: scheme.onSurfaceVariant) : null,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickEvent(List<EventItem> events) async {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final String? picked = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.block_outlined),
+              title: Text(l10n.expenseNoEvent),
+              onTap: () => Navigator.pop(ctx, ''),
+            ),
+            const Divider(height: 1),
+            for (final EventItem e in events)
+              ListTile(
+                leading: const Icon(Icons.event_note_outlined),
+                title:
+                    Text(e.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                onTap: () => Navigator.pop(ctx, e.rid),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (picked != null) {
+      setState(() => _eventRid = picked.isEmpty ? null : picked);
+    }
   }
 
   Widget _participantRow(Member m) {

@@ -275,5 +275,8 @@
   "placesMapAction": "Bản đồ",
   "placePickNew": "Tìm địa điểm mới trên bản đồ",
   "eventLocation": "Địa điểm",
-  "timelineUndated": "Chưa đặt giờ"
+  "timelineUndated": "Chưa đặt giờ",
+  "expenseAttachEvent": "Gắn vào lịch trình",
+  "expenseNoEvent": "Không gắn",
+  "timelineCosts": "Chi phí"
 }
