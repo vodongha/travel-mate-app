@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../l10n/app_localizations.dart';
+import 'geo_location.dart';
 import 'geocoding.dart';
 
 /// Opens the map location picker and returns the chosen place (name + coordinates), or null if the
@@ -97,6 +98,21 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
     _map.move(r.point, 15);
   }
 
+  Future<void> _myLocation() async {
+    final LatLng? here = await currentLatLng();
+    if (!mounted) {
+      return;
+    }
+    if (here == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content:
+              Text(AppLocalizations.of(context).locationPermissionDenied)));
+      return;
+    }
+    _map.move(here, 16);
+    await _onMapTap(here);
+  }
+
   Future<void> _onMapTap(LatLng point) async {
     setState(
         () => _selected = GeoResult(name: '', displayName: '', point: point));
@@ -167,6 +183,16 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                         ),
                       ]),
                   ],
+                ),
+                Positioned(
+                  right: 12,
+                  bottom: 12,
+                  child: FloatingActionButton.small(
+                    heroTag: 'pickMyLocation',
+                    onPressed: _myLocation,
+                    tooltip: l10n.locationMyLocation,
+                    child: const Icon(Icons.my_location),
+                  ),
                 ),
                 if (_results.isNotEmpty)
                   Positioned(

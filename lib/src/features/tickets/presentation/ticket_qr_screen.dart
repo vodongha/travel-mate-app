@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../../l10n/app_localizations.dart';
@@ -75,6 +76,30 @@ class TicketQrScreen extends StatelessWidget {
                       style: const TextStyle(color: Colors.black54),
                     ),
                   ),
+                // Show the ticket as a readable code too — some gates check a code, not a scan.
+                if (hasQr) ...[
+                  const SizedBox(height: 16),
+                  SelectableText(
+                    data,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 16,
+                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: data));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(l10n.actionCopied)));
+                    },
+                    icon: const Icon(Icons.copy, color: Colors.black54),
+                    label: Text(l10n.actionCopy,
+                        style: const TextStyle(color: Colors.black54)),
+                  ),
+                ],
                 const SizedBox(height: 24),
                 Text(
                   ticket.title.isEmpty ? l10n.ticketUntitled : ticket.title,
