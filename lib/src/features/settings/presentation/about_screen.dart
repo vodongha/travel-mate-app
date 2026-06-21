@@ -84,19 +84,6 @@ class AboutScreen extends StatelessWidget {
                       onTap: () => openWebPage(context, l10n.aboutWebsite,
                           AppConfig.publisherWebsite),
                     ),
-                    const Divider(height: 1),
-                    ListTile(
-                      leading:
-                          Icon(Icons.forum_outlined, color: scheme.primary),
-                      title: Text(l10n.settingsCommunity),
-                      subtitle: Text(AppConfig.communityUrl),
-                      trailing: Icon(
-                        kIsWeb ? Icons.open_in_new : Icons.chevron_right,
-                        size: 18,
-                      ),
-                      onTap: () => openWebPage(context, l10n.settingsCommunity,
-                          AppConfig.communityUrl),
-                    ),
                   ],
                 ),
               ),
