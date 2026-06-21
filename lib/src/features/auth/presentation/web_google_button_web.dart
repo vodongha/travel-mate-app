@@ -3,6 +3,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:google_sign_in_web/web_only.dart' as web;
 
 import '../../../core/config.dart';
+import '../../../core/theme.dart';
 
 /// Google Sign-In on web uses Google Identity Services, which only works through a Google-rendered
 /// button (there is no imperative `signIn()` on web). This widget renders that button and, when the
@@ -41,7 +42,31 @@ class _WebGoogleButtonState extends State<_WebGoogleButton> {
   }
 
   @override
-  Widget build(BuildContext context) => web.renderButton();
+  Widget build(BuildContext context) {
+    // The GIS button is Google-rendered, so we can't fully restyle it — but we make it a large,
+    // full-width rectangular button and clip it to the app's shared button radius so it lines up
+    // with the Save/Cancel/Add buttons.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double width = constraints.maxWidth.isFinite
+            ? constraints.maxWidth.clamp(200.0, 400.0)
+            : 360.0;
+        return ClipRRect(
+          borderRadius: AppTheme.buttonRadius,
+          child: web.renderButton(
+            configuration: web.GSIButtonConfiguration(
+              theme: web.GSIButtonTheme.outline,
+              size: web.GSIButtonSize.large,
+              text: web.GSIButtonText.continueWith,
+              shape: web.GSIButtonShape.rectangular,
+              logoAlignment: web.GSIButtonLogoAlignment.left,
+              minimumWidth: width,
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 Widget buildWebGoogleButton(Future<void> Function(String idToken) onIdToken) =>
