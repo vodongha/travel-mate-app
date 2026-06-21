@@ -5,6 +5,7 @@ class Member {
     required this.displayName,
     required this.role,
     required this.ghost,
+    this.mine = false,
     this.joinedAt,
   });
 
@@ -12,6 +13,9 @@ class Member {
   final String displayName;
   final String role;
   final bool ghost;
+
+  /// True for the membership belonging to the signed-in user (the "Myself" entry).
+  final bool mine;
   final DateTime? joinedAt;
 
   factory Member.fromJson(Map<String, dynamic> json) {
@@ -21,6 +25,7 @@ class Member {
       displayName: json['displayName'] as String,
       role: json['role'] as String? ?? 'VIEWER',
       ghost: json['ghost'] as bool? ?? false,
+      mine: json['mine'] as bool? ?? false,
       joinedAt: joined is String ? DateTime.tryParse(joined) : null,
     );
   }
