@@ -121,7 +121,9 @@ class _AddTransportScreenState extends ConsumerState<AddTransportScreen> {
         );
       }
       if (mounted) {
-        context.go('/trips/${widget.tripRid}/transports');
+        context.canPop()
+            ? context.pop()
+            : context.go('/trips/${widget.tripRid}/transports');
       }
     } catch (error) {
       if (mounted) {

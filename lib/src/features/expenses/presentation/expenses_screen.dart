@@ -25,7 +25,7 @@ class ExpensesScreen extends ConsumerWidget {
       return;
     }
     if (action == RowAction.edit) {
-      context.go('/trips/$tripRid/expenses/${item.rid}/edit', extra: item);
+      context.push('/trips/$tripRid/expenses/${item.rid}/edit', extra: item);
       return;
     }
     if (!await confirmDelete(context) || !context.mounted) {
@@ -56,7 +56,7 @@ class ExpensesScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(l10n.navExpenses)),
       floatingActionButton: canEdit
           ? FloatingActionButton.extended(
-              onPressed: () => context.go('/trips/$tripRid/expenses/new'),
+              onPressed: () => context.push('/trips/$tripRid/expenses/new'),
               icon: const Icon(Icons.add),
               label: Text(l10n.expenseNew),
             )

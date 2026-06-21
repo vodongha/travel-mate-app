@@ -8,7 +8,31 @@ class TripsController extends AsyncNotifier<List<Trip>> {
   TripRepository get _repo => ref.read(tripRepositoryProvider);
 
   @override
-  Future<List<Trip>> build() => _repo.listMine();
+  Future<List<Trip>> build() async {
+    final List<Trip> trips = await _repo.listMine();
+    return _sortedNewestFirst(trips);
+  }
+
+  /// Newest first: by `startDate` descending, trips without a start date last.
+  /// `List.sort` is stable, so equal start dates keep their server order.
+  static List<Trip> _sortedNewestFirst(List<Trip> trips) {
+    final List<Trip> sorted = List<Trip>.of(trips);
+    sorted.sort((a, b) {
+      final DateTime? sa = a.startDate;
+      final DateTime? sb = b.startDate;
+      if (sa == null && sb == null) {
+        return 0;
+      }
+      if (sa == null) {
+        return 1; // a (no date) sorts after b
+      }
+      if (sb == null) {
+        return -1; // b (no date) sorts after a
+      }
+      return sb.compareTo(sa); // descending
+    });
+    return sorted;
+  }
 
   Future<Trip> create({
     required String name,

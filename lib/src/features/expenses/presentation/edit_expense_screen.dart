@@ -52,7 +52,9 @@ class _EditExpenseScreenState extends ConsumerState<EditExpenseScreen> {
             expenseType: _expenseType,
           );
       if (mounted) {
-        context.go('/trips/${widget.tripRid}/expenses');
+        context.canPop()
+            ? context.pop()
+            : context.go('/trips/${widget.tripRid}/expenses');
       }
     } catch (error) {
       if (mounted) {
