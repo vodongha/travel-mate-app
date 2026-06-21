@@ -59,6 +59,7 @@ class TripsController extends AsyncNotifier<List<Trip>> {
     String? destination,
     DateTime? startDate,
     DateTime? endDate,
+    String? status,
   }) async {
     final Trip trip = await _repo.update(
       tripRid,
@@ -67,6 +68,7 @@ class TripsController extends AsyncNotifier<List<Trip>> {
       destination: destination,
       startDate: startDate,
       endDate: endDate,
+      status: status,
     );
     ref.invalidateSelf();
     ref.invalidate(tripProvider(tripRid));
