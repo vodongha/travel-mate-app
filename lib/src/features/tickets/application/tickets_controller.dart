@@ -10,12 +10,14 @@ Map<String, dynamic> ticketBody({
   required String title,
   required String ticketType,
   String? qrData,
+  String? seat,
   String? note,
 }) {
   final Map<String, dynamic> body = {
     'title': title,
     'ticketType': ticketType,
     'qrData': qrData ?? '',
+    'seat': seat ?? '',
     'note': note ?? '',
   };
   if (memberRid != null && memberRid.isNotEmpty) {
@@ -55,6 +57,7 @@ class AllTicketsController extends FamilyAsyncNotifier<List<Ticket>, String> {
     required String title,
     required String ticketType,
     String? qrData,
+    String? seat,
     String? note,
   }) async {
     await _repo.create(
@@ -64,6 +67,7 @@ class AllTicketsController extends FamilyAsyncNotifier<List<Ticket>, String> {
         title: title,
         ticketType: ticketType,
         qrData: qrData,
+        seat: seat,
         note: note,
       ),
     );
@@ -77,6 +81,7 @@ class AllTicketsController extends FamilyAsyncNotifier<List<Ticket>, String> {
     required String title,
     required String ticketType,
     String? qrData,
+    String? seat,
     String? note,
   }) async {
     await _repo.update(
@@ -87,6 +92,7 @@ class AllTicketsController extends FamilyAsyncNotifier<List<Ticket>, String> {
         title: title,
         ticketType: ticketType,
         qrData: qrData,
+        seat: seat,
         note: note,
       ),
     );
