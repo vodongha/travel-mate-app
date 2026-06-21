@@ -11,6 +11,8 @@ import '../../../core/labels.dart';
 import '../../../core/location_picker.dart';
 import '../../../core/qr.dart';
 import '../../../core/responsive.dart';
+import '../../../core/trip_dates.dart';
+import '../../trips/application/trips_controller.dart';
 import '../application/transport_controller.dart';
 import '../data/transport_repository.dart';
 
@@ -70,18 +72,25 @@ class _AddTransportScreenState extends ConsumerState<AddTransportScreen> {
   }
 
   Future<DateTime?> _pickDateTime(DateTime? initial) async {
-    final DateTime base = initial ?? DateTime.now();
+    // Constrain the picker to the trip's date range (and open on it).
+    final trip = ref.read(tripProvider(widget.tripRid)).valueOrNull;
+    final bounds = tripPickerBounds(
+      tripStart: trip?.startDate,
+      tripEnd: trip?.endDate,
+      current: initial,
+    );
     final DateTime? date = await showDatePicker(
       context: context,
-      initialDate: base,
-      firstDate: DateTime(base.year - 1),
-      lastDate: DateTime(base.year + 5),
+      initialDate: bounds.initial,
+      firstDate: bounds.first,
+      lastDate: bounds.last,
     );
     if (date == null || !mounted) {
       return null;
     }
     final TimeOfDay? time = await showTimePicker(
-        context: context, initialTime: TimeOfDay.fromDateTime(base));
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(initial ?? bounds.initial));
     if (time == null) {
       return null;
     }
