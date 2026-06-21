@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error.dart';
 import '../../../core/responsive.dart';
+import '../../../core/theme.dart';
 import '../application/auth_controller.dart';
 import 'auth_validators.dart';
 import 'google_sign_in_button.dart';
@@ -105,9 +106,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2.4))
                         : Text(l10n.actionRegister),
                   ),
-                  const SizedBox(height: 12),
-                  // Secondary action, same size/radius as the primary button.
-                  FilledButton.tonal(
+                  const SizedBox(height: 8),
+                  // Same frame as the primary button (height + radius + full
+                  // width), but keep the plain text-button behaviour: no fill
+                  // until hover/press.
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      minimumSize: const Size.fromHeight(AppTheme.buttonHeight),
+                      shape: const RoundedRectangleBorder(
+                          borderRadius: AppTheme.buttonRadius),
+                    ),
                     onPressed: _submitting ? null : () => context.go('/login'),
                     child: Text(l10n.authHaveAccount),
                   ),
