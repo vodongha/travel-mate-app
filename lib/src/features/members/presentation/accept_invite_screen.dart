@@ -5,13 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error.dart';
 import '../../../core/form_buttons.dart';
+import '../../../core/qr_scan_screen.dart';
 import '../../../core/responsive.dart';
 import '../../trips/application/trips_controller.dart';
 import '../data/member_repository.dart';
 import '../domain/member.dart';
 
-/// Join a trip by pasting an invite link or code. A scanned link contains `?token=…`; we accept
-/// either the full link or the bare token. (Camera scanning lands in a later slice.)
+/// Join a trip by pasting an invite link or code, or scanning the invite QR. A scanned link
+/// contains `?token=…`; we accept either the full link or the bare token.
 class AcceptInviteScreen extends ConsumerStatefulWidget {
   const AcceptInviteScreen({super.key, this.token});
 
@@ -39,6 +40,16 @@ class _AcceptInviteScreenState extends ConsumerState<AcceptInviteScreen> {
       return uri.queryParameters['token']!;
     }
     return value;
+  }
+
+  Future<void> _scan() async {
+    final String? code = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (_) => const QrScanScreen()),
+    );
+    if (code != null && code.isNotEmpty && mounted) {
+      _input.text = code;
+      await _join();
+    }
   }
 
   Future<void> _join() async {
@@ -86,8 +97,19 @@ class _AcceptInviteScreenState extends ConsumerState<AcceptInviteScreen> {
                 decoration: InputDecoration(
                   labelText: l10n.inviteCodeLabel,
                   prefixIcon: const Icon(Icons.link),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.qr_code_scanner),
+                    tooltip: l10n.qrScan,
+                    onPressed: _joining ? null : _scan,
+                  ),
                 ),
                 onSubmitted: (_) => _join(),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: _joining ? null : _scan,
+                icon: const Icon(Icons.qr_code_scanner),
+                label: Text(l10n.qrScan),
               ),
               const SizedBox(height: 24),
               FormButtons(
