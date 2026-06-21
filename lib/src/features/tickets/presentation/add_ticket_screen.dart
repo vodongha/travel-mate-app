@@ -178,7 +178,9 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
                     loading: () => const LinearProgressIndicator(),
                     error: (_, __) => const SizedBox.shrink(),
                     data: (list) => _AssigneeField(
-                      members: list,
+                      // Exclude the caller's own membership — the "Myself" option
+                      // already covers it (no duplicate name).
+                      members: list.where((m) => !m.mine).toList(),
                       value: _memberRid,
                       onChanged: (v) => setState(() => _memberRid = v),
                     ),
