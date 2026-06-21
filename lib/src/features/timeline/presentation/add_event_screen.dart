@@ -76,6 +76,25 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
     return DateTime(date.year, date.month, date.day, time.hour, time.minute);
   }
 
+  /// Opens the map directly (one tap), creates a place from the pick, links it.
+  Future<void> _pickPlace() async {
+    try {
+      final picked = await pickNewPlaceOnMap(context, ref, widget.tripRid);
+      if (!mounted) {
+        return;
+      }
+      if (picked != null) {
+        setState(() => _placeRid = picked.rid);
+      }
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(friendlyError(context, error))));
+    }
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -201,13 +220,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                 const SizedBox(height: 16),
                 // Attach a location (a trip place) — picked on the map, not typed.
                 InkWell(
-                  onTap: () async {
-                    final picked =
-                        await showTripPlacePicker(context, widget.tripRid);
-                    if (picked != null) {
-                      setState(() => _placeRid = picked.rid);
-                    }
-                  },
+                  onTap: _pickPlace,
                   borderRadius: BorderRadius.circular(14),
                   child: InputDecorator(
                     decoration: InputDecoration(

@@ -28,6 +28,7 @@ class _AddTransportScreenState extends ConsumerState<AddTransportScreen> {
   final _formKey = GlobalKey<FormState>();
   final _provider = TextEditingController();
   final _bookingCode = TextEditingController();
+  final _seat = TextEditingController();
   final _from = TextEditingController();
   final _to = TextEditingController();
   final _note = TextEditingController();
@@ -47,6 +48,7 @@ class _AddTransportScreenState extends ConsumerState<AddTransportScreen> {
       _type = t.transportType;
       _provider.text = t.provider ?? '';
       _bookingCode.text = t.bookingCode ?? '';
+      _seat.text = t.seat ?? '';
       _from.text = t.departurePlace ?? '';
       _to.text = t.arrivalPlace ?? '';
       _note.text = t.note ?? '';
@@ -60,6 +62,7 @@ class _AddTransportScreenState extends ConsumerState<AddTransportScreen> {
   void dispose() {
     _provider.dispose();
     _bookingCode.dispose();
+    _seat.dispose();
     _from.dispose();
     _to.dispose();
     _note.dispose();
@@ -110,6 +113,7 @@ class _AddTransportScreenState extends ConsumerState<AddTransportScreen> {
           transportType: _type,
           provider: _trim(_provider),
           bookingCode: _trim(_bookingCode),
+          seat: _trim(_seat),
           departurePlace: _trim(_from),
           arrivalPlace: _trim(_to),
           departureTimeUtc: _departure?.toUtc(),
@@ -122,6 +126,7 @@ class _AddTransportScreenState extends ConsumerState<AddTransportScreen> {
           transportType: _type,
           provider: _trim(_provider),
           bookingCode: _trim(_bookingCode),
+          seat: _trim(_seat),
           departurePlace: _trim(_from),
           arrivalPlace: _trim(_to),
           departureTimeUtc: _departure?.toUtc(),
@@ -239,6 +244,13 @@ class _AddTransportScreenState extends ConsumerState<AddTransportScreen> {
                       labelText: l10n.fieldBookingCode,
                       prefixIcon:
                           const Icon(Icons.confirmation_number_outlined)),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _seat,
+                  decoration: InputDecoration(
+                      labelText: l10n.fieldSeat,
+                      prefixIcon: const Icon(Icons.event_seat_outlined)),
                 ),
                 const SizedBox(height: 16),
                 QrField(
