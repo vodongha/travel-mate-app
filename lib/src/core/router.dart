@@ -71,9 +71,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       final String loc = state.matchedLocation;
       final bool atAuth = loc == '/login' || loc == '/register';
       if (!loggedIn) {
-        return atAuth ? null : '/login';
+        if (atAuth) {
+          return null;
+        }
+        // Preserve where the user was headed (e.g. an invite link /join?token=…) so we can
+        // return there after login — otherwise an invited, logged-out user loses the token.
+        final String dest = state.uri.toString();
+        return '/login?from=${Uri.encodeComponent(dest)}';
       }
       if (atAuth || loc == '/splash') {
+        final String? from = state.uri.queryParameters['from'];
+        if (from != null && from.isNotEmpty) {
+          return Uri.decodeComponent(from);
+        }
         return '/';
       }
       return null;
