@@ -7,6 +7,10 @@ class AppTheme {
 
   static const Color _seed = Color(0xFF1E6FE0);
 
+  /// Shared corner radius for all buttons (filled, outlined, and the web Google button).
+  static const BorderRadius buttonRadius =
+      BorderRadius.all(Radius.circular(14));
+
   static ThemeData light() => _build(Brightness.light);
 
   static ThemeData dark() => _build(Brightness.dark);
@@ -48,11 +52,20 @@ class AppTheme {
           borderSide: BorderSide(color: scheme.primary, width: 1.6),
         ),
       ),
+      // All buttons share one shape (radius 14) + height so Save / Cancel / Add / Delete and the
+      // Google button line up. M3's default OutlinedButton is a pill, which is why Cancel/Google
+      // looked different from the filled primary before.
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(50),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: const RoundedRectangleBorder(borderRadius: buttonRadius),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size.fromHeight(50),
+          shape: const RoundedRectangleBorder(borderRadius: buttonRadius),
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
