@@ -63,7 +63,7 @@ class SettingsScreen extends ConsumerWidget {
               ),
               _label(context, l10n.settingsAbout),
               ListTile(
-                leading: const Icon(Icons.info_outline),
+                leading: const Icon(Icons.public),
                 title: Text(l10n.about),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push('/about'),
@@ -227,7 +227,7 @@ class _VersionTile extends StatelessWidget {
     return FutureBuilder<PackageInfo>(
       future: PackageInfo.fromPlatform(),
       builder: (context, snapshot) => ListTile(
-        leading: const Icon(Icons.info_outline),
+        leading: const Icon(Icons.new_releases_outlined),
         title: Text(l10n.settingsVersion),
         trailing: Text(
           snapshot.hasData ? snapshot.data!.version : '—',

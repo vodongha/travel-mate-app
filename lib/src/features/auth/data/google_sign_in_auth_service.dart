@@ -21,6 +21,14 @@ class GoogleSignInAuthService implements GoogleAuthService {
 
   @override
   Future<String?> signInGetIdToken() async {
+    // Sign out first so Google always shows the account chooser instead of
+    // silently re-using the last-selected account — otherwise a user with
+    // several Google accounts on the device can't switch.
+    try {
+      await _google.signOut();
+    } catch (_) {
+      // Not signed in yet, or the plugin is unavailable — ignore.
+    }
     final GoogleSignInAccount? account = await _google.signIn();
     if (account == null) {
       return null; // user dismissed the account picker

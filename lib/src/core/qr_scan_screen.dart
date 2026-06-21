@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../l10n/app_localizations.dart';
 
@@ -13,17 +15,52 @@ class QrScanScreen extends StatefulWidget {
 }
 
 class _QrScanScreenState extends State<QrScanScreen> {
-  // An explicit controller (auto-starts the camera + requests permission) and a dispose, so the
-  // camera reliably opens/closes across pushes — and errorBuilder surfaces why if it can't.
-  final MobileScannerController _controller = MobileScannerController(
-    formats: const [BarcodeFormat.qrCode],
-    detectionSpeed: DetectionSpeed.noDuplicates,
-  );
+  // The camera controller is created only after the runtime permission is
+  // granted — on Android, starting the scanner without permission yields a
+  // bare "genericError". On web the browser handles the permission prompt, so
+  // we skip permission_handler there.
+  MobileScannerController? _controller;
+  bool _checking = true;
+  bool _denied = false;
   bool _handled = false;
 
   @override
+  void initState() {
+    super.initState();
+    _init();
+  }
+
+  Future<void> _init() async {
+    setState(() {
+      _checking = true;
+      _denied = false;
+    });
+    if (!kIsWeb) {
+      final PermissionStatus status = await Permission.camera.request();
+      if (!status.isGranted) {
+        if (mounted) {
+          setState(() {
+            _checking = false;
+            _denied = true;
+          });
+        }
+        return;
+      }
+    }
+    if (mounted) {
+      setState(() {
+        _controller = MobileScannerController(
+          formats: const [BarcodeFormat.qrCode],
+          detectionSpeed: DetectionSpeed.noDuplicates,
+        );
+        _checking = false;
+      });
+    }
+  }
+
+  @override
   void dispose() {
-    _controller.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 
@@ -43,44 +80,82 @@ class _QrScanScreenState extends State<QrScanScreen> {
     final AppLocalizations l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.qrScan)),
-      body: Stack(
-        alignment: Alignment.bottomCenter,
-        children: [
-          MobileScanner(
-            controller: _controller,
-            onDetect: _onDetect,
-            errorBuilder: (context, error, child) => Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.no_photography_outlined, size: 48),
-                    const SizedBox(height: 16),
-                    Text(l10n.qrCameraError, textAlign: TextAlign.center),
-                    const SizedBox(height: 8),
-                    Text('(${error.errorCode.name})',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodySmall),
-                  ],
+      body: _checking
+          ? const Center(child: CircularProgressIndicator())
+          : _denied
+              ? _PermissionDenied(l10n: l10n, onRetry: _init)
+              : _scanner(l10n),
+    );
+  }
+
+  Widget _scanner(AppLocalizations l10n) {
+    return Stack(
+      alignment: Alignment.bottomCenter,
+      children: [
+        MobileScanner(
+          controller: _controller,
+          onDetect: _onDetect,
+          errorBuilder: (context, error, child) =>
+              _PermissionDenied(l10n: l10n, onRetry: _init),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(24),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.black54,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(l10n.qrScanHint,
+                style: const TextStyle(color: Colors.white),
+                textAlign: TextAlign.center),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Shown when the camera permission is denied — explains why and offers a way
+/// to fix it (re-request, or jump to the OS app settings if it was permanently
+/// denied).
+class _PermissionDenied extends StatelessWidget {
+  const _PermissionDenied({required this.l10n, required this.onRetry});
+
+  final AppLocalizations l10n;
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.no_photography_outlined, size: 48),
+            const SizedBox(height: 16),
+            Text(l10n.qrCameraPermission, textAlign: TextAlign.center),
+            const SizedBox(height: 20),
+            Wrap(
+              spacing: 12,
+              runSpacing: 8,
+              alignment: WrapAlignment.center,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: onRetry,
+                  icon: const Icon(Icons.refresh),
+                  label: Text(l10n.actionRetry),
                 ),
-              ),
+                FilledButton.icon(
+                  onPressed: openAppSettings,
+                  icon: const Icon(Icons.settings_outlined),
+                  label: Text(l10n.openSettings),
+                ),
+              ],
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(24),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(l10n.qrScanHint,
-                  style: const TextStyle(color: Colors.white),
-                  textAlign: TextAlign.center),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
