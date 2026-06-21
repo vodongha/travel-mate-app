@@ -69,11 +69,15 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/trips/new'),
-        icon: const Icon(Icons.add),
-        label: Text(l10n.tripNew),
-      ),
+      // Only show the FAB once at least one trip exists — the empty state has
+      // its own "create trip" button, so showing both would be redundant.
+      floatingActionButton: (trips.valueOrNull?.isNotEmpty ?? false)
+          ? FloatingActionButton.extended(
+              onPressed: () => context.push('/trips/new'),
+              icon: const Icon(Icons.add),
+              label: Text(l10n.tripNew),
+            )
+          : null,
       body: SafeArea(
         child: ResponsiveCenter(
           child: trips.when(
