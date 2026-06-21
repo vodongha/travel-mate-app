@@ -56,6 +56,13 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
+            // Do NOT run R8/code-shrinking: it renames/strips classes that the
+            // camera stack (mobile_scanner / MLKit / CameraX) reaches by
+            // reflection, which crashed the QR scanner at runtime with a
+            // NullPointerException on obfuscated names (genericError: "Attempt
+            // to invoke virtual method 'a7…' on a null object reference").
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }
