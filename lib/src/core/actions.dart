@@ -4,15 +4,16 @@ import '../../l10n/app_localizations.dart';
 import 'form_buttons.dart';
 
 /// A row action chosen from the long-press / overflow sheet.
-enum RowAction { edit, delete }
+enum RowAction { maps, edit, delete }
 
-/// Shows a small bottom sheet offering Edit / Delete for a list row. Returns the
-/// chosen action, or null if dismissed. Used consistently across the app so every
-/// list (expenses, budgets, events, checklist, …) is editable and deletable the
-/// same way (long-press a row).
+/// Shows a small bottom sheet offering (optionally) Open in Maps / Edit / Delete
+/// for a list row. Returns the chosen action, or null if dismissed. Used
+/// consistently across the app so every list (places, events, expenses, …) is
+/// acted on the same way (long-press a row).
 Future<RowAction?> showRowActions(
   BuildContext context, {
   String? title,
+  bool allowMaps = false,
   bool allowEdit = true,
   bool allowDelete = true,
 }) {
@@ -31,6 +32,12 @@ Future<RowAction?> showRowActions(
                   style: Theme.of(ctx).textTheme.titleSmall,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis),
+            ),
+          if (allowMaps)
+            ListTile(
+              leading: const Icon(Icons.map_outlined),
+              title: Text(l10n.openInMaps),
+              onTap: () => Navigator.pop(ctx, RowAction.maps),
             ),
           if (allowEdit)
             ListTile(

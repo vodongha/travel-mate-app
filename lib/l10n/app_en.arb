@@ -284,6 +284,7 @@
   "timelineNow": "Happening now",
   "timelineUpcoming": "Upcoming",
   "mapsOpenFailed": "Couldn't open Google Maps.",
+  "openInMaps": "Open in Google Maps",
   "expenseAttachEvent": "Attach to itinerary",
   "expenseNoEvent": "Not attached",
   "timelineCosts": "Costs",

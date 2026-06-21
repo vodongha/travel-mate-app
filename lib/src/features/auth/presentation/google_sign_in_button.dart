@@ -84,8 +84,9 @@ class _GoogleSignInButtonState extends ConsumerState<GoogleSignInButton> {
         ),
         const SizedBox(height: 20),
         if (kIsWeb)
-          // Web must use Google's own rendered button (GIS); centre it under the divider.
-          Align(child: buildWebGoogleButton(_onWebIdToken))
+          // Web must use Google's own rendered button (GIS). Let it stretch full-width like the
+          // other buttons (the widget itself fixes the height/radius to match the app).
+          buildWebGoogleButton(_onWebIdToken)
         else
           OutlinedButton.icon(
             onPressed: on ? _signIn : null,

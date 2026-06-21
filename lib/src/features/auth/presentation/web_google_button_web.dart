@@ -37,30 +37,38 @@ class _WebGoogleButtonState extends State<_WebGoogleButton> {
         await widget.onIdToken(idToken);
       }
     });
-    // Attempt a silent restore so a returning user is recognised without clicking.
-    _google.signInSilently();
+    // Deliberately NO signInSilently() here: it would silently log the user in
+    // with whatever Google account is already in the browser session, with no
+    // chance to pick another. The user must click the button to choose.
   }
 
   @override
   Widget build(BuildContext context) {
-    // The GIS button is Google-rendered, so we can't fully restyle it — but we make it a large,
-    // full-width rectangular button and clip it to the app's shared button radius so it lines up
-    // with the Save/Cancel/Add buttons.
+    // The GIS button is Google-rendered, so we can't fully restyle it — but we make it full-width,
+    // clip it to the app's shared button radius (14), and reserve the same 50px row height as the
+    // app's other buttons (FormButtons / OutlinedButton) so it lines up with them. Both GIS states
+    // — the generic "Continue with Google" and the personalised "Continue as <name>" — render the
+    // same way here.
     return LayoutBuilder(
       builder: (context, constraints) {
-        final double width = constraints.maxWidth.isFinite
-            ? constraints.maxWidth.clamp(200.0, 400.0)
-            : 360.0;
-        return ClipRRect(
-          borderRadius: AppTheme.buttonRadius,
-          child: web.renderButton(
-            configuration: web.GSIButtonConfiguration(
-              theme: web.GSIButtonTheme.outline,
-              size: web.GSIButtonSize.large,
-              text: web.GSIButtonText.continueWith,
-              shape: web.GSIButtonShape.rectangular,
-              logoAlignment: web.GSIButtonLogoAlignment.left,
-              minimumWidth: width,
+        final double width =
+            constraints.maxWidth.isFinite ? constraints.maxWidth : 360.0;
+        return SizedBox(
+          height: AppTheme.buttonHeight,
+          width: width,
+          child: Center(
+            child: ClipRRect(
+              borderRadius: AppTheme.buttonRadius,
+              child: web.renderButton(
+                configuration: web.GSIButtonConfiguration(
+                  theme: web.GSIButtonTheme.outline,
+                  size: web.GSIButtonSize.large,
+                  text: web.GSIButtonText.continueWith,
+                  shape: web.GSIButtonShape.rectangular,
+                  logoAlignment: web.GSIButtonLogoAlignment.left,
+                  minimumWidth: width,
+                ),
+              ),
             ),
           ),
         );
