@@ -15,13 +15,12 @@ class QrScanScreen extends StatefulWidget {
 }
 
 class _QrScanScreenState extends State<QrScanScreen> {
-  // The camera controller is created only after the runtime permission is
-  // granted — on Android, starting the scanner without permission yields a
-  // bare "genericError". On web the browser handles the permission prompt, so
-  // we skip permission_handler there.
   MobileScannerController? _controller;
   bool _checking = true;
   bool _denied = false;
+  // The real underlying camera error (not just "genericError"), shown so we can
+  // see *why* it failed instead of masking everything as a permission problem.
+  String? _error;
   bool _handled = false;
 
   @override
@@ -34,7 +33,10 @@ class _QrScanScreenState extends State<QrScanScreen> {
     setState(() {
       _checking = true;
       _denied = false;
+      _error = null;
     });
+    // Ask for the camera permission ourselves first (clear denied UI). On web the
+    // browser handles its own prompt, so skip permission_handler there.
     if (!kIsWeb) {
       final PermissionStatus status = await Permission.camera.request();
       if (!status.isGranted) {
@@ -47,15 +49,43 @@ class _QrScanScreenState extends State<QrScanScreen> {
         return;
       }
     }
-    if (mounted) {
-      setState(() {
-        _controller = MobileScannerController(
-          formats: const [BarcodeFormat.qrCode],
-          detectionSpeed: DetectionSpeed.noDuplicates,
-        );
-        _checking = false;
-      });
+    // Start the camera explicitly (autoStart off) so a start failure surfaces its
+    // real exception here instead of a bare error inside the widget.
+    final MobileScannerController controller = MobileScannerController(
+      autoStart: false,
+      formats: const [BarcodeFormat.qrCode],
+      detectionSpeed: DetectionSpeed.noDuplicates,
+    );
+    try {
+      await controller.start();
+    } catch (e) {
+      await controller.dispose();
+      if (mounted) {
+        setState(() {
+          _checking = false;
+          _error = _describe(e);
+        });
+      }
+      return;
     }
+    if (!mounted) {
+      await controller.dispose();
+      return;
+    }
+    setState(() {
+      _controller = controller;
+      _checking = false;
+    });
+  }
+
+  /// Flatten a scanner error into a human-readable line (code + native message).
+  static String _describe(Object e) {
+    if (e is MobileScannerException) {
+      final MobileScannerErrorDetails? d = e.errorDetails;
+      final String extra = d?.message ?? d?.details?.toString() ?? '';
+      return extra.isEmpty ? e.errorCode.name : '${e.errorCode.name}: $extra';
+    }
+    return e.toString();
   }
 
   @override
@@ -83,8 +113,14 @@ class _QrScanScreenState extends State<QrScanScreen> {
       body: _checking
           ? const Center(child: CircularProgressIndicator())
           : _denied
-              ? _PermissionDenied(l10n: l10n, onRetry: _init)
-              : _scanner(l10n),
+              ? _CameraProblem(l10n: l10n, onRetry: _init, permission: true)
+              : _error != null
+                  ? _CameraProblem(
+                      l10n: l10n,
+                      onRetry: _init,
+                      permission: false,
+                      detail: _error)
+                  : _scanner(l10n),
     );
   }
 
@@ -95,8 +131,12 @@ class _QrScanScreenState extends State<QrScanScreen> {
         MobileScanner(
           controller: _controller,
           onDetect: _onDetect,
-          errorBuilder: (context, error) =>
-              _PermissionDenied(l10n: l10n, onRetry: _init),
+          errorBuilder: (context, error) => _CameraProblem(
+            l10n: l10n,
+            onRetry: _init,
+            permission: false,
+            detail: _describe(error),
+          ),
         ),
         Padding(
           padding: const EdgeInsets.all(24),
@@ -116,14 +156,21 @@ class _QrScanScreenState extends State<QrScanScreen> {
   }
 }
 
-/// Shown when the camera permission is denied — explains why and offers a way
-/// to fix it (re-request, or jump to the OS app settings if it was permanently
-/// denied).
-class _PermissionDenied extends StatelessWidget {
-  const _PermissionDenied({required this.l10n, required this.onRetry});
+/// Shown when the camera can't be used. For a denied permission it explains how
+/// to grant it; for any other failure it shows the real error so it can be
+/// reported, plus a retry.
+class _CameraProblem extends StatelessWidget {
+  const _CameraProblem({
+    required this.l10n,
+    required this.onRetry,
+    required this.permission,
+    this.detail,
+  });
 
   final AppLocalizations l10n;
   final Future<void> Function() onRetry;
+  final bool permission;
+  final String? detail;
 
   @override
   Widget build(BuildContext context) {
@@ -135,7 +182,14 @@ class _PermissionDenied extends StatelessWidget {
           children: [
             const Icon(Icons.no_photography_outlined, size: 48),
             const SizedBox(height: 16),
-            Text(l10n.qrCameraPermission, textAlign: TextAlign.center),
+            Text(permission ? l10n.qrCameraPermission : l10n.qrCameraError,
+                textAlign: TextAlign.center),
+            if (!permission && detail != null && detail!.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text('($detail)',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall),
+            ],
             const SizedBox(height: 20),
             Wrap(
               spacing: 12,
