@@ -278,5 +278,9 @@
   "timelineUndated": "Chưa đặt giờ",
   "expenseAttachEvent": "Gắn vào lịch trình",
   "expenseNoEvent": "Không gắn",
-  "timelineCosts": "Chi phí"
+  "timelineCosts": "Chi phí",
+  "ticketCode": "Mã vé hoặc QR",
+  "ticketCodeHint": "Nhập mã hoặc quét QR",
+  "locationMyLocation": "Vị trí của tôi",
+  "locationPermissionDenied": "Quyền vị trí bị từ chối"
 }
