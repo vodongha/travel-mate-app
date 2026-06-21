@@ -127,14 +127,6 @@ class _AccountSheet extends ConsumerWidget {
               },
             ),
             _Tile(
-              icon: Icons.info_outline,
-              label: l10n.about,
-              onTap: () {
-                Navigator.pop(context);
-                parentContext.push('/about');
-              },
-            ),
-            _Tile(
               icon: Icons.logout,
               label: l10n.actionLogout,
               onTap: () {
