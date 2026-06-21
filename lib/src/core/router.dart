@@ -17,6 +17,7 @@ import '../features/expenses/presentation/add_expense_screen.dart';
 import '../features/expenses/presentation/edit_expense_screen.dart';
 import '../features/expenses/presentation/expenses_screen.dart';
 import '../features/fund/presentation/fund_screen.dart';
+import '../features/app_update/presentation/app_update_gate.dart';
 import '../features/members/presentation/accept_invite_screen.dart';
 import '../features/members/presentation/invite_screen.dart';
 import '../features/members/presentation/members_screen.dart';
@@ -93,7 +94,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
-      GoRoute(path: '/', builder: (_, __) => const TripsScreen()),
+      GoRoute(
+        path: '/',
+        builder: (_, __) => const AppUpdateGate(child: TripsScreen()),
+      ),
       GoRoute(
         path: '/join',
         builder: (context, state) =>
