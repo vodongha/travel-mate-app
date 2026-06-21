@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../l10n/app_localizations.dart';
@@ -93,6 +95,30 @@ Future<void> openExternal(BuildContext context, String url) async {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(AppLocalizations.of(context).settingsOpenFailed)));
   }
+}
+
+/// Opens [url] in an in-app WebView on mobile (the `/web` route shows
+/// [WebPageScreen]); on web an external site can't be reliably iframed, so it
+/// opens in a new browser tab instead. Mirrors family-budget-app.
+Future<void> openWebPage(BuildContext context, String title, String url) async {
+  if (kIsWeb) {
+    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+    final String failMsg = AppLocalizations.of(context).settingsOpenFailed;
+    final bool ok =
+        await launchUrl(Uri.parse(url), webOnlyWindowName: '_blank');
+    if (!ok) {
+      messenger.showSnackBar(SnackBar(content: Text(failMsg)));
+    }
+  } else {
+    context.push('/web', extra: WebPageArgs(title: title, url: url));
+  }
+}
+
+/// Route arguments for the in-app WebView page.
+class WebPageArgs {
+  const WebPageArgs({required this.title, required this.url});
+  final String title;
+  final String url;
 }
 
 // ── dialogs ──────────────────────────────────────────────────────────────────

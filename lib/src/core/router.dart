@@ -23,7 +23,10 @@ import '../features/places/data/place_repository.dart';
 import '../features/places/presentation/add_place_screen.dart';
 import '../features/places/presentation/places_screen.dart';
 import '../features/report/presentation/report_screen.dart';
+import '../features/settings/presentation/about_screen.dart';
+import '../features/settings/presentation/account_dialogs.dart';
 import '../features/settings/presentation/settings_screen.dart';
+import '../features/settings/presentation/web_page_screen.dart';
 import '../features/settlement/presentation/settlement_screen.dart';
 import '../features/timeline/data/event_repository.dart';
 import '../features/timeline/presentation/add_event_screen.dart';
@@ -80,6 +83,14 @@ final routerProvider = Provider<GoRouter>((ref) {
             AcceptInviteScreen(token: state.uri.queryParameters['token']),
       ),
       GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
+      GoRoute(path: '/about', builder: (_, __) => const AboutScreen()),
+      GoRoute(
+        path: '/web',
+        builder: (context, state) {
+          final WebPageArgs args = state.extra as WebPageArgs;
+          return WebPageScreen(title: args.title, url: args.url);
+        },
+      ),
       GoRoute(path: '/trips/new', builder: (_, __) => const CreateTripScreen()),
       GoRoute(
         path: '/trips/:rid/dashboard',

@@ -230,5 +230,23 @@
   "ptOTHER": "Other",
   "authOr": "or",
   "authGoogle": "Continue with Google",
-  "googleNotConfigured": "Google sign-in isn't set up yet."
+  "googleNotConfigured": "Google sign-in isn't set up yet.",
+  "about": "About",
+  "aboutBlurb": "Plan group trips and split shared costs together — itineraries, places, transport, accommodation and a fair settlement, all in one app.",
+  "aboutPublisher": "Publisher",
+  "aboutWebsite": "Website",
+  "aboutLicense": "Released under the MIT License.",
+  "tripStatusPlanning": "Planning",
+  "tripStatusOngoing": "Ongoing",
+  "tripStatusCompleted": "Completed",
+  "tripStatusCancelled": "Cancelled",
+  "tripCountdownIn": "in {days, plural, =1{1 day} other{{days} days}}",
+  "@tripCountdownIn": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "tripCountdownStartsToday": "Starts today",
+  "tripCountdownOngoing": "Ongoing",
+  "tripCountdownEnded": "Ended"
 }

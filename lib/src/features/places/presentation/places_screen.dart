@@ -23,7 +23,7 @@ class PlacesScreen extends ConsumerWidget {
       return;
     }
     if (action == RowAction.edit) {
-      context.go('/trips/$tripRid/places/${item.rid}/edit', extra: item);
+      context.push('/trips/$tripRid/places/${item.rid}/edit', extra: item);
       return;
     }
     if (!await confirmDelete(context) || !context.mounted) {
@@ -68,7 +68,7 @@ class PlacesScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navPlaces)),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.go('/trips/$tripRid/places/new'),
+        onPressed: () => context.push('/trips/$tripRid/places/new'),
         icon: const Icon(Icons.add),
         label: Text(l10n.placeNew),
       ),

@@ -105,7 +105,9 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
         );
       }
       if (mounted) {
-        context.go('/trips/${widget.tripRid}/timeline');
+        context.canPop()
+            ? context.pop()
+            : context.go('/trips/${widget.tripRid}/timeline');
       }
     } catch (error) {
       if (mounted) {
