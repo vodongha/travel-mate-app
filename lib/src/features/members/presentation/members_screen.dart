@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error.dart';
 import '../../../core/app_error_view.dart';
+import '../../../core/form_buttons.dart';
 import '../../../core/responsive.dart';
 import '../../trips/application/trips_controller.dart';
 import '../../trips/presentation/trip_format.dart';
@@ -42,18 +43,19 @@ class MembersScreen extends ConsumerWidget {
     final bool ok = await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            content: Text(l10n.memberRemoveConfirm),
-            actions: [
-              TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: Text(l10n.actionCancel)),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                    backgroundColor: Theme.of(ctx).colorScheme.error),
-                onPressed: () => Navigator.pop(ctx, true),
-                child: Text(l10n.actionRemove),
-              ),
-            ],
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(l10n.memberRemoveConfirm),
+                const SizedBox(height: 20),
+                FormButtons(
+                  primaryLabel: l10n.actionRemove,
+                  primaryDanger: true,
+                  onPrimary: () => Navigator.pop(ctx, true),
+                  onCancel: () => Navigator.pop(ctx, false),
+                ),
+              ],
+            ),
           ),
         ) ??
         false;
@@ -244,25 +246,28 @@ class _ChangeRoleDialogState extends State<_ChangeRoleDialog> {
     final AppLocalizations l10n = AppLocalizations.of(context);
     return AlertDialog(
       title: Text(l10n.memberChangeRole),
-      content: DropdownButtonFormField<String>(
-        initialValue: _role,
-        decoration: InputDecoration(labelText: l10n.inviteRoleToGrant),
-        items: [
-          DropdownMenuItem(
-              value: 'VIEWER', child: Text(roleLabel(context, 'VIEWER'))),
-          DropdownMenuItem(
-              value: 'EDITOR', child: Text(roleLabel(context, 'EDITOR'))),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DropdownButtonFormField<String>(
+            initialValue: _role,
+            decoration: InputDecoration(labelText: l10n.inviteRoleToGrant),
+            items: [
+              DropdownMenuItem(
+                  value: 'VIEWER', child: Text(roleLabel(context, 'VIEWER'))),
+              DropdownMenuItem(
+                  value: 'EDITOR', child: Text(roleLabel(context, 'EDITOR'))),
+            ],
+            onChanged: (v) => setState(() => _role = v ?? 'VIEWER'),
+          ),
+          const SizedBox(height: 20),
+          FormButtons(
+            primaryLabel: l10n.actionSave,
+            onPrimary: () => Navigator.pop(context, _role),
+            onCancel: () => Navigator.pop(context),
+          ),
         ],
-        onChanged: (v) => setState(() => _role = v ?? 'VIEWER'),
       ),
-      actions: [
-        TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.actionCancel)),
-        FilledButton(
-            onPressed: () => Navigator.pop(context, _role),
-            child: Text(l10n.actionSave)),
-      ],
     );
   }
 }
@@ -326,22 +331,20 @@ class _AddGhostDialogState extends State<_AddGhostDialog> {
               ],
               onChanged: (v) => setState(() => _role = v ?? 'VIEWER'),
             ),
+            const SizedBox(height: 20),
+            FormButtons(
+              primaryLabel: l10n.actionAdd,
+              onPrimary: () {
+                if (_formKey.currentState!.validate()) {
+                  Navigator.pop(
+                      context, _AddGhostResult(_name.text.trim(), _role));
+                }
+              },
+              onCancel: () => Navigator.pop(context),
+            ),
           ],
         ),
       ),
-      actions: [
-        TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.actionCancel)),
-        FilledButton(
-          onPressed: () {
-            if (_formKey.currentState!.validate()) {
-              Navigator.pop(context, _AddGhostResult(_name.text.trim(), _role));
-            }
-          },
-          child: Text(l10n.actionAdd),
-        ),
-      ],
     );
   }
 }

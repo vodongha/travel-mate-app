@@ -2,6 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/accommodation/data/accommodation_repository.dart';
+import '../features/accommodation/presentation/accommodation_screen.dart';
+import '../features/accommodation/presentation/add_accommodation_screen.dart';
 import '../features/auth/application/auth_controller.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
@@ -16,12 +19,18 @@ import '../features/fund/presentation/fund_screen.dart';
 import '../features/members/presentation/accept_invite_screen.dart';
 import '../features/members/presentation/invite_screen.dart';
 import '../features/members/presentation/members_screen.dart';
+import '../features/places/data/place_repository.dart';
+import '../features/places/presentation/add_place_screen.dart';
+import '../features/places/presentation/places_screen.dart';
 import '../features/report/presentation/report_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/settlement/presentation/settlement_screen.dart';
 import '../features/timeline/data/event_repository.dart';
 import '../features/timeline/presentation/add_event_screen.dart';
 import '../features/timeline/presentation/timeline_screen.dart';
+import '../features/transport/data/transport_repository.dart';
+import '../features/transport/presentation/add_transport_screen.dart';
+import '../features/transport/presentation/transport_screen.dart';
 import '../features/trips/domain/trip.dart';
 import '../features/trips/presentation/create_trip_screen.dart';
 import '../features/trips/presentation/trip_detail_screen.dart';
@@ -145,6 +154,57 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/trips/:rid/members',
         builder: (context, state) =>
             MembersScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/transports/new',
+        builder: (context, state) =>
+            AddTransportScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/transports/:transportRid/edit',
+        builder: (context, state) => AddTransportScreen(
+          tripRid: state.pathParameters['rid']!,
+          existing: state.extra as TransportItem?,
+        ),
+      ),
+      GoRoute(
+        path: '/trips/:rid/transports',
+        builder: (context, state) =>
+            TransportScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/accommodations/new',
+        builder: (context, state) =>
+            AddAccommodationScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/accommodations/:accommodationRid/edit',
+        builder: (context, state) => AddAccommodationScreen(
+          tripRid: state.pathParameters['rid']!,
+          existing: state.extra as AccommodationItem?,
+        ),
+      ),
+      GoRoute(
+        path: '/trips/:rid/accommodations',
+        builder: (context, state) =>
+            AccommodationScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/places/new',
+        builder: (context, state) =>
+            AddPlaceScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/places/:placeRid/edit',
+        builder: (context, state) => AddPlaceScreen(
+          tripRid: state.pathParameters['rid']!,
+          existing: state.extra as PlaceItem?,
+        ),
+      ),
+      GoRoute(
+        path: '/trips/:rid/places',
+        builder: (context, state) =>
+            PlacesScreen(tripRid: state.pathParameters['rid']!),
       ),
       GoRoute(
         path: '/trips/:rid/edit',

@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error.dart';
 import '../../../core/app_error_view.dart';
+import '../../../core/currency_picker.dart';
+import '../../../core/form_buttons.dart';
 import '../../../core/labels.dart';
 import '../../../core/responsive.dart';
 import '../../members/application/members_controller.dart';
@@ -13,18 +15,6 @@ import '../../members/domain/member.dart';
 import '../../trips/application/trips_controller.dart';
 import '../application/expenses_controller.dart';
 import '../data/expense_repository.dart';
-
-const List<String> _commonCurrencies = [
-  'VND',
-  'USD',
-  'EUR',
-  'JPY',
-  'GBP',
-  'CNY',
-  'KRW',
-  'THB',
-  'SGD'
-];
 
 class AddExpenseScreen extends ConsumerStatefulWidget {
   const AddExpenseScreen({super.key, required this.tripRid});
@@ -160,7 +150,6 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
 
   Widget _form(BuildContext context, AppLocalizations l10n,
       List<Member> members, String base) {
-    final List<String> currencies = {base, ..._commonCurrencies}.toList();
     return ResponsiveCenter(
       maxWidth: 560,
       child: Form(
@@ -200,16 +189,21 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                 ),
                 const SizedBox(width: 12),
                 SizedBox(
-                  width: 110,
-                  child: DropdownButtonFormField<String>(
-                    initialValue: _currency,
-                    decoration:
-                        InputDecoration(labelText: l10n.expenseCurrency),
-                    items: currencies
-                        .map((c) =>
-                            DropdownMenuItem<String>(value: c, child: Text(c)))
-                        .toList(),
-                    onChanged: (v) => setState(() => _currency = v),
+                  width: 120,
+                  child: InkWell(
+                    onTap: () async {
+                      final String? c =
+                          await showCurrencyPicker(context, _currency ?? base);
+                      if (c != null) {
+                        setState(() => _currency = c);
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(14),
+                    child: InputDecorator(
+                      decoration:
+                          InputDecoration(labelText: l10n.expenseCurrency),
+                      child: Text(_currency ?? base),
+                    ),
                   ),
                 ),
               ],
@@ -259,14 +253,12 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                 style: Theme.of(context).textTheme.labelLarge),
             ...members.map((m) => _participantRow(m)),
             const SizedBox(height: 24),
-            FilledButton(
-              onPressed: _submitting ? null : _submit,
-              child: _submitting
-                  ? const SizedBox(
-                      height: 22,
-                      width: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2.4))
-                  : Text(l10n.actionSave),
+            FormButtons(
+              primaryLabel: l10n.actionSave,
+              loading: _submitting,
+              onPrimary: _submit,
+              onCancel: () =>
+                  context.canPop() ? context.pop() : context.go('/'),
             ),
           ],
         ),
