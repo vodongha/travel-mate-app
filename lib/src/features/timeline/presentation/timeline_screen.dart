@@ -49,7 +49,8 @@ class TimelineScreen extends ConsumerWidget {
   final String tripRid;
 
   Future<void> _eventActions(
-      BuildContext context, WidgetRef ref, EventItem event) async {
+      BuildContext context, WidgetRef ref, EventItem event,
+      [PlaceItem? place]) async {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final String? action = await showModalBottomSheet<String>(
       context: context,
@@ -58,6 +59,12 @@ class TimelineScreen extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (place != null)
+              ListTile(
+                leading: const Icon(Icons.map_outlined),
+                title: Text(l10n.openInMaps),
+                onTap: () => Navigator.pop(ctx, 'maps'),
+              ),
             ListTile(
               leading: const Icon(Icons.add_card_outlined),
               title: Text(l10n.expenseNew),
@@ -80,6 +87,11 @@ class TimelineScreen extends ConsumerWidget {
       ),
     );
     if (action == null || !context.mounted) {
+      return;
+    }
+    if (action == 'maps' && place != null) {
+      await openInGoogleMaps(context,
+          lat: place.latitude, lng: place.longitude, query: place.name);
       return;
     }
     if (action == 'edit') {
@@ -178,12 +190,9 @@ class TimelineScreen extends ConsumerWidget {
           if (pl != null && pl.name.isNotEmpty) pl.name,
           if (cost > 0) Money.format(cost, baseCurrency),
         ].join(' · '),
-        onTap: () => _eventActions(context, ref, e),
-        // Long-press an event with a place → open it in Google Maps.
-        onLongPress: pl == null
-            ? null
-            : () => openInGoogleMaps(context,
-                lat: pl.latitude, lng: pl.longitude, query: pl.name),
+        onTap: () => _eventActions(context, ref, e, pl),
+        // Long-press → options menu (Open in Maps when it has a place, Edit, Delete).
+        onLongPress: () => _eventActions(context, ref, e, pl),
       ));
     }
     for (final TransportItem t in transports) {
