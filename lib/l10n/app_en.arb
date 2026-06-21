@@ -284,6 +284,7 @@
   "expenseAttachEvent": "Attach to itinerary",
   "expenseNoEvent": "Not attached",
   "timelineCosts": "Costs",
+  "qrCameraError": "Can't open the camera. Check the camera permission in Settings.",
   "ticketCode": "Ticket code or QR",
   "ticketCodeHint": "Type a code or scan a QR",
   "locationMyLocation": "My location",

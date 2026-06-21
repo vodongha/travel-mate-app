@@ -60,6 +60,7 @@ class SettingsScreen extends ConsumerWidget {
                 title: Text(l10n.settingsChangePassword),
                 onTap: () => showChangePassword(context, ref),
               ),
+              _label(context, l10n.settingsAbout),
               const _VersionTile(),
             ],
           ),
