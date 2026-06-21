@@ -66,34 +66,23 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
     }
   }
 
-  Future<void> _pickStart() async {
+  /// One continuous range selection (like a booking app) instead of two pickers.
+  Future<void> _pickDateRange() async {
     final DateTime now = DateTime.now();
-    final DateTime? picked = await showDatePicker(
+    final DateTimeRange? picked = await showDateRangePicker(
       context: context,
-      initialDate: _start ?? now,
       firstDate: DateTime(now.year - 1),
       lastDate: DateTime(now.year + 5),
+      initialDateRange: (_start != null && _end != null)
+          ? DateTimeRange(start: _start!, end: _end!)
+          : null,
+      helpText: AppLocalizations.of(context).tripDates,
     );
     if (picked != null) {
       setState(() {
-        _start = picked;
-        if (_end != null && _end!.isBefore(picked)) {
-          _end = null;
-        }
+        _start = picked.start;
+        _end = picked.end;
       });
-    }
-  }
-
-  Future<void> _pickEnd() async {
-    final DateTime base = _start ?? DateTime.now();
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _end ?? base,
-      firstDate: _start ?? DateTime(base.year - 1),
-      lastDate: DateTime(base.year + 5),
-    );
-    if (picked != null) {
-      setState(() => _end = picked);
     }
   }
 
@@ -194,24 +183,12 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _DateField(
-                          label: l10n.tripStartDate,
-                          value: _start == null ? null : fmt.format(_start!),
-                          onTap: _pickStart,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _DateField(
-                          label: l10n.tripEndDate,
-                          value: _end == null ? null : fmt.format(_end!),
-                          onTap: _pickEnd,
-                        ),
-                      ),
-                    ],
+                  _DateField(
+                    label: l10n.tripDates,
+                    value: (_start == null || _end == null)
+                        ? null
+                        : '${fmt.format(_start!)}  –  ${fmt.format(_end!)}',
+                    onTap: _pickDateRange,
                   ),
                   const SizedBox(height: 28),
                   FormButtons(
