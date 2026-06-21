@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -62,12 +61,6 @@ class SettingsScreen extends ConsumerWidget {
                 onTap: () => showChangePassword(context, ref),
               ),
               _label(context, l10n.settingsAbout),
-              ListTile(
-                leading: const Icon(Icons.info_outline),
-                title: Text(l10n.about),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/about'),
-              ),
               ListTile(
                 leading: const Icon(Icons.forum_outlined),
                 title: Text(l10n.settingsCommunity),
@@ -236,14 +229,13 @@ class _VersionTile extends StatelessWidget {
       builder: (context, snapshot) => ListTile(
         leading: const Icon(Icons.info_outline),
         title: Text(l10n.settingsVersion),
-        // TODO: tap → open the Play Store listing once the app is published.
         trailing: Text(
-          snapshot.hasData
-              ? '${snapshot.data!.version}+${snapshot.data!.buildNumber}'
-              : '—',
+          snapshot.hasData ? snapshot.data!.version : '—',
           style:
               TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
+        // Tap → open the Play Store listing.
+        onTap: () => openExternal(context, AppConfig.playStoreUrl),
       ),
     );
   }
