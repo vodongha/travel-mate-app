@@ -11,6 +11,7 @@ class TransportItem {
     required this.transportType,
     this.provider,
     this.bookingCode,
+    this.seat,
     this.departurePlace,
     this.arrivalPlace,
     this.departureTime,
@@ -23,6 +24,7 @@ class TransportItem {
   final String transportType;
   final String? provider;
   final String? bookingCode;
+  final String? seat;
   final String? departurePlace;
   final String? arrivalPlace;
   final DateTime? departureTime;
@@ -37,6 +39,7 @@ class TransportItem {
       transportType: json['transportType'] as String? ?? 'FLIGHT',
       provider: json['provider'] as String?,
       bookingCode: json['bookingCode'] as String?,
+      seat: json['seat'] as String?,
       departurePlace: json['departurePlace'] as String?,
       arrivalPlace: json['arrivalPlace'] as String?,
       departureTime: parse(json['departureTime']),

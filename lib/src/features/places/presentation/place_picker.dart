@@ -21,6 +21,23 @@ Future<PlaceItem?> showTripPlacePicker(BuildContext context, String tripRid) {
   );
 }
 
+/// Opens the map straight away (one tap), then creates a trip place from the picked location and
+/// returns it. Used where the user just wants to drop a spot quickly (e.g. an event's location).
+Future<PlaceItem?> pickNewPlaceOnMap(
+    BuildContext context, WidgetRef ref, String tripRid) async {
+  final GeoResult? r = await showLocationPicker(context);
+  if (r == null) {
+    return null;
+  }
+  return ref.read(placeControllerProvider(tripRid).notifier).create(
+        name: r.name.isEmpty ? r.displayName : r.name,
+        address: r.displayName.isEmpty ? null : r.displayName,
+        latitude: r.point.latitude,
+        longitude: r.point.longitude,
+        placeType: 'OTHER',
+      );
+}
+
 class _TripPlacePicker extends ConsumerStatefulWidget {
   const _TripPlacePicker({required this.tripRid});
 

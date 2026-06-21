@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -37,7 +38,11 @@ class GeocodingService {
   GeocodingService()
       : _dio = Dio(BaseOptions(
           baseUrl: 'https://nominatim.openstreetmap.org',
-          headers: const {'User-Agent': 'TravelMate/1.0 (vn.trippo.mate)'},
+          // Browsers forbid setting User-Agent (it logs "Refused to set unsafe
+          // header") and send their own; only set it off the web.
+          headers: kIsWeb
+              ? null
+              : const {'User-Agent': 'TravelMate/1.0 (vn.trippo.mate)'},
           connectTimeout: const Duration(seconds: 10),
           receiveTimeout: const Duration(seconds: 10),
         ));

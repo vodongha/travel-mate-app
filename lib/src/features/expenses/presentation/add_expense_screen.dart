@@ -9,6 +9,7 @@ import '../../../core/app_error_view.dart';
 import '../../../core/currency_picker.dart';
 import '../../../core/form_buttons.dart';
 import '../../../core/labels.dart';
+import '../../../core/money.dart';
 import '../../../core/responsive.dart';
 import '../../members/application/members_controller.dart';
 import '../../members/domain/member.dart';
@@ -51,6 +52,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     super.initState();
     _eventRid = widget.eventRid;
   }
+
+  String? _amountPreview() => Money.grouped(_amount.text, _currency ?? 'VND');
 
   @override
   void dispose() {
@@ -193,7 +196,12 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                     inputFormatters: [
                       FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
                     ],
-                    decoration: InputDecoration(labelText: l10n.expenseAmount),
+                    onChanged: (_) => setState(() {}),
+                    decoration: InputDecoration(
+                      labelText: l10n.expenseAmount,
+                      suffixText: _currency,
+                      helperText: _amountPreview(),
+                    ),
                     validator: (v) {
                       final num? n = num.tryParse((v ?? '').trim());
                       return (n == null || n <= 0)
