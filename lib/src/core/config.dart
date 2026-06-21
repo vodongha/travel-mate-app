@@ -18,6 +18,30 @@ class AppConfig {
   /// Community & support forum, opened from Settings.
   static const String communityUrl = 'https://vodongha.forumvi.com';
 
+  /// Google OAuth **Web client ID** (from Google Cloud → Credentials). Required for Google Sign-In:
+  /// on web it is the client id; on Android it is the `serverClientId` so the backend can verify the
+  /// returned ID token. Supply with `--dart-define=GOOGLE_SERVER_CLIENT_ID=...`. Empty = Google
+  /// Sign-In disabled (the button reports "not configured").
+  static const String googleServerClientId = String.fromEnvironment(
+    'GOOGLE_SERVER_CLIENT_ID',
+    // The project's **Web** OAuth client ID — public (it ships to clients) so it's a safe default.
+    // The Google ID token's `aud` equals this; the backend must verify against the SAME id
+    // (env `GOOGLE_CLIENT_ID`).
+    defaultValue:
+        '542406829306-4f37t1brg750jdoksjidh197hkbopnuj.apps.googleusercontent.com',
+  );
+
+  /// Whether Google Sign-In is wired up (a client id was provided at build time).
+  static bool get googleSignInEnabled => googleServerClientId.isNotEmpty;
+
+  /// Web Push (VAPID) **public** key — required by `getToken` on web only. Must be the key pair from
+  /// Firebase Console → Cloud Messaging → Web Push certificates. Empty = web push disabled.
+  static const String webPushVapidKey = String.fromEnvironment(
+    'WEB_PUSH_VAPID_KEY',
+    defaultValue:
+        'BFzFkKDu8m8Z5p1xJCI23CYsh0v4KlJMdgH3y60lbpprUJwGclR-DOn8wYxVS_bCSisHK5iwbQ4fR4hMtWfOzoA',
+  );
+
   /// The backend-served, bilingual privacy policy (LegalController). [lang] is `vi` or `en`.
   static String privacyUrl(String lang) =>
       '$apiBaseUrl$apiPrefix/privacy?lang=${lang == 'en' ? 'en' : 'vi'}';

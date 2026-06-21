@@ -7,6 +7,7 @@ import '../../../core/app_error.dart';
 import '../../../core/responsive.dart';
 import '../application/auth_controller.dart';
 import 'auth_validators.dart';
+import 'google_sign_in_button.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -117,6 +118,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         _submitting ? null : () => context.go('/register'),
                     child: Text(l10n.authNeedAccount),
                   ),
+                  GoogleSignInButton(enabled: !_submitting),
                 ],
               ),
             ),

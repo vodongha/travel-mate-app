@@ -6,6 +6,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/actions.dart';
 import '../../../core/app_error.dart';
 import '../../../core/app_error_view.dart';
+import '../../../core/form_buttons.dart';
 import '../../../core/labels.dart';
 import '../../../core/money.dart';
 import '../../../core/responsive.dart';
@@ -215,23 +216,20 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
                 return (n == null || n < 0) ? l10n.validationRequired : null;
               },
             ),
+            const SizedBox(height: 20),
+            FormButtons(
+              primaryLabel: l10n.actionSave,
+              onPrimary: () {
+                if (_formKey.currentState!.validate()) {
+                  Navigator.pop(context,
+                      _BudgetInput(_category, num.parse(_amount.text.trim())));
+                }
+              },
+              onCancel: () => Navigator.pop(context),
+            ),
           ],
         ),
       ),
-      actions: [
-        TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.actionCancel)),
-        FilledButton(
-          onPressed: () {
-            if (_formKey.currentState!.validate()) {
-              Navigator.pop(context,
-                  _BudgetInput(_category, num.parse(_amount.text.trim())));
-            }
-          },
-          child: Text(l10n.actionSave),
-        ),
-      ],
     );
   }
 }

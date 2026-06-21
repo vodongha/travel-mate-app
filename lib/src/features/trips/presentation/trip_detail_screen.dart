@@ -158,6 +158,28 @@ class TripDetailScreen extends ConsumerWidget {
                       ),
                       const Divider(height: 1),
                       ListTile(
+                        leading: const Icon(Icons.commute_outlined),
+                        title: Text(l10n.navTransport),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.go('/trips/$tripRid/transports'),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.hotel_outlined),
+                        title: Text(l10n.navAccommodation),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () =>
+                            context.go('/trips/$tripRid/accommodations'),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.place_outlined),
+                        title: Text(l10n.navPlaces),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.go('/trips/$tripRid/places'),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
                         leading: const Icon(Icons.checklist_outlined),
                         title: Text(l10n.navChecklist),
                         trailing: const Icon(Icons.chevron_right),

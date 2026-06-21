@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/token_storage.dart';
+import '../../notifications/application/push_service.dart';
 import '../data/auth_repository.dart';
+import '../data/google_auth_service.dart';
 import '../domain/auth_user.dart';
 
 /// Holds the session as `AsyncValue<AuthUser?>` (null = signed out). On startup it resolves the
@@ -10,6 +12,8 @@ import '../domain/auth_user.dart';
 class AuthController extends AsyncNotifier<AuthUser?> {
   TokenStorage get _storage => ref.read(tokenStorageProvider);
   AuthRepository get _repo => ref.read(authRepositoryProvider);
+  GoogleAuthService get _google => ref.read(googleAuthServiceProvider);
+  PushService get _push => ref.read(pushServiceProvider);
 
   @override
   Future<AuthUser?> build() async {
@@ -36,7 +40,31 @@ class AuthController extends AsyncNotifier<AuthUser?> {
     await _persist(session);
   }
 
+  /// Signs in with Google (mobile): gets an ID token from the device, exchanges it at `/auth/google`.
+  /// Does nothing if the user cancels the Google account picker.
+  Future<void> signInWithGoogle() async {
+    final String? idToken = await _google.signInGetIdToken();
+    if (idToken == null) {
+      return;
+    }
+    await exchangeGoogleIdToken(idToken);
+  }
+
+  /// Exchanges an already-obtained Google ID token for an app session. Used by the web sign-in flow,
+  /// where the token comes from the Google-rendered button rather than an imperative call.
+  Future<void> exchangeGoogleIdToken(String idToken) async {
+    final AuthSession session = await _repo.googleLogin(idToken);
+    await _persist(session);
+  }
+
   Future<void> logout() async {
+    // Best-effort cleanup; never block sign-out on these.
+    try {
+      await _push.unregister();
+    } catch (_) {}
+    try {
+      await _google.signOut();
+    } catch (_) {}
     await _storage.clear();
     state = const AsyncData(null);
   }
@@ -93,6 +121,10 @@ class AuthController extends AsyncNotifier<AuthUser?> {
     await _storage.save(
         access: session.accessToken, refresh: session.refreshToken);
     state = AsyncData(session.user);
+    // Best-effort: register this device for push. No-op until FCM is configured.
+    try {
+      await _push.registerCurrentDevice();
+    } catch (_) {}
   }
 }
 
