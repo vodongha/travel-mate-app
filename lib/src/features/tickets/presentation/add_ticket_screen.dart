@@ -32,6 +32,7 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
   final _title = TextEditingController();
   final _note = TextEditingController();
   final _code = TextEditingController();
+  final _seat = TextEditingController();
   String _type = 'OTHER';
   // null ⇒ "myself" (server omits memberRid); otherwise the chosen member's rid.
   String? _memberRid;
@@ -48,6 +49,7 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
       _note.text = t.note ?? '';
       _type = t.ticketType;
       _code.text = t.qrData ?? '';
+      _seat.text = t.seat ?? '';
       _memberRid = t.mine ? null : t.memberRid;
     }
   }
@@ -57,6 +59,7 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
     _title.dispose();
     _note.dispose();
     _code.dispose();
+    _seat.dispose();
     super.dispose();
   }
 
@@ -87,6 +90,7 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
           title: _title.text.trim(),
           ticketType: _type,
           qrData: _trim(_code),
+          seat: _type == 'TRANSPORT' ? _trim(_seat) : null,
           note: _trim(_note),
         );
       } else {
@@ -95,6 +99,7 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
           title: _title.text.trim(),
           ticketType: _type,
           qrData: _trim(_code),
+          seat: _type == 'TRANSPORT' ? _trim(_seat) : null,
           note: _trim(_note),
         );
       }
@@ -172,6 +177,15 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
                     ),
                   ),
                 ),
+                if (_type == 'TRANSPORT') ...[
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _seat,
+                    decoration: InputDecoration(
+                        labelText: l10n.fieldSeat,
+                        prefixIcon: const Icon(Icons.event_seat_outlined)),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 if (canAssign)
                   members.when(
