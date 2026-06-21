@@ -8,13 +8,17 @@ import '../../../core/actions.dart';
 import '../../../core/app_error.dart';
 import '../../../core/app_error_view.dart';
 import '../../../core/labels.dart';
+import '../../../core/money.dart';
 import '../../../core/responsive.dart';
 import '../../accommodation/application/accommodation_controller.dart';
 import '../../accommodation/data/accommodation_repository.dart';
+import '../../expenses/application/expenses_controller.dart';
+import '../../expenses/data/expense_repository.dart';
 import '../../places/application/place_controller.dart';
 import '../../places/data/place_repository.dart';
 import '../../transport/application/transport_controller.dart';
 import '../../transport/data/transport_repository.dart';
+import '../../trips/application/trips_controller.dart';
 import '../application/events_controller.dart';
 import '../data/event_repository.dart';
 
@@ -109,15 +113,26 @@ class TimelineScreen extends ConsumerWidget {
     List<TransportItem> transports,
     List<AccommodationItem> stays,
     List<PlaceItem> places,
+    List<ExpenseItem> expenses,
+    String baseCurrency,
   ) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final Map<String, String> placeNames = {
       for (final PlaceItem p in places) p.rid: p.name
     };
+    // Sum each event's attached expenses (already in the trip's base currency).
+    final Map<String, num> costByEvent = {};
+    for (final ExpenseItem x in expenses) {
+      if (x.eventRid != null) {
+        costByEvent[x.eventRid!] =
+            (costByEvent[x.eventRid!] ?? 0) + x.amountBase;
+      }
+    }
     final List<_Entry> entries = [];
 
     for (final EventItem e in events) {
       final String? place = e.placeRid == null ? null : placeNames[e.placeRid];
+      final num cost = costByEvent[e.rid] ?? 0;
       entries.add(_Entry(
         when: e.startTime?.toLocal(),
         icon: _eventIcon(e.eventType),
@@ -125,6 +140,7 @@ class TimelineScreen extends ConsumerWidget {
         subtitle: [
           Labels.eventType(context, e.eventType),
           if (place != null && place.isNotEmpty) place,
+          if (cost > 0) Money.format(cost, baseCurrency),
         ].join(' · '),
         onTap: () => _eventActions(context, ref, e),
       ));
@@ -180,6 +196,10 @@ class TimelineScreen extends ConsumerWidget {
             const [];
     final List<PlaceItem> places =
         ref.watch(placeControllerProvider(tripRid)).valueOrNull ?? const [];
+    final List<ExpenseItem> expenses =
+        ref.watch(expensesControllerProvider(tripRid)).valueOrNull ?? const [];
+    final String baseCurrency =
+        ref.watch(tripProvider(tripRid)).valueOrNull?.baseCurrency ?? 'VND';
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navTimeline)),
@@ -197,8 +217,8 @@ class TimelineScreen extends ConsumerWidget {
                 onRetry: () =>
                     ref.invalidate(eventsControllerProvider(tripRid))),
             data: (list) {
-              final List<_Entry> entries =
-                  _entries(context, ref, list, transports, stays, places);
+              final List<_Entry> entries = _entries(context, ref, list,
+                  transports, stays, places, expenses, baseCurrency);
               if (entries.isEmpty) {
                 return Center(child: Text(l10n.timelineEmpty));
               }
@@ -208,6 +228,7 @@ class TimelineScreen extends ConsumerWidget {
                   ref.invalidate(transportControllerProvider(tripRid));
                   ref.invalidate(accommodationControllerProvider(tripRid));
                   ref.invalidate(placeControllerProvider(tripRid));
+                  ref.invalidate(expensesControllerProvider(tripRid));
                 },
                 child: _DayTimeline(entries: entries),
               );
