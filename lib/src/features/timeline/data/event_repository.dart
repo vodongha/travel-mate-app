@@ -11,6 +11,7 @@ class EventItem {
     required this.eventType,
     this.startTime,
     this.endTime,
+    this.placeRid,
     this.note,
   });
 
@@ -19,6 +20,9 @@ class EventItem {
   final String eventType;
   final DateTime? startTime;
   final DateTime? endTime;
+
+  /// The linked trip place (its location on the map), or null.
+  final String? placeRid;
   final String? note;
 
   factory EventItem.fromJson(Map<String, dynamic> json) {
@@ -29,6 +33,7 @@ class EventItem {
       eventType: json['eventType'] as String? ?? 'OTHER',
       startTime: parse(json['startTime']),
       endTime: parse(json['endTime']),
+      placeRid: json['placeRid'] as String?,
       note: json['note'] as String?,
     );
   }
@@ -58,6 +63,7 @@ class EventRepository {
     required String eventType,
     required DateTime startTimeUtc,
     DateTime? endTimeUtc,
+    String? placeRid,
     String? note,
   }) async {
     try {
@@ -66,6 +72,7 @@ class EventRepository {
         'eventType': eventType,
         'startTime': startTimeUtc.toIso8601String(),
         if (endTimeUtc != null) 'endTime': endTimeUtc.toIso8601String(),
+        if (placeRid != null && placeRid.isNotEmpty) 'placeRid': placeRid,
         if (note != null && note.isNotEmpty) 'note': note,
       });
     } on DioException catch (e) {
@@ -80,6 +87,7 @@ class EventRepository {
     required String eventType,
     required DateTime startTimeUtc,
     DateTime? endTimeUtc,
+    String? placeRid,
     String? note,
   }) async {
     try {
@@ -88,6 +96,8 @@ class EventRepository {
         'eventType': eventType,
         'startTime': startTimeUtc.toIso8601String(),
         'endTime': endTimeUtc?.toIso8601String(),
+        // Blank clears the place link; omit-null would leave it unchanged.
+        'placeRid': placeRid ?? '',
         'note': note ?? '',
       });
     } on DioException catch (e) {
