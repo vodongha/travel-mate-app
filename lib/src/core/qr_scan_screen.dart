@@ -18,9 +18,6 @@ class _QrScanScreenState extends State<QrScanScreen> {
   MobileScannerController? _controller;
   bool _checking = true;
   bool _denied = false;
-  // The real underlying camera error (not just "genericError"), shown so we can
-  // see *why* it failed instead of masking everything as a permission problem.
-  String? _error;
   bool _handled = false;
 
   @override
@@ -33,7 +30,6 @@ class _QrScanScreenState extends State<QrScanScreen> {
     setState(() {
       _checking = true;
       _denied = false;
-      _error = null;
     });
     // Ask for the camera permission ourselves first (clear denied UI). On web the
     // browser handles its own prompt, so skip permission_handler there.
@@ -49,33 +45,20 @@ class _QrScanScreenState extends State<QrScanScreen> {
         return;
       }
     }
-    // Start the camera explicitly (autoStart off) so a start failure surfaces its
-    // real exception here instead of a bare error inside the widget.
-    final MobileScannerController controller = MobileScannerController(
-      autoStart: false,
-      formats: const [BarcodeFormat.qrCode],
-      detectionSpeed: DetectionSpeed.noDuplicates,
-    );
-    try {
-      await controller.start();
-    } catch (e) {
-      await controller.dispose();
-      if (mounted) {
-        setState(() {
-          _checking = false;
-          _error = _describe(e);
-        });
-      }
-      return;
+    // Create the controller with autoStart (the default): the MobileScanner
+    // widget attaches it and calls start() once it's built. We must NOT call
+    // start() ourselves before the widget exists — mobile_scanner throws
+    // "controllerNotAttached" in that case. A start failure (e.g. a real camera
+    // error) surfaces through the widget's errorBuilder below.
+    if (mounted) {
+      setState(() {
+        _controller = MobileScannerController(
+          formats: const [BarcodeFormat.qrCode],
+          detectionSpeed: DetectionSpeed.noDuplicates,
+        );
+        _checking = false;
+      });
     }
-    if (!mounted) {
-      await controller.dispose();
-      return;
-    }
-    setState(() {
-      _controller = controller;
-      _checking = false;
-    });
   }
 
   /// Flatten a scanner error into a human-readable line (code + native message).
@@ -114,13 +97,7 @@ class _QrScanScreenState extends State<QrScanScreen> {
           ? const Center(child: CircularProgressIndicator())
           : _denied
               ? _CameraProblem(l10n: l10n, onRetry: _init, permission: true)
-              : _error != null
-                  ? _CameraProblem(
-                      l10n: l10n,
-                      onRetry: _init,
-                      permission: false,
-                      detail: _error)
-                  : _scanner(l10n),
+              : _scanner(l10n),
     );
   }
 
