@@ -8,6 +8,8 @@ import '../../../core/app_error.dart';
 import '../../../core/currencies.dart';
 import '../../../core/currency_picker.dart';
 import '../../../core/form_buttons.dart';
+import '../../../core/geocoding.dart';
+import '../../../core/location_picker.dart';
 import '../../../core/responsive.dart';
 import '../../auth/presentation/auth_validators.dart';
 import '../application/trips_controller.dart';
@@ -52,6 +54,16 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
     _name.dispose();
     _destination.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickDestination() async {
+    final GeoResult? r = await showLocationPicker(context,
+        initialName:
+            _destination.text.trim().isEmpty ? null : _destination.text.trim());
+    if (r != null) {
+      setState(
+          () => _destination.text = r.name.isEmpty ? r.displayName : r.name);
+    }
   }
 
   Future<void> _pickStart() async {
@@ -155,8 +167,14 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
                     controller: _destination,
                     textCapitalization: TextCapitalization.words,
                     decoration: InputDecoration(
-                        labelText: l10n.tripDestination,
-                        prefixIcon: const Icon(Icons.place_outlined)),
+                      labelText: l10n.tripDestination,
+                      prefixIcon: const Icon(Icons.place_outlined),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.map_outlined),
+                        tooltip: l10n.placePickLocation,
+                        onPressed: _pickDestination,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   InkWell(
