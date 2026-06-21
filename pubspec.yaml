@@ -1,7 +1,7 @@
 name: travel_mate_app
 description: "TravelMate — group-trip planning & shared-expense (Android + Web)."
 publish_to: "none"
-version: 1.0.0+3
+version: 1.0.0+4
 
 environment:
   sdk: ">=3.5.0 <4.0.0"
@@ -41,7 +41,7 @@ dependencies:
   # Phone input with country picker + E.164 validation (mirrors family-budget-app).
   phone_form_field: ^10.0.17
   # Scan a ticket QR into its decoded string (camera). We store the string, render on view.
-  mobile_scanner: ^5.2.3
+  mobile_scanner: ^7.2.0
   # Request the camera permission at runtime before opening the scanner (else "genericError").
   permission_handler: ^11.3.1
   # OpenStreetMap map for trip places (no API key needed). latlong2 supplies LatLng.

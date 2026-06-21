@@ -39,8 +39,18 @@ class PlacesScreen extends ConsumerWidget {
 
   Future<void> _rowActions(
       BuildContext context, WidgetRef ref, PlaceItem item) async {
-    final RowAction? action = await showRowActions(context, title: item.name);
+    final RowAction? action =
+        await showRowActions(context, title: item.name, allowMaps: true);
     if (action == null || !context.mounted) {
+      return;
+    }
+    if (action == RowAction.maps) {
+      await openInGoogleMaps(
+        context,
+        lat: item.latitude,
+        lng: item.longitude,
+        query: item.address ?? item.name,
+      );
       return;
     }
     if (action == RowAction.edit) {
@@ -129,13 +139,8 @@ class PlacesScreen extends ConsumerWidget {
                               onPressed: () => _rowActions(context, ref, p),
                             ),
                             onTap: () => _rowActions(context, ref, p),
-                            // Long-press opens the place in Google Maps.
-                            onLongPress: () => openInGoogleMaps(
-                              context,
-                              lat: p.latitude,
-                              lng: p.longitude,
-                              query: p.address ?? p.name,
-                            ),
+                            // Long-press opens the same options menu (Maps/Edit/Delete).
+                            onLongPress: () => _rowActions(context, ref, p),
                           ),
                         );
                       },
