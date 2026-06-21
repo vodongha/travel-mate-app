@@ -26,7 +26,7 @@ class TransportScreen extends ConsumerWidget {
       return;
     }
     if (action == RowAction.edit) {
-      context.go('/trips/$tripRid/transports/${item.rid}/edit', extra: item);
+      context.push('/trips/$tripRid/transports/${item.rid}/edit', extra: item);
       return;
     }
     if (!await confirmDelete(context) || !context.mounted) {
@@ -80,7 +80,7 @@ class TransportScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navTransport)),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.go('/trips/$tripRid/transports/new'),
+        onPressed: () => context.push('/trips/$tripRid/transports/new'),
         icon: const Icon(Icons.add),
         label: Text(l10n.transportNew),
       ),

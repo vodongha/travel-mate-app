@@ -115,7 +115,9 @@ class _AddAccommodationScreenState
         );
       }
       if (mounted) {
-        context.go('/trips/${widget.tripRid}/accommodations');
+        context.canPop()
+            ? context.pop()
+            : context.go('/trips/${widget.tripRid}/accommodations');
       }
     } catch (error) {
       if (mounted) {

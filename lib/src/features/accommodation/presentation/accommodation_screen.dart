@@ -24,7 +24,7 @@ class AccommodationScreen extends ConsumerWidget {
       return;
     }
     if (action == RowAction.edit) {
-      context.go('/trips/$tripRid/accommodations/${item.rid}/edit',
+      context.push('/trips/$tripRid/accommodations/${item.rid}/edit',
           extra: item);
       return;
     }
@@ -51,7 +51,7 @@ class AccommodationScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navAccommodation)),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.go('/trips/$tripRid/accommodations/new'),
+        onPressed: () => context.push('/trips/$tripRid/accommodations/new'),
         icon: const Icon(Icons.add),
         label: Text(l10n.accommodationNew),
       ),
