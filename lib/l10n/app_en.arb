@@ -198,6 +198,7 @@
   "fieldName": "Name",
   "fieldAddress": "Address",
   "fieldBookingCode": "Booking code",
+  "fieldSeat": "Seat",
   "fieldType": "Type",
   "navTransport": "Transport",
   "transportNew": "Add transport",
