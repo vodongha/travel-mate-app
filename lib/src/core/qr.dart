@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../l10n/app_localizations.dart';
+import 'form_buttons.dart';
 import 'qr_scan_screen.dart';
 
 /// Shows a stored QR string as a regenerated QR code (SPEC §2.7 — we never store the image). Any
@@ -94,12 +95,75 @@ class QrField extends StatelessWidget {
               }
             },
           ),
+          // Manual type/paste — works everywhere (and the fallback when the camera
+          // or web scanner isn't available).
+          IconButton(
+            tooltip: l10n.qrEnterManually,
+            icon: const Icon(Icons.keyboard_outlined),
+            onPressed: () async {
+              final String? code = await showDialog<String>(
+                context: context,
+                builder: (_) => _QrManualDialog(initial: value),
+              );
+              if (code != null) {
+                onChanged(code.isEmpty ? null : code);
+              }
+            },
+          ),
           if (has)
             IconButton(
               tooltip: l10n.actionRemove,
               icon: const Icon(Icons.clear),
               onPressed: () => onChanged(null),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Type/paste the decoded QR string by hand — the fallback when scanning isn't available (e.g. web
+/// without camera access). Returns the entered string, or null on cancel.
+class _QrManualDialog extends StatefulWidget {
+  const _QrManualDialog({this.initial});
+
+  final String? initial;
+
+  @override
+  State<_QrManualDialog> createState() => _QrManualDialogState();
+}
+
+class _QrManualDialogState extends State<_QrManualDialog> {
+  late final TextEditingController _controller =
+      TextEditingController(text: widget.initial ?? '');
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    return AlertDialog(
+      title: Text(l10n.qrEnterManually),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            minLines: 1,
+            maxLines: 4,
+            decoration: InputDecoration(labelText: l10n.qrTicket),
+          ),
+          const SizedBox(height: 20),
+          FormButtons(
+            primaryLabel: l10n.actionSave,
+            onPrimary: () => Navigator.pop(context, _controller.text.trim()),
+            onCancel: () => Navigator.pop(context),
+          ),
         ],
       ),
     );

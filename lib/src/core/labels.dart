@@ -117,6 +117,26 @@ class Labels {
     }
   }
 
+  static const List<String> ticketTypes = [
+    'TRANSPORT', 'ACCOMMODATION', 'SIGHTSEEING', 'EVENT', 'OTHER', //
+  ];
+
+  static String ticketType(BuildContext context, String value) {
+    final AppLocalizations l = AppLocalizations.of(context);
+    switch (value) {
+      case 'TRANSPORT':
+        return l.tkTRANSPORT;
+      case 'ACCOMMODATION':
+        return l.tkACCOMMODATION;
+      case 'SIGHTSEEING':
+        return l.tkSIGHTSEEING;
+      case 'EVENT':
+        return l.tkEVENT;
+      default:
+        return l.tkOTHER;
+    }
+  }
+
   static String splitType(BuildContext context, String value) {
     final AppLocalizations l = AppLocalizations.of(context);
     switch (value) {

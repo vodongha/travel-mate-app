@@ -190,6 +190,7 @@
   "qrScanHint": "Hướng camera vào mã QR",
   "qrView": "Xem mã QR",
   "qrEmpty": "Chưa có mã QR",
+  "qrEnterManually": "Nhập mã QR thủ công",
   "fieldName": "Tên",
   "fieldAddress": "Địa chỉ",
   "fieldBookingCode": "Mã đặt chỗ",
@@ -248,5 +249,19 @@
   },
   "tripCountdownStartsToday": "Bắt đầu hôm nay",
   "tripCountdownOngoing": "Đang diễn ra",
-  "tripCountdownEnded": "Đã kết thúc"
+  "tripCountdownEnded": "Đã kết thúc",
+  "navTickets": "Vé của tôi",
+  "ticketsHubSubtitle": "Đưa mã QR của bạn tại cổng",
+  "ticketNew": "Thêm vé",
+  "ticketEditTitle": "Sửa vé",
+  "ticketsEmpty": "Chưa có vé nào",
+  "ticketsAll": "Tất cả vé",
+  "ticketUntitled": "Vé",
+  "ticketAssignee": "Thuộc về",
+  "ticketAssigneeMyself": "Tôi",
+  "tkTRANSPORT": "Di chuyển",
+  "tkACCOMMODATION": "Lưu trú",
+  "tkSIGHTSEEING": "Tham quan",
+  "tkEVENT": "Sự kiện",
+  "tkOTHER": "Khác"
 }

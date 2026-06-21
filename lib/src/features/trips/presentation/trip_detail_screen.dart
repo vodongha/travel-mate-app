@@ -129,6 +129,15 @@ class TripDetailScreen extends ConsumerWidget {
                       ),
                       const Divider(height: 1),
                       ListTile(
+                        leading: Icon(Icons.qr_code_2,
+                            color: Theme.of(context).colorScheme.primary),
+                        title: Text(l10n.navTickets),
+                        subtitle: Text(l10n.ticketsHubSubtitle),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.push('/trips/$tripRid/tickets'),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
                         leading: const Icon(Icons.receipt_long_outlined),
                         title: Text(l10n.navExpenses),
                         trailing: const Icon(Icons.chevron_right),
