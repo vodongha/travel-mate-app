@@ -28,6 +28,11 @@ import '../features/settings/presentation/account_dialogs.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/settings/presentation/web_page_screen.dart';
 import '../features/settlement/presentation/settlement_screen.dart';
+import '../features/tickets/data/ticket_repository.dart';
+import '../features/tickets/presentation/add_ticket_screen.dart';
+import '../features/tickets/presentation/all_tickets_screen.dart';
+import '../features/tickets/presentation/ticket_qr_screen.dart';
+import '../features/tickets/presentation/tickets_screen.dart';
 import '../features/timeline/data/event_repository.dart';
 import '../features/timeline/presentation/add_event_screen.dart';
 import '../features/timeline/presentation/timeline_screen.dart';
@@ -216,6 +221,33 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/trips/:rid/places',
         builder: (context, state) =>
             PlacesScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/tickets/new',
+        builder: (context, state) =>
+            AddTicketScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/tickets/all',
+        builder: (context, state) =>
+            AllTicketsScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/tickets/:ticketRid/edit',
+        builder: (context, state) => AddTicketScreen(
+          tripRid: state.pathParameters['rid']!,
+          existing: state.extra as Ticket?,
+        ),
+      ),
+      GoRoute(
+        path: '/trips/:rid/tickets/:ticketRid/qr',
+        builder: (context, state) =>
+            TicketQrScreen(ticket: state.extra as Ticket),
+      ),
+      GoRoute(
+        path: '/trips/:rid/tickets',
+        builder: (context, state) =>
+            TicketsScreen(tripRid: state.pathParameters['rid']!),
       ),
       GoRoute(
         path: '/trips/:rid/edit',

@@ -190,6 +190,7 @@
   "qrScanHint": "Point the camera at the QR code",
   "qrView": "Show QR",
   "qrEmpty": "No QR saved",
+  "qrEnterManually": "Enter QR manually",
   "fieldName": "Name",
   "fieldAddress": "Address",
   "fieldBookingCode": "Booking code",
@@ -248,5 +249,19 @@
   },
   "tripCountdownStartsToday": "Starts today",
   "tripCountdownOngoing": "Ongoing",
-  "tripCountdownEnded": "Ended"
+  "tripCountdownEnded": "Ended",
+  "navTickets": "My tickets",
+  "ticketsHubSubtitle": "Show your QR at the gate",
+  "ticketNew": "Add ticket",
+  "ticketEditTitle": "Edit ticket",
+  "ticketsEmpty": "No tickets yet",
+  "ticketsAll": "All tickets",
+  "ticketUntitled": "Ticket",
+  "ticketAssignee": "Belongs to",
+  "ticketAssigneeMyself": "Myself",
+  "tkTRANSPORT": "Transport",
+  "tkACCOMMODATION": "Accommodation",
+  "tkSIGHTSEEING": "Sightseeing",
+  "tkEVENT": "Event",
+  "tkOTHER": "Other"
 }
