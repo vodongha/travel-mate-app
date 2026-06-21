@@ -1,7 +1,8 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:google_sign_in_web/web_only.dart' as web;
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../core/config.dart';
 import '../../../core/theme.dart';
 
@@ -44,11 +45,11 @@ class _WebGoogleButtonState extends State<_WebGoogleButton> {
 
   @override
   Widget build(BuildContext context) {
-    // The GIS button is Google-rendered, so we can't fully restyle it — but we make it full-width,
-    // clip it to the app's shared button radius (14), and reserve the same 50px row height as the
-    // app's other buttons (FormButtons / OutlinedButton) so it lines up with them. Both GIS states
-    // — the generic "Continue with Google" and the personalised "Continue as <name>" — render the
-    // same way here.
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    // Google Identity Services (web) only signs in through ITS OWN rendered button, which can't be
+    // restyled to match the app. So we draw the app's own Google button (identical to the mobile
+    // OutlinedButton) and lay the real GIS button on top, fully transparent — on web it's a DOM
+    // element above the Flutter canvas, so it still receives the click and runs the sign-in flow.
     return LayoutBuilder(
       builder: (context, constraints) {
         final double width =
@@ -56,20 +57,36 @@ class _WebGoogleButtonState extends State<_WebGoogleButton> {
         return SizedBox(
           height: AppTheme.buttonHeight,
           width: width,
-          child: Center(
-            child: ClipRRect(
-              borderRadius: AppTheme.buttonRadius,
-              child: web.renderButton(
-                configuration: web.GSIButtonConfiguration(
-                  theme: web.GSIButtonTheme.outline,
-                  size: web.GSIButtonSize.large,
-                  text: web.GSIButtonText.continueWith,
-                  shape: web.GSIButtonShape.rectangular,
-                  logoAlignment: web.GSIButtonLogoAlignment.left,
-                  minimumWidth: width,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // What the user sees — matches the rest of the app's buttons.
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: OutlinedButton.icon(
+                    onPressed: () {},
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(AppTheme.buttonHeight),
+                    ),
+                    icon: const Icon(Icons.g_mobiledata, size: 28),
+                    label: Text(l10n.authGoogle),
+                  ),
                 ),
               ),
-            ),
+              // The real (invisible) GIS button that actually handles the click.
+              Opacity(
+                opacity: 0.0,
+                child: web.renderButton(
+                  configuration: web.GSIButtonConfiguration(
+                    theme: web.GSIButtonTheme.outline,
+                    size: web.GSIButtonSize.large,
+                    text: web.GSIButtonText.continueWith,
+                    shape: web.GSIButtonShape.rectangular,
+                    minimumWidth: width,
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       },
