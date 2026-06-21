@@ -53,9 +53,12 @@ class PlaceRepository {
     }
   }
 
-  Future<void> create(String tripRid, Map<String, dynamic> body) async {
+  Future<PlaceItem> create(String tripRid, Map<String, dynamic> body) async {
     try {
-      await _dio.post<dynamic>(_base(tripRid), data: body);
+      final Response<dynamic> res =
+          await _dio.post<dynamic>(_base(tripRid), data: body);
+      return PlaceItem.fromJson(
+          (res.data as Map)['data'] as Map<String, dynamic>);
     } on DioException catch (e) {
       throw toApiException(e);
     }

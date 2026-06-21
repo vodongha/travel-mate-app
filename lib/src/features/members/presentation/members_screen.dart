@@ -109,7 +109,7 @@ class MembersScreen extends ConsumerWidget {
           IconButton(
             tooltip: l10n.inviteTitle,
             icon: const Icon(Icons.person_add_alt),
-            onPressed: () => context.go('/trips/$tripRid/members/invite'),
+            onPressed: () => context.push('/trips/$tripRid/members/invite'),
           ),
         ],
       ),

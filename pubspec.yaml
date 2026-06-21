@@ -30,12 +30,21 @@ dependencies:
   qr_flutter: ^4.1.0
   # Open the privacy policy + community forum in the browser / a new tab.
   url_launcher: ^6.3.1
+  # In-app WebView (About → website, community/support) on Android/iOS. Never
+  # imported on a web-reachable path — web uses an <iframe> via package:web and
+  # opens external sites in a new tab via url_launcher.
+  webview_flutter: ^4.10.0
+  # The web <iframe> platform view (used only by app_web_view_web.dart).
+  web: ^1.1.0
   # App version shown on the Settings/About screen.
   package_info_plus: ^8.1.1
   # Phone input with country picker + E.164 validation (mirrors family-budget-app).
   phone_form_field: ^10.0.17
   # Scan a ticket QR into its decoded string (camera). We store the string, render on view.
   mobile_scanner: ^5.2.3
+  # OpenStreetMap map for trip places (no API key needed). latlong2 supplies LatLng.
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
   # Google Sign-In: returns a Google ID token the backend verifies (POST /auth/google).
   google_sign_in: ^6.2.2
   # Web Google Sign-In uses Google Identity Services' rendered button (web_only.renderButton).

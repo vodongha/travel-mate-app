@@ -8,23 +8,84 @@ import '../../../core/actions.dart';
 import '../../../core/app_error.dart';
 import '../../../core/app_error_view.dart';
 import '../../../core/labels.dart';
+import '../../../core/money.dart';
 import '../../../core/responsive.dart';
+import '../../accommodation/application/accommodation_controller.dart';
+import '../../accommodation/data/accommodation_repository.dart';
+import '../../expenses/application/expenses_controller.dart';
+import '../../expenses/data/expense_repository.dart';
+import '../../places/application/place_controller.dart';
+import '../../places/data/place_repository.dart';
+import '../../transport/application/transport_controller.dart';
+import '../../transport/data/transport_repository.dart';
+import '../../trips/application/trips_controller.dart';
 import '../application/events_controller.dart';
 import '../data/event_repository.dart';
+
+/// One thing happening on the trip — an event, a transport leg, or a stay — placed on the day-by-day
+/// itinerary. The timeline is the trip's main axis; everything with a time shows up here.
+class _Entry {
+  _Entry({
+    required this.when,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final DateTime? when; // local time, null = no time set
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+}
 
 class TimelineScreen extends ConsumerWidget {
   const TimelineScreen({super.key, required this.tripRid});
 
   final String tripRid;
 
-  Future<void> _rowActions(
+  Future<void> _eventActions(
       BuildContext context, WidgetRef ref, EventItem event) async {
-    final RowAction? action = await showRowActions(context, title: event.title);
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final String? action = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.add_card_outlined),
+              title: Text(l10n.expenseNew),
+              onTap: () => Navigator.pop(ctx, 'expense'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.edit_outlined),
+              title: Text(l10n.actionEdit),
+              onTap: () => Navigator.pop(ctx, 'edit'),
+            ),
+            ListTile(
+              leading: Icon(Icons.delete_outline,
+                  color: Theme.of(ctx).colorScheme.error),
+              title: Text(l10n.actionDelete,
+                  style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
+              onTap: () => Navigator.pop(ctx, 'delete'),
+            ),
+          ],
+        ),
+      ),
+    );
     if (action == null || !context.mounted) {
       return;
     }
-    if (action == RowAction.edit) {
-      context.go('/trips/$tripRid/timeline/${event.rid}/edit', extra: event);
+    if (action == 'edit') {
+      context.push('/trips/$tripRid/timeline/${event.rid}/edit', extra: event);
+      return;
+    }
+    if (action == 'expense') {
+      // Pre-attach the new expense to this event.
+      context.push('/trips/$tripRid/expenses/new', extra: event.rid);
       return;
     }
     if (!await confirmDelete(context) || !context.mounted) {
@@ -42,15 +103,141 @@ class TimelineScreen extends ConsumerWidget {
     }
   }
 
+  static IconData _eventIcon(String type) {
+    switch (type) {
+      case 'TRANSPORT':
+        return Icons.commute_outlined;
+      case 'HOTEL':
+        return Icons.hotel_outlined;
+      case 'FOOD':
+        return Icons.restaurant_outlined;
+      case 'SIGHTSEEING':
+        return Icons.attractions_outlined;
+      case 'SHOPPING':
+        return Icons.shopping_bag_outlined;
+      case 'ACTIVITY':
+        return Icons.local_activity_outlined;
+      default:
+        return Icons.event_note_outlined;
+    }
+  }
+
+  static IconData _transportIcon(String type) {
+    switch (type) {
+      case 'FLIGHT':
+        return Icons.flight;
+      case 'TRAIN':
+        return Icons.train;
+      case 'BUS':
+        return Icons.directions_bus;
+      case 'FERRY':
+        return Icons.directions_boat;
+      case 'TAXI':
+        return Icons.local_taxi;
+      default:
+        return Icons.directions_car;
+    }
+  }
+
+  List<_Entry> _entries(
+    BuildContext context,
+    WidgetRef ref,
+    List<EventItem> events,
+    List<TransportItem> transports,
+    List<AccommodationItem> stays,
+    List<PlaceItem> places,
+    List<ExpenseItem> expenses,
+    String baseCurrency,
+  ) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final Map<String, String> placeNames = {
+      for (final PlaceItem p in places) p.rid: p.name
+    };
+    // Sum each event's attached expenses (already in the trip's base currency).
+    final Map<String, num> costByEvent = {};
+    for (final ExpenseItem x in expenses) {
+      if (x.eventRid != null) {
+        costByEvent[x.eventRid!] =
+            (costByEvent[x.eventRid!] ?? 0) + x.amountBase;
+      }
+    }
+    final List<_Entry> entries = [];
+
+    for (final EventItem e in events) {
+      final String? place = e.placeRid == null ? null : placeNames[e.placeRid];
+      final num cost = costByEvent[e.rid] ?? 0;
+      entries.add(_Entry(
+        when: e.startTime?.toLocal(),
+        icon: _eventIcon(e.eventType),
+        title: e.title,
+        subtitle: [
+          Labels.eventType(context, e.eventType),
+          if (place != null && place.isNotEmpty) place,
+          if (cost > 0) Money.format(cost, baseCurrency),
+        ].join(' · '),
+        onTap: () => _eventActions(context, ref, e),
+      ));
+    }
+    for (final TransportItem t in transports) {
+      final String route = [
+        if (t.departurePlace?.isNotEmpty == true) t.departurePlace!,
+        if (t.arrivalPlace?.isNotEmpty == true) t.arrivalPlace!,
+      ].join(' → ');
+      entries.add(_Entry(
+        when: t.departureTime?.toLocal(),
+        icon: _transportIcon(t.transportType),
+        title: route.isNotEmpty
+            ? route
+            : (t.provider?.isNotEmpty == true
+                ? t.provider!
+                : Labels.transportType(context, t.transportType)),
+        subtitle: l10n.navTransport,
+        onTap: () =>
+            context.push('/trips/$tripRid/transports/${t.rid}/edit', extra: t),
+      ));
+    }
+    for (final AccommodationItem a in stays) {
+      entries.add(_Entry(
+        when: a.checkinTime?.toLocal(),
+        icon: Icons.hotel_outlined,
+        title: a.name,
+        subtitle: l10n.accommodationCheckin,
+        onTap: () => context
+            .push('/trips/$tripRid/accommodations/${a.rid}/edit', extra: a),
+      ));
+    }
+
+    // Sort by time; undated entries sink to the bottom.
+    entries.sort((a, b) {
+      if (a.when == null && b.when == null) return 0;
+      if (a.when == null) return 1;
+      if (b.when == null) return -1;
+      return a.when!.compareTo(b.when!);
+    });
+    return entries;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final AsyncValue<List<EventItem>> events =
         ref.watch(eventsControllerProvider(tripRid));
+    final List<TransportItem> transports =
+        ref.watch(transportControllerProvider(tripRid)).valueOrNull ?? const [];
+    final List<AccommodationItem> stays =
+        ref.watch(accommodationControllerProvider(tripRid)).valueOrNull ??
+            const [];
+    final List<PlaceItem> places =
+        ref.watch(placeControllerProvider(tripRid)).valueOrNull ?? const [];
+    final List<ExpenseItem> expenses =
+        ref.watch(expensesControllerProvider(tripRid)).valueOrNull ?? const [];
+    final String baseCurrency =
+        ref.watch(tripProvider(tripRid)).valueOrNull?.baseCurrency ?? 'VND';
+
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navTimeline)),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.go('/trips/$tripRid/timeline/new'),
+        onPressed: () => context.push('/trips/$tripRid/timeline/new'),
         icon: const Icon(Icons.add),
         label: Text(l10n.eventNew),
       ),
@@ -62,16 +249,23 @@ class TimelineScreen extends ConsumerWidget {
                 error: e,
                 onRetry: () =>
                     ref.invalidate(eventsControllerProvider(tripRid))),
-            data: (list) => list.isEmpty
-                ? Center(child: Text(l10n.timelineEmpty))
-                : RefreshIndicator(
-                    onRefresh: () async =>
-                        ref.invalidate(eventsControllerProvider(tripRid)),
-                    child: _Timeline(
-                      events: list,
-                      onTap: (e) => _rowActions(context, ref, e),
-                    ),
-                  ),
+            data: (list) {
+              final List<_Entry> entries = _entries(context, ref, list,
+                  transports, stays, places, expenses, baseCurrency);
+              if (entries.isEmpty) {
+                return Center(child: Text(l10n.timelineEmpty));
+              }
+              return RefreshIndicator(
+                onRefresh: () async {
+                  ref.invalidate(eventsControllerProvider(tripRid));
+                  ref.invalidate(transportControllerProvider(tripRid));
+                  ref.invalidate(accommodationControllerProvider(tripRid));
+                  ref.invalidate(placeControllerProvider(tripRid));
+                  ref.invalidate(expensesControllerProvider(tripRid));
+                },
+                child: _DayTimeline(entries: entries),
+              );
+            },
           ),
         ),
       ),
@@ -79,53 +273,56 @@ class TimelineScreen extends ConsumerWidget {
   }
 }
 
-/// Splits events into Upcoming / Past and renders each group as a connected vertical timeline.
-class _Timeline extends StatelessWidget {
-  const _Timeline({required this.events, required this.onTap});
+/// Renders entries grouped under day headers, each day a connected vertical rail.
+class _DayTimeline extends StatelessWidget {
+  const _DayTimeline({required this.entries});
 
-  final List<EventItem> events;
-  final void Function(EventItem) onTap;
+  final List<_Entry> entries;
 
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
+    final String locale = Localizations.localeOf(context).toLanguageTag();
+    final DateFormat dayFmt = DateFormat.yMMMMEEEEd(locale);
     final DateTime now = DateTime.now();
-    // Events arrive ordered by start time ascending.
-    final List<EventItem> upcoming = events
-        .where(
-            (e) => e.startTime == null || !e.startTime!.toLocal().isBefore(now))
-        .toList();
-    final List<EventItem> past = events
-        .where(
-            (e) => e.startTime != null && e.startTime!.toLocal().isBefore(now))
-        .toList();
 
+    // Group consecutive (already time-sorted) entries by calendar day.
     final List<Widget> children = [];
-    if (upcoming.isNotEmpty) {
-      children.add(_header(context, l10n.timelineUpcoming));
-      for (int i = 0; i < upcoming.length; i++) {
+    String? currentKey;
+    List<_Entry> bucket = [];
+
+    void flush() {
+      if (bucket.isEmpty) {
+        return;
+      }
+      final _Entry head = bucket.first;
+      children.add(_header(
+        context,
+        head.when == null ? l10n.timelineUndated : dayFmt.format(head.when!),
+      ));
+      for (int i = 0; i < bucket.length; i++) {
+        final _Entry e = bucket[i];
         children.add(_TimelineTile(
-          event: upcoming[i],
+          entry: e,
           isFirst: i == 0,
-          isLast: i == upcoming.length - 1,
-          highlight: i == 0, // the very next event
-          onTap: () => onTap(upcoming[i]),
+          isLast: i == bucket.length - 1,
+          highlight: e.when != null && !e.when!.isBefore(now) && i == 0,
         ));
       }
+      bucket = [];
     }
-    if (past.isNotEmpty) {
-      children.add(_header(context, l10n.timelinePast));
-      for (int i = 0; i < past.length; i++) {
-        children.add(_TimelineTile(
-          event: past[i],
-          isFirst: i == 0,
-          isLast: i == past.length - 1,
-          highlight: false,
-          dimmed: true,
-          onTap: () => onTap(past[i]),
-        ));
+
+    for (final _Entry e in entries) {
+      final String key = e.when == null
+          ? '_'
+          : '${e.when!.year}-${e.when!.month}-${e.when!.day}';
+      if (key != currentKey) {
+        flush();
+        currentKey = key;
       }
+      bucket.add(e);
     }
+    flush();
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
@@ -145,38 +342,29 @@ class _Timeline extends StatelessWidget {
 
 class _TimelineTile extends StatelessWidget {
   const _TimelineTile({
-    required this.event,
+    required this.entry,
     required this.isFirst,
     required this.isLast,
     required this.highlight,
-    required this.onTap,
-    this.dimmed = false,
   });
 
-  final EventItem event;
+  final _Entry entry;
   final bool isFirst;
   final bool isLast;
   final bool highlight;
-  final bool dimmed;
-  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final ColorScheme scheme = Theme.of(context).colorScheme;
     final String locale = Localizations.localeOf(context).toLanguageTag();
-    final String when = event.startTime == null
-        ? ''
-        : DateFormat.MMMEd(locale).add_Hm().format(event.startTime!.toLocal());
+    final String time =
+        entry.when == null ? '' : DateFormat.Hm(locale).format(entry.when!);
     final Color line = scheme.outlineVariant;
-    final Color dotColor = highlight
-        ? scheme.primary
-        : (dimmed ? scheme.outline : scheme.tertiary);
 
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // The rail: a vertical line with a dot, joined to neighbours.
           SizedBox(
             width: 28,
             child: Column(
@@ -188,7 +376,7 @@ class _TimelineTile extends StatelessWidget {
                   width: 14,
                   height: 14,
                   decoration: BoxDecoration(
-                    color: dotColor,
+                    color: highlight ? scheme.primary : scheme.tertiary,
                     shape: BoxShape.circle,
                     border: Border.all(color: scheme.surface, width: 2),
                   ),
@@ -206,18 +394,16 @@ class _TimelineTile extends StatelessWidget {
               child: Card(
                 color: highlight ? scheme.primaryContainer : null,
                 child: ListTile(
-                  title: Text(event.title,
-                      style: dimmed
-                          ? TextStyle(color: scheme.onSurfaceVariant)
-                          : null),
-                  subtitle: Text('${Labels.eventType(context, event.eventType)}'
-                      '${when.isEmpty ? '' : ' · $when'}'),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.more_vert),
-                    tooltip: AppLocalizations.of(context).actionEdit,
-                    onPressed: onTap,
+                  leading: Icon(entry.icon),
+                  title: Text(entry.title,
+                      maxLines: 1, overflow: TextOverflow.ellipsis),
+                  subtitle: Text(
+                    time.isEmpty ? entry.subtitle : '$time · ${entry.subtitle}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  onTap: onTap,
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: entry.onTap,
                 ),
               ),
             ),

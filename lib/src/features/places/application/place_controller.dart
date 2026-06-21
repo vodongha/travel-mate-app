@@ -25,14 +25,14 @@ class PlaceController extends FamilyAsyncNotifier<List<PlaceItem>, String> {
     };
   }
 
-  Future<void> create({
+  Future<PlaceItem> create({
     required String name,
     String? address,
     double? latitude,
     double? longitude,
     String? placeType,
   }) async {
-    await _repo.create(
+    final PlaceItem created = await _repo.create(
       arg,
       _body(
         name: name,
@@ -44,6 +44,7 @@ class PlaceController extends FamilyAsyncNotifier<List<PlaceItem>, String> {
     );
     ref.invalidateSelf();
     await future;
+    return created;
   }
 
   Future<void> edit({

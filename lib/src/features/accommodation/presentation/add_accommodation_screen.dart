@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error.dart';
 import '../../../core/form_buttons.dart';
+import '../../../core/geocoding.dart';
+import '../../../core/location_picker.dart';
 import '../../../core/qr.dart';
 import '../../../core/responsive.dart';
 import '../../auth/presentation/auth_validators.dart';
@@ -84,6 +86,20 @@ class _AddAccommodationScreenState
   String? _trim(TextEditingController c) =>
       c.text.trim().isEmpty ? null : c.text.trim();
 
+  Future<void> _pickAddress() async {
+    final GeoResult? r = await showLocationPicker(context,
+        initialName: _name.text.trim().isEmpty ? null : _name.text.trim());
+    if (r == null) {
+      return;
+    }
+    setState(() {
+      _address.text = r.displayName.isEmpty ? r.name : r.displayName;
+      if (_name.text.trim().isEmpty && r.name.isNotEmpty) {
+        _name.text = r.name;
+      }
+    });
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -115,7 +131,9 @@ class _AddAccommodationScreenState
         );
       }
       if (mounted) {
-        context.go('/trips/${widget.tripRid}/accommodations');
+        context.canPop()
+            ? context.pop()
+            : context.go('/trips/${widget.tripRid}/accommodations');
       }
     } catch (error) {
       if (mounted) {
@@ -159,8 +177,14 @@ class _AddAccommodationScreenState
                 TextFormField(
                   controller: _address,
                   decoration: InputDecoration(
-                      labelText: l10n.fieldAddress,
-                      prefixIcon: const Icon(Icons.place_outlined)),
+                    labelText: l10n.fieldAddress,
+                    prefixIcon: const Icon(Icons.place_outlined),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.map_outlined),
+                      tooltip: l10n.placePickLocation,
+                      onPressed: _pickAddress,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 _DateTimeField(

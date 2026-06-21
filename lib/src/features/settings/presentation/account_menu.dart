@@ -34,14 +34,17 @@ class AccountMenu extends ConsumerWidget {
           case 'profile':
             showEditProfile(context, ref);
           case 'settings':
-            context.go('/settings');
+            context.push('/settings');
+          case 'about':
+            context.push('/about');
           case 'privacy':
             openExternal(
                 context,
                 AppConfig.privacyUrl(
                     Localizations.localeOf(context).languageCode));
           case 'community':
-            openExternal(context, AppConfig.communityUrl);
+            openWebPage(
+                context, l10n.settingsCommunity, AppConfig.communityUrl);
           case 'logout':
             ref.read(authControllerProvider.notifier).logout();
           case 'delete':
@@ -51,6 +54,7 @@ class AccountMenu extends ConsumerWidget {
       itemBuilder: (context) => [
         _item('profile', Icons.person_outline, l10n.settingsEditProfile),
         _item('settings', Icons.settings_outlined, l10n.navSettings),
+        _item('about', Icons.info_outline, l10n.about),
         _item('privacy', Icons.privacy_tip_outlined, l10n.settingsPrivacy),
         _item('community', Icons.forum_outlined, l10n.settingsCommunity),
         const PopupMenuDivider(),

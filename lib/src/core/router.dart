@@ -21,10 +21,19 @@ import '../features/members/presentation/invite_screen.dart';
 import '../features/members/presentation/members_screen.dart';
 import '../features/places/data/place_repository.dart';
 import '../features/places/presentation/add_place_screen.dart';
+import '../features/places/presentation/places_map_screen.dart';
 import '../features/places/presentation/places_screen.dart';
 import '../features/report/presentation/report_screen.dart';
+import '../features/settings/presentation/about_screen.dart';
+import '../features/settings/presentation/account_dialogs.dart';
 import '../features/settings/presentation/settings_screen.dart';
+import '../features/settings/presentation/web_page_screen.dart';
 import '../features/settlement/presentation/settlement_screen.dart';
+import '../features/tickets/data/ticket_repository.dart';
+import '../features/tickets/presentation/add_ticket_screen.dart';
+import '../features/tickets/presentation/all_tickets_screen.dart';
+import '../features/tickets/presentation/ticket_qr_screen.dart';
+import '../features/tickets/presentation/tickets_screen.dart';
 import '../features/timeline/data/event_repository.dart';
 import '../features/timeline/presentation/add_event_screen.dart';
 import '../features/timeline/presentation/timeline_screen.dart';
@@ -80,6 +89,14 @@ final routerProvider = Provider<GoRouter>((ref) {
             AcceptInviteScreen(token: state.uri.queryParameters['token']),
       ),
       GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
+      GoRoute(path: '/about', builder: (_, __) => const AboutScreen()),
+      GoRoute(
+        path: '/web',
+        builder: (context, state) {
+          final WebPageArgs args = state.extra as WebPageArgs;
+          return WebPageScreen(title: args.title, url: args.url);
+        },
+      ),
       GoRoute(path: '/trips/new', builder: (_, __) => const CreateTripScreen()),
       GoRoute(
         path: '/trips/:rid/dashboard',
@@ -93,8 +110,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/trips/:rid/expenses/new',
-        builder: (context, state) =>
-            AddExpenseScreen(tripRid: state.pathParameters['rid']!),
+        builder: (context, state) => AddExpenseScreen(
+          tripRid: state.pathParameters['rid']!,
+          // Optional: pre-attach to a timeline event (passed from the timeline "+ expense").
+          eventRid: state.extra as String?,
+        ),
       ),
       GoRoute(
         path: '/trips/:rid/expenses/:expenseRid/edit',
@@ -190,6 +210,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             AccommodationScreen(tripRid: state.pathParameters['rid']!),
       ),
       GoRoute(
+        path: '/trips/:rid/places/map',
+        builder: (context, state) =>
+            PlacesMapScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
         path: '/trips/:rid/places/new',
         builder: (context, state) =>
             AddPlaceScreen(tripRid: state.pathParameters['rid']!),
@@ -205,6 +230,33 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/trips/:rid/places',
         builder: (context, state) =>
             PlacesScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/tickets/new',
+        builder: (context, state) =>
+            AddTicketScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/tickets/all',
+        builder: (context, state) =>
+            AllTicketsScreen(tripRid: state.pathParameters['rid']!),
+      ),
+      GoRoute(
+        path: '/trips/:rid/tickets/:ticketRid/edit',
+        builder: (context, state) => AddTicketScreen(
+          tripRid: state.pathParameters['rid']!,
+          existing: state.extra as Ticket?,
+        ),
+      ),
+      GoRoute(
+        path: '/trips/:rid/tickets/:ticketRid/qr',
+        builder: (context, state) =>
+            TicketQrScreen(ticket: state.extra as Ticket),
+      ),
+      GoRoute(
+        path: '/trips/:rid/tickets',
+        builder: (context, state) =>
+            TicketsScreen(tripRid: state.pathParameters['rid']!),
       ),
       GoRoute(
         path: '/trips/:rid/edit',

@@ -111,7 +111,7 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
             );
       }
       if (mounted) {
-        context.go('/trips/${trip.rid}');
+        context.canPop() ? context.pop() : context.go('/trips/${trip.rid}');
       }
     } catch (error) {
       if (mounted) {
