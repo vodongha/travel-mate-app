@@ -105,8 +105,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2.4))
                         : Text(l10n.actionRegister),
                   ),
-                  const SizedBox(height: 8),
-                  TextButton(
+                  const SizedBox(height: 12),
+                  // Secondary action, same size/radius as the primary button.
+                  FilledButton.tonal(
                     onPressed: _submitting ? null : () => context.go('/login'),
                     child: Text(l10n.authHaveAccount),
                   ),
