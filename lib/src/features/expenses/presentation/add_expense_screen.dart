@@ -11,21 +11,32 @@ import '../../../core/form_buttons.dart';
 import '../../../core/labels.dart';
 import '../../../core/money.dart';
 import '../../../core/responsive.dart';
+import '../../accommodation/application/accommodation_controller.dart';
+import '../../accommodation/data/accommodation_repository.dart';
 import '../../members/application/members_controller.dart';
 import '../../members/domain/member.dart';
 import '../../timeline/application/events_controller.dart';
 import '../../timeline/data/event_repository.dart';
+import '../../transport/application/transport_controller.dart';
+import '../../transport/data/transport_repository.dart';
 import '../../trips/application/trips_controller.dart';
 import '../application/expenses_controller.dart';
 import '../data/expense_repository.dart';
+import 'itinerary_ref.dart';
 
 class AddExpenseScreen extends ConsumerStatefulWidget {
-  const AddExpenseScreen({super.key, required this.tripRid, this.eventRid});
+  const AddExpenseScreen(
+      {super.key,
+      required this.tripRid,
+      this.itineraryKind,
+      this.itineraryRid});
 
   final String tripRid;
 
-  /// When opened from a timeline event, the expense is pre-attached to it.
-  final String? eventRid;
+  /// When opened from a timeline item (event / transport / accommodation), the expense is
+  /// pre-attached to it. Both null means a standalone expense.
+  final String? itineraryKind;
+  final String? itineraryRid;
 
   @override
   ConsumerState<AddExpenseScreen> createState() => _AddExpenseScreenState();
@@ -42,7 +53,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   String _splitType = 'EQUAL';
   String? _currency;
   String? _payerRid;
-  String? _eventRid;
+  String? _itineraryKind;
+  String? _itineraryRid;
   final Set<String> _selected = {};
   bool _initialized = false;
   bool _submitting = false;
@@ -50,7 +62,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   @override
   void initState() {
     super.initState();
-    _eventRid = widget.eventRid;
+    _itineraryKind = widget.itineraryKind;
+    _itineraryRid = widget.itineraryRid;
   }
 
   String? _amountPreview() => Money.grouped(_amount.text, _currency ?? 'VND');
@@ -117,7 +130,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
             splitType: _splitType,
             participants: participants,
             spentAtIso: DateTime.now().toUtc().toIso8601String(),
-            eventRid: _eventRid,
+            itineraryKind: _itineraryKind,
+            itineraryRid: _itineraryRid,
           );
       if (mounted) {
         context.canPop()
@@ -252,7 +266,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
               onChanged: (v) => setState(() => _payerRid = v),
             ),
             const SizedBox(height: 16),
-            _attachEventField(context, l10n),
+            _attachItineraryField(context, l10n),
             const SizedBox(height: 16),
             SegmentedButton<String>(
               segments: [
@@ -291,75 +305,116 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     );
   }
 
-  Widget _attachEventField(BuildContext context, AppLocalizations l10n) {
+  /// The combined itinerary (events + transport + accommodation) the expense can attach to.
+  List<ItineraryRef> _itineraryRefs() {
     final List<EventItem> events =
         ref.watch(eventsControllerProvider(widget.tripRid)).valueOrNull ??
             const [];
-    String? title;
-    if (_eventRid != null) {
-      for (final EventItem e in events) {
-        if (e.rid == _eventRid) {
-          title = e.title;
+    final List<TransportItem> transports =
+        ref.watch(transportControllerProvider(widget.tripRid)).valueOrNull ??
+            const [];
+    final List<AccommodationItem> stays =
+        ref.watch(accommodationControllerProvider(widget.tripRid)).valueOrNull ??
+            const [];
+    return buildItineraryRefs(context, events, transports, stays);
+  }
+
+  Widget _attachItineraryField(BuildContext context, AppLocalizations l10n) {
+    final List<ItineraryRef> refs = _itineraryRefs();
+    final bool attached = _itineraryRid != null;
+    String? label;
+    if (attached) {
+      for (final ItineraryRef r in refs) {
+        if (r.kind == _itineraryKind && r.rid == _itineraryRid) {
+          label = r.label;
           break;
         }
       }
     }
     final ColorScheme scheme = Theme.of(context).colorScheme;
     return InkWell(
-      onTap: () => _pickEvent(events),
+      onTap: () => _pickItinerary(refs),
       borderRadius: BorderRadius.circular(14),
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: l10n.expenseAttachEvent,
           prefixIcon: const Icon(Icons.timeline_outlined),
-          suffixIcon: _eventRid == null
+          suffixIcon: !attached
               ? const Icon(Icons.chevron_right)
               : IconButton(
                   icon: const Icon(Icons.clear),
                   tooltip: l10n.actionRemove,
-                  onPressed: () => setState(() => _eventRid = null),
+                  onPressed: () => setState(() {
+                    _itineraryKind = null;
+                    _itineraryRid = null;
+                  }),
                 ),
         ),
         child: Text(
-          title ?? l10n.expenseNoEvent,
+          // A stale link (item deleted) still shows "attached"; fall back to its kind.
+          label ??
+              (attached
+                  ? itinerarySectionLabel(context, _itineraryKind ?? '')
+                  : l10n.expenseNoEvent),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style:
-              title == null ? TextStyle(color: scheme.onSurfaceVariant) : null,
+              attached ? null : TextStyle(color: scheme.onSurfaceVariant),
         ),
       ),
     );
   }
 
-  Future<void> _pickEvent(List<EventItem> events) async {
+  Future<void> _pickItinerary(List<ItineraryRef> refs) async {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    final String? picked = await showModalBottomSheet<String>(
+    final ItineraryRef? picked = await showModalBottomSheet<ItineraryRef>(
       context: context,
       showDragHandle: true,
-      builder: (ctx) => SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.block_outlined),
-              title: Text(l10n.expenseNoEvent),
-              onTap: () => Navigator.pop(ctx, ''),
-            ),
-            const Divider(height: 1),
-            for (final EventItem e in events)
-              ListTile(
-                leading: const Icon(Icons.event_note_outlined),
-                title:
-                    Text(e.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-                onTap: () => Navigator.pop(ctx, e.rid),
-              ),
-          ],
-        ),
-      ),
+      isScrollControlled: true,
+      builder: (ctx) {
+        String? lastKind;
+        final List<Widget> tiles = [
+          ListTile(
+            leading: const Icon(Icons.block_outlined),
+            title: Text(l10n.expenseNoEvent),
+            // Sentinel (empty rid) = explicitly clear, distinct from dismissing the sheet (null).
+            onTap: () => Navigator.pop(ctx,
+                const ItineraryRef(kind: '', rid: '', label: '', icon: Icons.block)),
+          ),
+        ];
+        for (final ItineraryRef r in refs) {
+          if (r.kind != lastKind) {
+            lastKind = r.kind;
+            tiles.add(Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: Text(itinerarySectionLabel(ctx, r.kind),
+                  style: Theme.of(ctx).textTheme.labelMedium?.copyWith(
+                      color: Theme.of(ctx).colorScheme.primary)),
+            ));
+          }
+          tiles.add(ListTile(
+            leading: Icon(r.icon),
+            title: Text(r.label, maxLines: 1, overflow: TextOverflow.ellipsis),
+            onTap: () => Navigator.pop(ctx, r),
+          ));
+        }
+        return SafeArea(child: ListView(shrinkWrap: true, children: tiles));
+      },
     );
-    if (picked != null) {
-      setState(() => _eventRid = picked.isEmpty ? null : picked);
+    // Dismissed (tapped outside) → null → no change. The "Not attached" row returns the empty
+    // sentinel → clear. Any real row → attach.
+    if (picked == null) {
+      return;
     }
+    setState(() {
+      if (picked.rid.isEmpty) {
+        _itineraryKind = null;
+        _itineraryRid = null;
+      } else {
+        _itineraryKind = picked.kind;
+        _itineraryRid = picked.rid;
+      }
+    });
   }
 
   Widget _participantRow(Member m) {

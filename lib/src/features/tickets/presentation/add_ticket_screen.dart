@@ -14,9 +14,13 @@ import '../../trips/application/trips_controller.dart';
 import '../application/tickets_controller.dart';
 import '../data/ticket_repository.dart';
 
+/// Sentinel "Belongs to" value for a group ticket (no owner, shared by the whole trip), distinct
+/// from null (myself) and a member rid.
+const String _kGroupTicket = '__group__';
+
 /// Add or edit a ticket. The QR is captured as a decoded string via [QrField] (scan with
-/// mobile_scanner or type/paste). EDITOR/OWNER may assign the ticket to another member; everyone
-/// else can only manage their own (assignee picker hidden → server treats it as the caller's own).
+/// mobile_scanner or type/paste). EDITOR/OWNER may assign the ticket to another member or make it a
+/// group ticket; everyone else can only manage their own (picker hidden → the caller's own ticket).
 class AddTicketScreen extends ConsumerStatefulWidget {
   const AddTicketScreen({super.key, required this.tripRid, this.existing});
 
@@ -34,7 +38,7 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
   final _code = TextEditingController();
   final _seat = TextEditingController();
   String _type = 'OTHER';
-  // null ⇒ "myself" (server omits memberRid); otherwise the chosen member's rid.
+  // null ⇒ "myself" (server omits memberRid); [_kGroupTicket] ⇒ group ticket; else a member rid.
   String? _memberRid;
   bool _submitting = false;
 
@@ -50,7 +54,9 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
       _type = t.ticketType;
       _code.text = t.qrData ?? '';
       _seat.text = t.seat ?? '';
-      _memberRid = t.mine ? null : t.memberRid;
+      _memberRid = t.shared
+          ? _kGroupTicket
+          : (t.mine ? null : t.memberRid);
     }
   }
 
@@ -80,13 +86,16 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
       return;
     }
     setState(() => _submitting = true);
+    final bool shared = _memberRid == _kGroupTicket;
+    final String? memberRid = shared ? null : _memberRid;
     try {
       final controller =
           ref.read(allTicketsControllerProvider(widget.tripRid).notifier);
       if (_editing) {
         await controller.edit(
           rid: widget.existing!.rid,
-          memberRid: _memberRid,
+          memberRid: memberRid,
+          shared: shared,
           title: _title.text.trim(),
           ticketType: _type,
           qrData: _trim(_code),
@@ -95,7 +104,8 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
         );
       } else {
         await controller.create(
-          memberRid: _memberRid,
+          memberRid: memberRid,
+          shared: shared,
           title: _title.text.trim(),
           ticketType: _type,
           qrData: _trim(_code),
@@ -240,8 +250,10 @@ class _AssigneeField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    // Guard against a stale rid that's no longer in the list.
-    final bool valid = value == null || members.any((m) => m.rid == value);
+    // Guard against a stale rid that's no longer in the list (the group sentinel is always valid).
+    final bool valid = value == null ||
+        value == _kGroupTicket ||
+        members.any((m) => m.rid == value);
     return DropdownButtonFormField<String?>(
       initialValue: valid ? value : null,
       decoration: InputDecoration(
@@ -250,6 +262,8 @@ class _AssigneeField extends StatelessWidget {
       items: [
         DropdownMenuItem<String?>(
             value: null, child: Text(l10n.ticketAssigneeMyself)),
+        DropdownMenuItem<String?>(
+            value: _kGroupTicket, child: Text(l10n.ticketAssigneeGroup)),
         ...members.map((m) => DropdownMenuItem<String?>(
             value: m.rid, child: Text(m.displayName))),
       ],

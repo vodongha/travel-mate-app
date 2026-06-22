@@ -111,8 +111,10 @@ class _AccountSheet extends ConsumerWidget {
               label: l10n.settingsPrivacy,
               onTap: () {
                 Navigator.pop(context);
-                openExternal(
+                // In-app WebView on mobile; a new browser tab on web.
+                openWebPage(
                     parentContext,
+                    l10n.settingsPrivacy,
                     AppConfig.privacyUrl(
                         Localizations.localeOf(parentContext).languageCode));
               },

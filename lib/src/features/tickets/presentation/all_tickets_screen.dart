@@ -45,11 +45,15 @@ class AllTicketsScreen extends ConsumerWidget {
     }
   }
 
-  /// Groups tickets by member, preserving first-seen order; the caller's group first.
-  List<MapEntry<String, List<Ticket>>> _grouped(List<Ticket> list) {
+  /// Groups tickets by member, preserving first-seen order; the caller's group first. Group tickets
+  /// (no owner) are gathered under [groupLabel].
+  List<MapEntry<String, List<Ticket>>> _grouped(
+      List<Ticket> list, String groupLabel) {
     final Map<String, List<Ticket>> byMember = {};
     for (final Ticket t in list) {
-      final String name = t.memberName.isEmpty ? t.memberRid : t.memberName;
+      final String name = t.shared
+          ? groupLabel
+          : (t.memberName.isEmpty ? t.memberRid : t.memberName);
       byMember.putIfAbsent(name, () => <Ticket>[]).add(t);
     }
     final List<MapEntry<String, List<Ticket>>> entries =
@@ -93,7 +97,7 @@ class AllTicketsScreen extends ConsumerWidget {
                 return Center(child: Text(l10n.ticketsEmpty));
               }
               final List<MapEntry<String, List<Ticket>>> groups =
-                  _grouped(list);
+                  _grouped(list, l10n.ticketAssigneeGroup);
               return RefreshIndicator(
                 onRefresh: () async =>
                     ref.invalidate(allTicketsControllerProvider(tripRid)),

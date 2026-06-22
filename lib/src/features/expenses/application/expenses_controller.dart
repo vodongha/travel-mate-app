@@ -24,7 +24,8 @@ class ExpensesController
     required String splitType,
     required List<ParticipantInput> participants,
     required String spentAtIso,
-    String? eventRid,
+    String? itineraryKind,
+    String? itineraryRid,
   }) async {
     await _repo.create(
       arg,
@@ -37,7 +38,8 @@ class ExpensesController
       splitType: splitType,
       participants: participants,
       spentAtIso: spentAtIso,
-      eventRid: eventRid,
+      itineraryKind: itineraryKind,
+      itineraryRid: itineraryRid,
     );
     _invalidateDerived();
     await future;
