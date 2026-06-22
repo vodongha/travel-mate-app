@@ -17,7 +17,6 @@ class AccommodationController
     String? address,
     DateTime? checkinTimeUtc,
     DateTime? checkoutTimeUtc,
-    String? qrData,
     String? note,
   }) {
     return {
@@ -26,7 +25,6 @@ class AccommodationController
       'address': address ?? '',
       'checkinTime': checkinTimeUtc?.toIso8601String(),
       'checkoutTime': checkoutTimeUtc?.toIso8601String(),
-      'qrData': qrData ?? '',
       'note': note ?? '',
     };
   }
@@ -37,7 +35,6 @@ class AccommodationController
     String? address,
     DateTime? checkinTimeUtc,
     DateTime? checkoutTimeUtc,
-    String? qrData,
     String? note,
   }) async {
     await _repo.create(
@@ -48,7 +45,6 @@ class AccommodationController
         address: address,
         checkinTimeUtc: checkinTimeUtc,
         checkoutTimeUtc: checkoutTimeUtc,
-        qrData: qrData,
         note: note,
       ),
     );
@@ -63,7 +59,6 @@ class AccommodationController
     String? address,
     DateTime? checkinTimeUtc,
     DateTime? checkoutTimeUtc,
-    String? qrData,
     String? note,
   }) async {
     await _repo.update(
@@ -75,7 +70,6 @@ class AccommodationController
         address: address,
         checkinTimeUtc: checkinTimeUtc,
         checkoutTimeUtc: checkoutTimeUtc,
-        qrData: qrData,
         note: note,
       ),
     );

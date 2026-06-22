@@ -9,6 +9,7 @@ import '../../../core/maps.dart';
 import '../../../core/app_error_view.dart';
 import '../../../core/labels.dart';
 import '../../../core/responsive.dart';
+import '../../trips/application/trips_controller.dart';
 import '../application/place_controller.dart';
 import '../data/place_repository.dart';
 
@@ -37,10 +38,14 @@ class PlacesScreen extends ConsumerWidget {
 
   final String tripRid;
 
-  Future<void> _rowActions(
-      BuildContext context, WidgetRef ref, PlaceItem item) async {
-    final RowAction? action =
-        await showRowActions(context, title: item.name, allowMaps: true);
+  Future<void> _rowActions(BuildContext context, WidgetRef ref, PlaceItem item,
+      {required bool canEdit}) async {
+    // A VIEWER still gets "Open in Google Maps" (read-only) — just no edit/delete.
+    final RowAction? action = await showRowActions(context,
+        title: item.name,
+        allowMaps: true,
+        allowEdit: canEdit,
+        allowDelete: canEdit);
     if (action == null || !context.mounted) {
       return;
     }
@@ -77,6 +82,8 @@ class PlacesScreen extends ConsumerWidget {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final AsyncValue<List<PlaceItem>> items =
         ref.watch(placeControllerProvider(tripRid));
+    final bool canEdit =
+        ref.watch(tripProvider(tripRid)).valueOrNull?.myRole != 'VIEWER';
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.navPlaces),
@@ -88,11 +95,13 @@ class PlacesScreen extends ConsumerWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/trips/$tripRid/places/new'),
-        icon: const Icon(Icons.add),
-        label: Text(l10n.placeNew),
-      ),
+      floatingActionButton: canEdit
+          ? FloatingActionButton.extended(
+              onPressed: () => context.push('/trips/$tripRid/places/new'),
+              icon: const Icon(Icons.add),
+              label: Text(l10n.placeNew),
+            )
+          : null,
       body: SafeArea(
         child: ResponsiveCenter(
           child: items.when(
@@ -136,11 +145,11 @@ class PlacesScreen extends ConsumerWidget {
                             trailing: IconButton(
                               icon: const Icon(Icons.more_vert),
                               tooltip: l10n.actionEdit,
-                              onPressed: () => _rowActions(context, ref, p),
+                              onPressed: () => _rowActions(context, ref, p, canEdit: canEdit),
                             ),
-                            onTap: () => _rowActions(context, ref, p),
+                            onTap: () => _rowActions(context, ref, p, canEdit: canEdit),
                             // Long-press opens the same options menu (Maps/Edit/Delete).
-                            onLongPress: () => _rowActions(context, ref, p),
+                            onLongPress: () => _rowActions(context, ref, p, canEdit: canEdit),
                           ),
                         );
                       },

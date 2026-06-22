@@ -13,6 +13,8 @@ Map<String, dynamic> ticketBody({
   required String ticketType,
   String? qrData,
   String? seat,
+  String? itineraryKind,
+  String? itineraryRid,
   String? note,
 }) {
   final Map<String, dynamic> body = {
@@ -20,6 +22,9 @@ Map<String, dynamic> ticketBody({
     'ticketType': ticketType,
     'qrData': qrData ?? '',
     'seat': seat ?? '',
+    // Blank itineraryRid clears the link; a value (re)sets it to that itinerary item.
+    'itineraryKind': itineraryKind ?? '',
+    'itineraryRid': itineraryRid ?? '',
     'note': note ?? '',
   };
   if (shared) {
@@ -63,6 +68,8 @@ class AllTicketsController extends FamilyAsyncNotifier<List<Ticket>, String> {
     required String ticketType,
     String? qrData,
     String? seat,
+    String? itineraryKind,
+    String? itineraryRid,
     String? note,
   }) async {
     await _repo.create(
@@ -74,6 +81,8 @@ class AllTicketsController extends FamilyAsyncNotifier<List<Ticket>, String> {
         ticketType: ticketType,
         qrData: qrData,
         seat: seat,
+        itineraryKind: itineraryKind,
+        itineraryRid: itineraryRid,
         note: note,
       ),
     );
@@ -89,6 +98,8 @@ class AllTicketsController extends FamilyAsyncNotifier<List<Ticket>, String> {
     required String ticketType,
     String? qrData,
     String? seat,
+    String? itineraryKind,
+    String? itineraryRid,
     String? note,
   }) async {
     await _repo.update(
@@ -101,6 +112,8 @@ class AllTicketsController extends FamilyAsyncNotifier<List<Ticket>, String> {
         ticketType: ticketType,
         qrData: qrData,
         seat: seat,
+        itineraryKind: itineraryKind,
+        itineraryRid: itineraryRid,
         note: note,
       ),
     );

@@ -7,6 +7,7 @@ import '../../../core/app_error.dart';
 import '../../../core/app_error_view.dart';
 import '../../../core/form_buttons.dart';
 import '../../../core/responsive.dart';
+import '../../trips/application/trips_controller.dart';
 import '../application/checklist_controller.dart';
 import '../data/checklist_repository.dart';
 
@@ -77,13 +78,18 @@ class ChecklistScreen extends ConsumerWidget {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final AsyncValue<List<ChecklistItem>> items =
         ref.watch(checklistControllerProvider(tripRid));
+    // A VIEWER can still tick items off, but can't add/edit/delete them.
+    final bool canEdit =
+        ref.watch(tripProvider(tripRid)).valueOrNull?.myRole != 'VIEWER';
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navChecklist)),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _add(context, ref),
-        icon: const Icon(Icons.add),
-        label: Text(l10n.actionAdd),
-      ),
+      floatingActionButton: canEdit
+          ? FloatingActionButton.extended(
+              onPressed: () => _add(context, ref),
+              icon: const Icon(Icons.add),
+              label: Text(l10n.actionAdd),
+            )
+          : null,
       body: SafeArea(
         child: ResponsiveCenter(
           child: items.when(
@@ -98,8 +104,9 @@ class ChecklistScreen extends ConsumerWidget {
                     padding: const EdgeInsets.fromLTRB(8, 8, 8, 96),
                     children: list
                         .map((item) => GestureDetector(
-                              onLongPress: () =>
-                                  _rowActions(context, ref, item),
+                              onLongPress: canEdit
+                                  ? () => _rowActions(context, ref, item)
+                                  : null,
                               child: CheckboxListTile(
                                 value: item.completed,
                                 title: Text(
@@ -110,13 +117,15 @@ class ChecklistScreen extends ConsumerWidget {
                                               TextDecoration.lineThrough)
                                       : null,
                                 ),
-                                secondary: IconButton(
-                                  icon: const Icon(Icons.more_vert),
-                                  tooltip:
-                                      AppLocalizations.of(context).actionEdit,
-                                  onPressed: () =>
-                                      _rowActions(context, ref, item),
-                                ),
+                                secondary: canEdit
+                                    ? IconButton(
+                                        icon: const Icon(Icons.more_vert),
+                                        tooltip: AppLocalizations.of(context)
+                                            .actionEdit,
+                                        onPressed: () =>
+                                            _rowActions(context, ref, item),
+                                      )
+                                    : null,
                                 onChanged: (v) => ref
                                     .read(checklistControllerProvider(tripRid)
                                         .notifier)

@@ -8,8 +8,15 @@ import '../../../core/form_buttons.dart';
 import '../../../core/labels.dart';
 import '../../../core/qr_scan_screen.dart';
 import '../../../core/responsive.dart';
+import '../../accommodation/application/accommodation_controller.dart';
+import '../../accommodation/data/accommodation_repository.dart';
+import '../../expenses/presentation/itinerary_ref.dart';
 import '../../members/application/members_controller.dart';
 import '../../members/domain/member.dart';
+import '../../timeline/application/events_controller.dart';
+import '../../timeline/data/event_repository.dart';
+import '../../transport/application/transport_controller.dart';
+import '../../transport/data/transport_repository.dart';
 import '../../trips/application/trips_controller.dart';
 import '../application/tickets_controller.dart';
 import '../data/ticket_repository.dart';
@@ -40,6 +47,9 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
   String _type = 'OTHER';
   // null ⇒ "myself" (server omits memberRid); [_kGroupTicket] ⇒ group ticket; else a member rid.
   String? _memberRid;
+  // The itinerary item this ticket is for (a flight leg, stay, event), if any.
+  String? _itineraryKind;
+  String? _itineraryRid;
   bool _submitting = false;
 
   bool get _editing => widget.existing != null;
@@ -55,6 +65,8 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
       _code.text = t.qrData ?? '';
       _seat.text = t.seat ?? '';
       _memberRid = t.shared ? _kGroupTicket : (t.mine ? null : t.memberRid);
+      _itineraryKind = t.itineraryKind;
+      _itineraryRid = t.itineraryRid;
     }
   }
 
@@ -98,6 +110,8 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
           ticketType: _type,
           qrData: _trim(_code),
           seat: _type == 'TRANSPORT' ? _trim(_seat) : null,
+          itineraryKind: _itineraryKind,
+          itineraryRid: _itineraryRid,
           note: _trim(_note),
         );
       } else {
@@ -108,6 +122,8 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
           ticketType: _type,
           qrData: _trim(_code),
           seat: _type == 'TRANSPORT' ? _trim(_seat) : null,
+          itineraryKind: _itineraryKind,
+          itineraryRid: _itineraryRid,
           note: _trim(_note),
         );
       }
@@ -195,6 +211,9 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
                   ),
                 ],
                 const SizedBox(height: 16),
+                // Attach the pass to a flight/stay/event so it shows under that itinerary item.
+                _attachItineraryField(context, l10n),
+                const SizedBox(height: 16),
                 if (canAssign)
                   members.when(
                     loading: () => const LinearProgressIndicator(),
@@ -229,6 +248,120 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
         ),
       ),
     );
+  }
+
+  /// The combined itinerary (events + transport + accommodation) the ticket can attach to.
+  List<ItineraryRef> _itineraryRefs() {
+    final List<EventItem> events =
+        ref.watch(eventsControllerProvider(widget.tripRid)).valueOrNull ??
+            const [];
+    final List<TransportItem> transports =
+        ref.watch(transportControllerProvider(widget.tripRid)).valueOrNull ??
+            const [];
+    final List<AccommodationItem> stays = ref
+            .watch(accommodationControllerProvider(widget.tripRid))
+            .valueOrNull ??
+        const [];
+    return buildItineraryRefs(context, events, transports, stays);
+  }
+
+  Widget _attachItineraryField(BuildContext context, AppLocalizations l10n) {
+    final List<ItineraryRef> refs = _itineraryRefs();
+    final bool attached = _itineraryRid != null;
+    String? label;
+    if (attached) {
+      for (final ItineraryRef r in refs) {
+        if (r.kind == _itineraryKind && r.rid == _itineraryRid) {
+          label = r.label;
+          break;
+        }
+      }
+    }
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: () => _pickItinerary(refs),
+      borderRadius: BorderRadius.circular(14),
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: l10n.ticketForItinerary,
+          prefixIcon: const Icon(Icons.timeline_outlined),
+          suffixIcon: !attached
+              ? const Icon(Icons.chevron_right)
+              : IconButton(
+                  icon: const Icon(Icons.clear),
+                  tooltip: l10n.actionRemove,
+                  onPressed: () => setState(() {
+                    _itineraryKind = null;
+                    _itineraryRid = null;
+                  }),
+                ),
+        ),
+        child: Text(
+          // A stale link (item deleted) still shows "attached"; fall back to its kind.
+          label ??
+              (attached
+                  ? itinerarySectionLabel(context, _itineraryKind ?? '')
+                  : l10n.ticketForItineraryNone),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: attached ? null : TextStyle(color: scheme.onSurfaceVariant),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickItinerary(List<ItineraryRef> refs) async {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final ItineraryRef? picked = await showModalBottomSheet<ItineraryRef>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (ctx) {
+        String? lastKind;
+        final List<Widget> tiles = [
+          ListTile(
+            leading: const Icon(Icons.block_outlined),
+            title: Text(l10n.ticketForItineraryNone),
+            // Sentinel (empty rid) = explicitly clear, distinct from dismissing the sheet (null).
+            onTap: () => Navigator.pop(
+                ctx,
+                const ItineraryRef(
+                    kind: '', rid: '', label: '', icon: Icons.block)),
+          ),
+        ];
+        for (final ItineraryRef r in refs) {
+          if (r.kind != lastKind) {
+            lastKind = r.kind;
+            tiles.add(Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: Text(itinerarySectionLabel(ctx, r.kind),
+                  style: Theme.of(ctx)
+                      .textTheme
+                      .labelMedium
+                      ?.copyWith(color: Theme.of(ctx).colorScheme.primary)),
+            ));
+          }
+          tiles.add(ListTile(
+            leading: Icon(r.icon),
+            title: Text(r.label, maxLines: 1, overflow: TextOverflow.ellipsis),
+            onTap: () => Navigator.pop(ctx, r),
+          ));
+        }
+        return SafeArea(child: ListView(shrinkWrap: true, children: tiles));
+      },
+    );
+    if (picked == null) {
+      return;
+    }
+    setState(() {
+      if (picked.rid.isEmpty) {
+        _itineraryKind = null;
+        _itineraryRid = null;
+      } else {
+        _itineraryKind = picked.kind;
+        _itineraryRid = picked.rid;
+      }
+    });
   }
 }
 
