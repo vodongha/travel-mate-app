@@ -12,27 +12,28 @@ actual spending, manage the shared fund, and view who-owes-whom settlement.
 > Backend lives in a separate repo: **[vodongha/travel-mate](https://github.com/vodongha/travel-mate)**.
 > This repo is the mobile frontend only — the server is the source of truth (especially for money).
 
-> **Status:** **M9 in progress** — the Flutter project exists for **Android + Web**. Done: the core
-> layer (Dio + auth/refresh interceptor, secure token storage, go_router guard, Material 3 theme,
-> en/vi localization) and the first slices — **auth** (login/register) and **trips** (list / create /
-> detail). More feature screens land in follow-up slices. The backend (M1–M8) is complete.
+> **Status: shipped — v1.0.0 in production.** Live on **Android** (`vn.trippo.mate`) and **Web**
+> (https://trippo.io.vn, served by the backend at the same origin). All feature areas are built —
+> auth, trips, timeline (events/transport/accommodation/places), money + split, budget, fund,
+> settlement, tickets (personal + group), checklist, dashboard, report and account/settings.
 
 ---
 
-## Planned features
+## Features
 
 | Area | What it does |
 |---|---|
 | **Auth** | Email/password + **Sign in with Google** → JWT (access + refresh). Email verify & password reset. Token in the OS secure store, auto-resumed on launch. |
-| **Trips** | Create/join trips (link or QR invite), roles `OWNER`/`EDITOR`/`VIEWER`. Split with **ghost members** who don't have the app. |
-| **Timeline** | Events, transport, accommodation on a per-trip timeline; places on an **OpenStreetMap** map (`flutter_map`). |
+| **Trips** | Create/join trips (link or QR invite), roles `OWNER`/`EDITOR`/`VIEWER`, split with **ghost members**. List **grouped by year** with scroll pagination; auto status (Planning → **Upcoming** → Ongoing → Completed). |
+| **Timeline** | Add via a type chooser — **event / transport / accommodation** — plus places on an **OpenStreetMap** map. Tap/long-press to edit, delete or attach an expense. |
 | **Checklist** | Per-trip to-dos with optional assignee. |
-| **Budget vs actual** | Planned budget per category vs real expenses; multi-currency with snapshot rates. |
-| **Expenses & split** | Add an expense in any currency; split `EQUAL`/`EXACT`/`PERCENT`/`SHARES`. |
+| **Budget vs actual** | Budget per category vs real expenses; multi-currency with snapshot rates. |
+| **Expenses & split** | Any currency; split `EQUAL`/`EXACT`/`PERCENT`/`SHARES`; attach to any itinerary item. |
 | **Shared fund** | Contributions + fund expenses; derived fund balance. |
 | **Settlement** | Per-member net balance + minimised who-owes-whom transaction list. |
+| **Tickets** | Per-member tickets & QR (stored as strings), plus **group tickets** shared by the whole trip. |
 | **Dashboard & report** | Countdown, budget/fund summary, next event; end-of-trip report. |
-| **Notifications** | Push reminders (pre-trip 30/7/1 days, event/check-in, debt) via FCM. |
+| **Account** | Edit profile, change password, privacy policy, in-app update, delete account. |
 | **Localization** | English + Tiếng Việt, follows the device language. |
 
 ---
@@ -54,25 +55,27 @@ an invite link string the app renders as a QR.
 
 ---
 
-## Tech stack (planned — mirrors family-budget-app)
+## Tech stack
 
 | Concern | Choice |
 |---|---|
 | Framework | Flutter (Material 3, modern responsive UI) — **Android + Web** |
 | State | Riverpod (`AsyncNotifier`) — one controller per feature |
-| HTTP | Dio (one configured client + bearer-token interceptor) |
+| HTTP | Dio (one configured client + bearer/refresh interceptor) |
 | Routing | go_router (auth-aware redirect guard) |
 | Secure storage | flutter_secure_storage (Keychain / Keystore) |
-| Maps | `flutter_map` (OpenStreetMap tiles) |
+| Maps | `flutter_map` + `latlong2` (OpenStreetMap); `geolocator` for "my location" |
+| Permissions | `permission_handler` (runtime camera/location) |
 | QR | `qr_flutter` (render from string) + `mobile_scanner` (scan → string) |
-| Push | `firebase_messaging` (FCM) |
+| Push | `firebase_core` + `firebase_messaging` (FCM) |
+| Auth | `google_sign_in` (+ `google_sign_in_web`) |
+| Updates | `in_app_update` (Google Play) |
 | Localization | flutter_localizations + ARB (`lib/l10n`) |
-| Auth | google_sign_in |
-| Formatting | intl |
+| Formatting | intl · `package_info_plus` (version) |
 
 ---
 
-## Architecture (planned)
+## Architecture
 
 A layered slice per feature, mirroring the backend's `controller → service → repository`:
 
@@ -92,19 +95,21 @@ lib/src/
 
 ---
 
-## Quick start (once scaffolded)
+## Quick start
 
 ```bash
-flutter create --platforms=android,web .   # ONE-TIME: generate platform folders (keeps lib/, pubspec.yaml)
 flutter pub get
-flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000            # Android emulator → host localhost
-flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8000 # Web
 flutter analyze
 flutter test
-dart format .
-```
 
-Make sure the **backend is running** first (see the travel-mate repo).
+# Dev (run the backend first — see the travel-mate repo)
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000            # Android emulator → host localhost
+flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8000 # Web
+
+# Release
+flutter build appbundle --release --dart-define=API_BASE_URL=https://trippo.io.vn   # Android (Play: vn.trippo.mate)
+flutter build web --release --dart-define=SAME_ORIGIN=true                          # Web (served by the backend)
+```
 
 ---
 
