@@ -64,6 +64,14 @@
   "memberAddTitle": "Add a member",
   "memberGhostHint": "Add someone without the app — a ghost member you can split costs with.",
   "memberGhostBadge": "Ghost",
+  "memberEmailLabel": "Email (optional)",
+  "memberEmailHint": "When they join with this email, the ghost auto-merges into their account.",
+  "memberEditTitle": "Edit member",
+  "memberMergeAction": "Merge into member…",
+  "memberMergePrompt": "Merge \"{name}\" into which member? Their expenses, tickets and fund move over and this entry is removed.",
+  "@memberMergePrompt": { "placeholders": { "name": {} } },
+  "memberMergeEmpty": "No other member to merge into.",
+  "memberMergeDone": "Members merged.",
   "memberRemoveConfirm": "Remove this member from the trip?",
   "inviteTitle": "Invite people",
   "inviteRoleToGrant": "Role to grant",
@@ -246,6 +254,7 @@
   "tripStatusUpcoming": "Upcoming",
   "tripStatusOngoing": "Ongoing",
   "tripStatusCompleted": "Completed",
+  "tripStatusCancelled": "Cancelled",
   "tripCountdownIn": "in {days, plural, =1{1 day} other{{days} days}}",
   "@tripCountdownIn": {
     "placeholders": {

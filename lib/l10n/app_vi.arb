@@ -64,6 +64,14 @@
   "memberAddTitle": "Thêm thành viên",
   "memberGhostHint": "Thêm người chưa cài app — thành viên ảo để chia chi phí cùng.",
   "memberGhostBadge": "Ảo",
+  "memberEmailLabel": "Email (tuỳ chọn)",
+  "memberEmailHint": "Khi họ tham gia bằng email này, thành viên ảo sẽ tự gộp.",
+  "memberEditTitle": "Sửa thành viên",
+  "memberMergeAction": "Gộp vào thành viên…",
+  "memberMergePrompt": "Gộp \"{name}\" vào thành viên nào? Mọi chi phí, vé, quỹ sẽ chuyển sang họ và xoá mục này.",
+  "@memberMergePrompt": { "placeholders": { "name": {} } },
+  "memberMergeEmpty": "Không có thành viên nào khác để gộp vào.",
+  "memberMergeDone": "Đã gộp thành viên.",
   "memberRemoveConfirm": "Xoá thành viên này khỏi chuyến đi?",
   "inviteTitle": "Mời mọi người",
   "inviteRoleToGrant": "Vai trò khi tham gia",
@@ -246,6 +254,7 @@
   "tripStatusUpcoming": "Sắp diễn ra",
   "tripStatusOngoing": "Đang diễn ra",
   "tripStatusCompleted": "Đã hoàn thành",
+  "tripStatusCancelled": "Đã huỷ",
   "tripCountdownIn": "còn {days, plural, other{{days} ngày}}",
   "@tripCountdownIn": {
     "placeholders": {
