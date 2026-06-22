@@ -163,7 +163,8 @@ class TimelineScreen extends ConsumerWidget {
       return;
     }
     if (action == 'expense') {
-      context.push('/trips/$tripRid/expenses/new', extra: (kind: kind, rid: rid));
+      context
+          .push('/trips/$tripRid/expenses/new', extra: (kind: kind, rid: rid));
       return;
     }
     if (action == 'edit') {
@@ -186,7 +187,8 @@ class TimelineScreen extends ConsumerWidget {
   /// "+" on the timeline: pick what kind of itinerary item to add. Transport and accommodation are
   /// their own entities (single source of truth, shown here and on their own screens); everything
   /// else is a generic event.
-  Future<void> _addToItinerary(BuildContext context, AppLocalizations l10n) async {
+  Future<void> _addToItinerary(
+      BuildContext context, AppLocalizations l10n) async {
     final String? choice = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
@@ -327,15 +329,17 @@ class TimelineScreen extends ConsumerWidget {
             rid: t.rid,
             editPath: '/trips/$tripRid/transports/${t.rid}/edit',
             editExtra: t,
-            onDelete: () =>
-                ref.read(transportControllerProvider(tripRid).notifier).delete(t.rid)),
+            onDelete: () => ref
+                .read(transportControllerProvider(tripRid).notifier)
+                .delete(t.rid)),
         onLongPress: () => _itemActions(context, ref,
             kind: 'TRANSPORT',
             rid: t.rid,
             editPath: '/trips/$tripRid/transports/${t.rid}/edit',
             editExtra: t,
-            onDelete: () =>
-                ref.read(transportControllerProvider(tripRid).notifier).delete(t.rid)),
+            onDelete: () => ref
+                .read(transportControllerProvider(tripRid).notifier)
+                .delete(t.rid)),
       ));
     }
     for (final AccommodationItem a in stays) {
@@ -353,15 +357,17 @@ class TimelineScreen extends ConsumerWidget {
             rid: a.rid,
             editPath: '/trips/$tripRid/accommodations/${a.rid}/edit',
             editExtra: a,
-            onDelete: () =>
-                ref.read(accommodationControllerProvider(tripRid).notifier).delete(a.rid)),
+            onDelete: () => ref
+                .read(accommodationControllerProvider(tripRid).notifier)
+                .delete(a.rid)),
         onLongPress: () => _itemActions(context, ref,
             kind: 'ACCOMMODATION',
             rid: a.rid,
             editPath: '/trips/$tripRid/accommodations/${a.rid}/edit',
             editExtra: a,
-            onDelete: () =>
-                ref.read(accommodationControllerProvider(tripRid).notifier).delete(a.rid)),
+            onDelete: () => ref
+                .read(accommodationControllerProvider(tripRid).notifier)
+                .delete(a.rid)),
       ));
     }
 
