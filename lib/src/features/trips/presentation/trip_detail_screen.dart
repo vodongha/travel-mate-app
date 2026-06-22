@@ -122,19 +122,26 @@ class TripDetailScreen extends ConsumerWidget {
                       ),
                       const Divider(height: 1),
                       ListTile(
-                        leading: const Icon(Icons.group_outlined),
-                        title: Text(l10n.navMembers),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.push('/trips/$tripRid/members'),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
                         leading: Icon(Icons.qr_code_2,
                             color: Theme.of(context).colorScheme.primary),
                         title: Text(l10n.navTickets),
                         subtitle: Text(l10n.ticketsHubSubtitle),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () => context.push('/trips/$tripRid/tickets'),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.timeline_outlined),
+                        title: Text(l10n.navTimeline),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.push('/trips/$tripRid/timeline'),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.group_outlined),
+                        title: Text(l10n.navMembers),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.push('/trips/$tripRid/members'),
                       ),
                       const Divider(height: 1),
                       ListTile(
@@ -157,13 +164,6 @@ class TripDetailScreen extends ConsumerWidget {
                         title: Text(l10n.navSettlement),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () => context.push('/trips/$tripRid/settlement'),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.timeline_outlined),
-                        title: Text(l10n.navTimeline),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.push('/trips/$tripRid/timeline'),
                       ),
                       const Divider(height: 1),
                       ListTile(
