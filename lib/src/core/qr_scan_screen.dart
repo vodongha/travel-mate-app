@@ -207,14 +207,19 @@ class _QrScanScreenState extends State<QrScanScreen>
                 ),
               ),
             ),
-            // Opaque app background everywhere except the window + corner
-            // brackets — so the camera only shows inside the 1:1 frame.
+            // Dim everything except the window + corner brackets. On mobile the camera composites
+            // under Flutter, so an opaque app-background fill gives a clean "only the window shows
+            // the camera" look. On web the camera is an HTML platform view that Flutter draws OVER,
+            // so an opaque fill would hide the whole preview (camera on, but black) — use a
+            // translucent scrim there so the live camera shows through, dimmed.
             Positioned.fill(
               child: CustomPaint(
                 painter: _FramePainter(
                   window,
                   accent,
-                  Theme.of(context).scaffoldBackgroundColor,
+                  kIsWeb
+                      ? Colors.black.withValues(alpha: 0.55)
+                      : Theme.of(context).scaffoldBackgroundColor,
                 ),
               ),
             ),
