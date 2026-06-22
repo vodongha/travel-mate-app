@@ -14,25 +14,26 @@ currency conversion, and settlement).
 and desktop web. Treat a responsive layout (width-capped content, adaptive navigation) as a baseline
 requirement, not an afterthought.
 
-**Status:** **M9 in progress** — the Flutter project exists (Android + Web). Done: the core layer
-(Dio client + bearer/refresh interceptor, secure token storage, go_router auth guard, Material 3
-theme, en/vi l10n) and the first vertical slices — **auth** (login/register, session restore) and
-**trips** (list / create / detail). Remaining feature screens (planning, money, fund, settlement,
-dashboard, report, notifications, Google sign-in, QR scan) land in follow-up slices. The backend
-(M1–M8) is complete; its spec is the source of truth:
+**Status: shipped — v1.0.0 in production** (Android `vn.trippo.mate` + web https://trippo.io.vn).
+All feature areas are built: auth (email + Google), trips (list grouped by year with scroll
+pagination, create/detail, derived status incl. "Upcoming"), timeline (events + transport +
+accommodation + places, add via a type chooser, edit/delete, attach expenses), money (multi-currency
+expenses + split, budget), fund, settlement, tickets (personal + group/QR), checklist, dashboard,
+report, settings/account, notifications scaffolding, in-app update. The web build is served by the
+backend at the same origin. Backend spec (source of truth):
 [vodongha/travel-mate › docs/SPEC.md](https://github.com/vodongha/travel-mate/blob/master/docs/SPEC.md).
 
-## Tech stack (planned)
+## Tech stack
 
-- **Flutter** (Material 3, modern responsive UI), latest stable — **Android + Web** targets from one codebase
-- **Riverpod** (`AsyncNotifier`) for state — one controller per feature, mirrors the backend service layer
-- **Dio** for HTTP — a single configured client with a bearer-token interceptor
+- **Flutter** (Material 3, modern responsive UI), latest stable — **Android + Web** from one codebase
+- **Riverpod** (`AsyncNotifier`/`FamilyAsyncNotifier`) — one controller per feature, mirrors the backend service layer
+- **Dio** for HTTP — a single configured client with a bearer-token + refresh interceptor
 - **go_router** for navigation with an auth-aware redirect guard
 - **flutter_secure_storage** for the JWT access + refresh tokens (Keychain / Keystore — never plain prefs)
-- **flutter_map** (OpenStreetMap) for places/timeline maps
+- **flutter_map** (OpenStreetMap) + **latlong2** for maps; **geolocator** for "my location" + **permission_handler** for runtime camera/location permission
 - **qr_flutter** to render a QR from a string; **mobile_scanner** to scan a QR into its decoded string (see "QR codes" below)
-- **firebase_messaging** (FCM) for push
-- **google_sign_in** for Sign in with Google
+- **firebase_core** + **firebase_messaging** (FCM) for push; **google_sign_in** (+ `google_sign_in_web`) for Sign in with Google
+- **in_app_update** for Google Play in-app updates; **package_info_plus** for the version shown in About
 - **intl** for money/date formatting
 
 This mirrors the sibling `family-budget-app` setup; reuse its patterns (Dio client + interceptor,
@@ -91,9 +92,13 @@ Rules:
 
 ## Backend API contract (high level)
 
-Base URL via `--dart-define=API_BASE_URL=...` (default `http://10.0.2.2:8000`, the Android
-emulator's route to host localhost). Base path **`/api/v1`**. Full detail in the backend's
-`docs/SPEC.md` §4/§7.
+Base path **`/api/v1`**. The base URL is resolved in `AppConfig`:
+- **Mobile (release):** `--dart-define=API_BASE_URL=https://trippo.io.vn` (absolute). Dev default is
+  `http://10.0.2.2:8000` (Android emulator → host localhost).
+- **Web:** built with `--dart-define=SAME_ORIGIN=true` → **relative** URLs, because the backend serves
+  the web build at the same origin (no CORS). The backend's `deploy.yml` builds the web this way.
+
+Full detail in the backend's `docs/SPEC.md` §4/§7.
 
 - **Envelope:** responses are `{ data, error, meta }`; errors follow **RFC 7807** ProblemDetail
   (`{ type, title, status, detail, fieldErrors[] }`). Pagination is `?page=&size=&sort=`.
@@ -109,7 +114,13 @@ emulator's route to host localhost). Base path **`/api/v1`**. Full detail in the
 - **Trips/members:** roles `OWNER`/`EDITOR`/`VIEWER`; ghost members (no account) can be split with;
   invite by link/QR (`POST /trips/{tripRid}/invitations`, `POST /invitations/{token}/accept`).
 - **Money:** expenses carry `currency`, `amount`, `exchangeRate` (snapshot), `amountBase`; the
-  server computes `amountBase`. Splits are `EQUAL`/`EXACT`/`PERCENT`/`SHARES`.
+  server computes `amountBase`. Splits are `EQUAL`/`EXACT`/`PERCENT`/`SHARES`. An expense may attach
+  to an itinerary item via `itineraryKind` (EVENT/TRANSPORT/ACCOMMODATION) + `itineraryRid`.
+- **Classification:** one canonical `Category` (TRANSPORT, ACCOMMODATION, FOOD, SHOPPING, ACTIVITY,
+  SIGHTSEEING, MEDICAL, PARKING, OTHER) for events/places/tickets/expenses; `TransportType` is a
+  separate sub-type. See `Labels` in `core/labels.dart`.
+- **Tickets:** per-member, or a **group ticket** (`shared: true`, no owner — needs EDITOR); group
+  tickets appear in everyone's `/tickets/mine`.
 - **Settlement:** `GET /trips/{tripRid}/settlement` → net balances + minimised transactions.
 - **Dashboard/report:** `GET /trips/{tripRid}/dashboard`, `GET /trips/{tripRid}/report`.
 
@@ -130,22 +141,30 @@ in CI). Add a string to **both** ARB files. Don't hardcode user-facing text in w
   confirm) before calling the controller; never delete on a single tap.
 - Run `dart format .` before committing — CI fails on unformatted code.
 
-## Build & run (once scaffolded)
+## Build & run
 
 ```bash
-flutter create --platforms=android,web .   # ONE-TIME: generate platform folders (keeps lib/, pubspec.yaml, test/)
 flutter pub get
-flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000          # Android emulator → host
-flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8000  # Web
-flutter analyze
+flutter analyze                                                        # CI gate — keep clean
 flutter test
-dart format .
+
+# Dev
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000            # Android emulator → host
+flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8000 # Web
+
+# Release
+flutter build appbundle --release --dart-define=API_BASE_URL=https://trippo.io.vn   # Android (Play)
+flutter build web --release --dart-define=SAME_ORIGIN=true                          # Web (backend bakes this in)
 ```
 
-**`android/` and `web/` are committed** (Android: applicationId, INTERNET permission, release
-signing; Web: `index.html`, manifest, icons). Secrets stay out via `.gitignore` (`key.properties`,
-`*.jks`, `local.properties`, `google-services.json`). `ios/` is regenerated by `flutter create .`
-if/when iOS is targeted.
+The Play release is `vn.trippo.mate`; bump `version:` in `pubspec.yaml` (`x.y.z+build`) per upload.
+The **web build is normally produced by the backend's `deploy.yml`** (it checks out this repo's
+`master`), so an app-only change needs a backend redeploy to go live on https://trippo.io.vn.
+
+**`android/` and `web/` are committed** (Android: applicationId `vn.trippo.mate`, permissions, release
+signing via `android/key.properties`; Web: `index.html`, manifest, icons). Secrets stay out via
+`.gitignore` (`key.properties`, `*.jks`, `local.properties`, `google-services.json`, Firebase service
+accounts). Google Sign-In on a Play build needs the **App signing** key's SHA-1/SHA-256 in Firebase.
 
 ## Git workflow
 
