@@ -119,7 +119,10 @@ class TicketCard extends StatelessWidget {
     final ColorScheme scheme = Theme.of(context).colorScheme;
     final List<String> subParts = [
       ticketTypeLabel(context, ticket.ticketType),
-      if (ticket.memberName.isNotEmpty) ticket.memberName,
+      if (ticket.shared)
+        l10n.ticketAssigneeGroup
+      else if (ticket.memberName.isNotEmpty)
+        ticket.memberName,
     ];
     return Card(
       child: ListTile(

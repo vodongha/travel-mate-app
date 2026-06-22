@@ -24,7 +24,8 @@ class ExpenseItem {
     required this.amount,
     required this.amountBase,
     this.spentAt,
-    this.eventRid,
+    this.itineraryKind,
+    this.itineraryRid,
   });
 
   final String rid;
@@ -36,8 +37,11 @@ class ExpenseItem {
   final num amountBase;
   final DateTime? spentAt;
 
-  /// The timeline event this expense is attached to, or null (a standalone expense).
-  final String? eventRid;
+  /// The itinerary item this expense is attached to (a timeline event, transport leg, or
+  /// accommodation stay), or null for a standalone expense. [itineraryKind] is EVENT / TRANSPORT /
+  /// ACCOMMODATION and [itineraryRid] is that item's rid; the pair together identifies the target.
+  final String? itineraryKind;
+  final String? itineraryRid;
 
   factory ExpenseItem.fromJson(Map<String, dynamic> json) {
     final Object? spent = json['spentAt'];
@@ -50,7 +54,8 @@ class ExpenseItem {
       amount: (json['amount'] as num?) ?? 0,
       amountBase: (json['amountBase'] as num?) ?? 0,
       spentAt: spent is String ? DateTime.tryParse(spent) : null,
-      eventRid: json['eventRid'] as String?,
+      itineraryKind: json['itineraryKind'] as String?,
+      itineraryRid: json['itineraryRid'] as String?,
     );
   }
 }
@@ -84,7 +89,8 @@ class ExpenseRepository {
     required String splitType,
     required List<ParticipantInput> participants,
     required String spentAtIso,
-    String? eventRid,
+    String? itineraryKind,
+    String? itineraryRid,
   }) async {
     try {
       await _dio.post<dynamic>('/trips/$tripRid/expenses', data: {
@@ -98,7 +104,10 @@ class ExpenseRepository {
         'splitType': splitType,
         'participants': participants.map((p) => p.toJson()).toList(),
         'spentAt': spentAtIso,
-        if (eventRid != null && eventRid.isNotEmpty) 'eventRid': eventRid,
+        if (itineraryRid != null && itineraryRid.isNotEmpty) ...{
+          'itineraryKind': itineraryKind,
+          'itineraryRid': itineraryRid,
+        },
       });
     } on DioException catch (e) {
       throw toApiException(e);

@@ -110,7 +110,7 @@ class _VersionText extends StatelessWidget {
     return FutureBuilder<PackageInfo>(
       future: PackageInfo.fromPlatform(),
       builder: (context, snapshot) => Text(
-        snapshot.hasData ? 'v${snapshot.data!.version}' : '',
+        snapshot.hasData ? snapshot.data!.version : '',
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: color),
       ),
     );

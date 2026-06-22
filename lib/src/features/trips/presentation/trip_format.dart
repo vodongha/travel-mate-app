@@ -33,12 +33,15 @@ String tripDateRange(BuildContext context, Trip trip) {
   return fmt.format((trip.startDate ?? trip.endDate)!);
 }
 
-/// Localized label for a trip status (PLANNING/ONGOING/COMPLETED/CANCELLED).
+/// Localized label for a trip status. UPCOMING is a derived-only state (the trip starts within a
+/// week) — see [tripEffectiveStatus]; the others map to the backend TripStatus.
 String tripStatusLabel(BuildContext context, String status) {
   final AppLocalizations l10n = AppLocalizations.of(context);
   switch (status) {
     case 'PLANNING':
       return l10n.tripStatusPlanning;
+    case 'UPCOMING':
+      return l10n.tripStatusUpcoming;
     case 'ONGOING':
       return l10n.tripStatusOngoing;
     case 'COMPLETED':
@@ -50,11 +53,15 @@ String tripStatusLabel(BuildContext context, String status) {
   }
 }
 
+/// Number of days within which an upcoming trip flips from PLANNING to UPCOMING ("Sắp diễn ra").
+const int kTripUpcomingDays = 7;
+
 /// The status to *display*, derived from the trip's dates so it updates itself
-/// automatically: before the start day it's PLANNING, between start and end
-/// (inclusive) ONGOING, after the end day COMPLETED. A trip explicitly marked
-/// CANCELLED stays cancelled. Falls back to the stored status when there are no
-/// dates to reason about.
+/// automatically: more than a week before the start it's PLANNING, within the
+/// last [kTripUpcomingDays] days before the start UPCOMING, between start and
+/// end (inclusive) ONGOING, after the end day COMPLETED. A trip explicitly
+/// marked CANCELLED stays cancelled. Falls back to the stored status when there
+/// are no dates to reason about.
 String tripEffectiveStatus(Trip trip) {
   if (trip.status == 'CANCELLED') {
     return 'CANCELLED';
@@ -70,7 +77,9 @@ String tripEffectiveStatus(Trip trip) {
   final DateTime? startDay = start == null ? null : dayOf(start);
   final DateTime? endDay = end == null ? null : dayOf(end);
   if (startDay != null && today.isBefore(startDay)) {
-    return 'PLANNING';
+    // Within a week of departure → "Sắp diễn ra"; further out → still planning.
+    final int daysUntilStart = startDay.difference(today).inDays;
+    return daysUntilStart <= kTripUpcomingDays ? 'UPCOMING' : 'PLANNING';
   }
   if (endDay != null && today.isAfter(endDay)) {
     return 'COMPLETED';
@@ -86,6 +95,8 @@ String tripEffectiveStatus(Trip trip) {
   switch (status) {
     case 'ONGOING':
       return (bg: scheme.primaryContainer, fg: scheme.onPrimaryContainer);
+    case 'UPCOMING':
+      return (bg: scheme.secondaryContainer, fg: scheme.onSecondaryContainer);
     case 'COMPLETED':
       return (bg: scheme.surfaceContainerHighest, fg: scheme.onSurfaceVariant);
     case 'CANCELLED':
