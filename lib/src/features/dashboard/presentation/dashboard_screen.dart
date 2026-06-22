@@ -6,6 +6,9 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error_view.dart';
 import '../../../core/money.dart';
 import '../../../core/responsive.dart';
+import '../../trips/application/trips_controller.dart';
+import '../../trips/domain/trip.dart';
+import '../../trips/presentation/trip_format.dart';
 import '../data/dashboard_repository.dart';
 import '../domain/dashboard.dart';
 
@@ -19,6 +22,8 @@ class DashboardScreen extends ConsumerWidget {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final AsyncValue<Dashboard> dashboard =
         ref.watch(dashboardProvider(tripRid));
+    // The trip's dates drive the status so an ended trip no longer reads as "in progress".
+    final Trip? trip = ref.watch(tripProvider(tripRid)).valueOrNull;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navDashboard)),
       body: SafeArea(
@@ -33,7 +38,7 @@ class DashboardScreen extends ConsumerWidget {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  _CountdownCard(days: d.countdownDays, l10n: l10n),
+                  _CountdownCard(days: d.countdownDays, trip: trip, l10n: l10n),
                   const SizedBox(height: 12),
                   Row(
                     children: [
@@ -71,25 +76,45 @@ class DashboardScreen extends ConsumerWidget {
 }
 
 class _CountdownCard extends StatelessWidget {
-  const _CountdownCard({required this.days, required this.l10n});
+  const _CountdownCard({required this.days, required this.trip, required this.l10n});
 
   final int? days;
+  final Trip? trip;
   final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
     final ColorScheme scheme = Theme.of(context).colorScheme;
-    final String big;
-    final String label;
-    if (days == null) {
-      big = '—';
-      label = l10n.tripNoDates;
-    } else if (days! < 0) {
-      big = '✈';
-      label = l10n.dashInProgress;
-    } else {
-      big = '${days!}';
-      label = l10n.dashDaysToGo;
+    String big;
+    String label;
+    // Prefer the date-derived status (knows about the end date); fall back to the raw countdown.
+    final String? status = trip == null ? null : tripEffectiveStatus(trip!);
+    switch (status) {
+      case 'COMPLETED':
+        big = '🏁';
+        label = l10n.tripStatusCompleted;
+      case 'CANCELLED':
+        big = '⊘';
+        label = l10n.tripStatusCancelled;
+      case 'ONGOING':
+        big = '✈';
+        label = l10n.tripStatusOngoing;
+      case 'PLANNING':
+      case 'UPCOMING':
+        big = (days != null && days! >= 0) ? '${days!}' : '—';
+        label = l10n.dashDaysToGo;
+      default:
+        // No trip/status yet — keep the previous countdown-only behaviour.
+        if (days == null) {
+          big = '—';
+          label = l10n.tripNoDates;
+        } else if (days! < 0) {
+          big = '✈';
+          label = l10n.dashInProgress;
+        } else {
+          big = '${days!}';
+          label = l10n.dashDaysToGo;
+        }
     }
     return Card(
       color: scheme.primaryContainer,

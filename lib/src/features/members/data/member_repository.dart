@@ -24,11 +24,15 @@ class MemberRepository {
   }
 
   Future<Member> addGhost(
-      String tripRid, String displayName, String role) async {
+      String tripRid, String displayName, String role, {String? email}) async {
     try {
       final Response<dynamic> res = await _dio.post<dynamic>(
         '/trips/$tripRid/members',
-        data: {'displayName': displayName, 'role': role},
+        data: {
+          'displayName': displayName,
+          'role': role,
+          if (email != null && email.isNotEmpty) 'email': email,
+        },
       );
       return Member.fromJson(_data(res));
     } on DioException catch (e) {
@@ -44,12 +48,30 @@ class MemberRepository {
     }
   }
 
-  /// OWNER-only: change a member's role (backend `PATCH /trips/{tripRid}/members/{memberRid}`).
-  Future<void> updateRole(String tripRid, String memberRid, String role) async {
+  /// OWNER-only partial update (backend `PATCH /trips/{tripRid}/members/{memberRid}`). `role` works
+  /// for any member; `displayName`/`email` are applied to a ghost only. Blank `email` clears it.
+  Future<void> update(String tripRid, String memberRid,
+      {String? displayName, String? email, String? role}) async {
     try {
       await _dio.patch<dynamic>(
         '/trips/$tripRid/members/$memberRid',
-        data: {'role': role},
+        data: {
+          if (displayName != null) 'displayName': displayName,
+          if (email != null) 'email': email,
+          if (role != null) 'role': role,
+        },
+      );
+    } on DioException catch (e) {
+      throw toApiException(e);
+    }
+  }
+
+  /// OWNER-only: merge [memberRid] (a ghost) into [targetRid] — backend re-points its money/tickets.
+  Future<void> merge(String tripRid, String memberRid, String targetRid) async {
+    try {
+      await _dio.post<dynamic>(
+        '/trips/$tripRid/members/$memberRid/merge',
+        data: {'targetRid': targetRid},
       );
     } on DioException catch (e) {
       throw toApiException(e);

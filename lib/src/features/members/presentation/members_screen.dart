@@ -28,7 +28,80 @@ class MembersScreen extends ConsumerWidget {
     try {
       await ref
           .read(membersControllerProvider(tripRid).notifier)
-          .addGhost(result.name, result.role);
+          .addGhost(result.name, result.role, email: result.email);
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(friendlyError(context, error))));
+      }
+    }
+  }
+
+  Future<void> _editGhost(
+      BuildContext context, WidgetRef ref, Member member) async {
+    final _AddGhostResult? result = await showDialog<_AddGhostResult>(
+      context: context,
+      builder: (_) => _EditGhostDialog(member: member),
+    );
+    if (result == null) {
+      return;
+    }
+    try {
+      await ref
+          .read(membersControllerProvider(tripRid).notifier)
+          .editGhost(member.rid, displayName: result.name, email: result.email ?? '');
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(friendlyError(context, error))));
+      }
+    }
+  }
+
+  Future<void> _merge(BuildContext context, WidgetRef ref, Member source,
+      List<Member> all) async {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final List<Member> targets =
+        all.where((m) => m.rid != source.rid).toList(growable: false);
+    if (targets.isEmpty) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.memberMergeEmpty)));
+      return;
+    }
+    final Member? target = await showModalBottomSheet<Member>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+              child: Text(l10n.memberMergePrompt(source.displayName),
+                  style: Theme.of(ctx).textTheme.bodyMedium),
+            ),
+            for (final Member m in targets)
+              ListTile(
+                leading: Icon(m.ghost ? Icons.person_outline : Icons.person),
+                title: Text(m.displayName),
+                subtitle: Text(roleLabel(ctx, m.role)),
+                onTap: () => Navigator.pop(ctx, m),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (target == null || !context.mounted) {
+      return;
+    }
+    try {
+      await ref
+          .read(membersControllerProvider(tripRid).notifier)
+          .merge(source.rid, target.rid);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.memberMergeDone)));
+      }
     } catch (error) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -137,6 +210,8 @@ class MembersScreen extends ConsumerWidget {
                       isOwner: isOwner,
                       onRemove: () => _remove(context, ref, list[i]),
                       onChangeRole: () => _changeRole(context, ref, list[i]),
+                      onEdit: () => _editGhost(context, ref, list[i]),
+                      onMerge: () => _merge(context, ref, list[i], list),
                     ),
                   ),
           ),
@@ -146,7 +221,7 @@ class MembersScreen extends ConsumerWidget {
   }
 }
 
-enum _MemberAction { changeRole, remove }
+enum _MemberAction { changeRole, edit, merge, remove }
 
 class _MemberTile extends StatelessWidget {
   const _MemberTile({
@@ -154,12 +229,16 @@ class _MemberTile extends StatelessWidget {
     required this.isOwner,
     required this.onRemove,
     required this.onChangeRole,
+    required this.onEdit,
+    required this.onMerge,
   });
 
   final Member member;
   final bool isOwner;
   final VoidCallback onRemove;
   final VoidCallback onChangeRole;
+  final VoidCallback onEdit;
+  final VoidCallback onMerge;
 
   @override
   Widget build(BuildContext context) {
@@ -178,18 +257,27 @@ class _MemberTile extends StatelessWidget {
         child: Icon(member.ghost ? Icons.person_outline : Icons.person),
       ),
       title: Text(member.displayName),
-      subtitle: Row(
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(roleLabel(context, member.role)),
-          if (member.ghost) ...[
-            const SizedBox(width: 8),
-            Chip(
-              label: Text(l10n.memberGhostBadge),
-              visualDensity: VisualDensity.compact,
-              padding: EdgeInsets.zero,
-              labelStyle: const TextStyle(fontSize: 11),
-            ),
-          ],
+          Row(
+            children: [
+              Text(roleLabel(context, member.role)),
+              if (member.ghost) ...[
+                const SizedBox(width: 8),
+                Chip(
+                  label: Text(l10n.memberGhostBadge),
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  labelStyle: const TextStyle(fontSize: 11),
+                ),
+              ],
+            ],
+          ),
+          if (member.ghost && (member.email?.isNotEmpty ?? false))
+            Text(member.email!,
+                style: TextStyle(
+                    fontSize: 12, color: scheme.onSurfaceVariant)),
         ],
       ),
       trailing: !showActions
@@ -197,8 +285,18 @@ class _MemberTile extends StatelessWidget {
           : PopupMenuButton<_MemberAction>(
               icon: const Icon(Icons.more_vert),
               tooltip: l10n.actionEdit,
-              onSelected: (a) =>
-                  a == _MemberAction.changeRole ? onChangeRole() : onRemove(),
+              onSelected: (a) {
+                switch (a) {
+                  case _MemberAction.changeRole:
+                    onChangeRole();
+                  case _MemberAction.edit:
+                    onEdit();
+                  case _MemberAction.merge:
+                    onMerge();
+                  case _MemberAction.remove:
+                    onRemove();
+                }
+              },
               itemBuilder: (context) => [
                 PopupMenuItem(
                   value: _MemberAction.changeRole,
@@ -207,6 +305,25 @@ class _MemberTile extends StatelessWidget {
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.badge_outlined),
                     title: Text(l10n.memberChangeRole),
+                  ),
+                ),
+                if (member.ghost)
+                  PopupMenuItem(
+                    value: _MemberAction.edit,
+                    child: ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.edit_outlined),
+                      title: Text(l10n.actionEdit),
+                    ),
+                  ),
+                PopupMenuItem(
+                  value: _MemberAction.merge,
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.merge_outlined),
+                    title: Text(l10n.memberMergeAction),
                   ),
                 ),
                 PopupMenuItem(
@@ -273,8 +390,9 @@ class _ChangeRoleDialogState extends State<_ChangeRoleDialog> {
 }
 
 class _AddGhostResult {
-  const _AddGhostResult(this.name, this.role);
+  const _AddGhostResult(this.name, this.email, this.role);
   final String name;
+  final String? email;
   final String role;
 }
 
@@ -288,11 +406,13 @@ class _AddGhostDialog extends StatefulWidget {
 class _AddGhostDialogState extends State<_AddGhostDialog> {
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
+  final _email = TextEditingController();
   String _role = 'VIEWER';
 
   @override
   void dispose() {
     _name.dispose();
+    _email.dispose();
     super.dispose();
   }
 
@@ -320,6 +440,8 @@ class _AddGhostDialogState extends State<_AddGhostDialog> {
                   : null,
             ),
             const SizedBox(height: 12),
+            _GhostEmailField(controller: _email, l10n: l10n),
+            const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               initialValue: _role,
               decoration: InputDecoration(labelText: l10n.inviteRoleToGrant),
@@ -336,8 +458,8 @@ class _AddGhostDialogState extends State<_AddGhostDialog> {
               primaryLabel: l10n.actionAdd,
               onPrimary: () {
                 if (_formKey.currentState!.validate()) {
-                  Navigator.pop(
-                      context, _AddGhostResult(_name.text.trim(), _role));
+                  Navigator.pop(context,
+                      _AddGhostResult(_name.text.trim(), _email.text.trim(), _role));
                 }
               },
               onCancel: () => Navigator.pop(context),
@@ -345,6 +467,100 @@ class _AddGhostDialogState extends State<_AddGhostDialog> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Edit a ghost's name + email (role is changed via the separate role action).
+class _EditGhostDialog extends StatefulWidget {
+  const _EditGhostDialog({required this.member});
+
+  final Member member;
+
+  @override
+  State<_EditGhostDialog> createState() => _EditGhostDialogState();
+}
+
+class _EditGhostDialogState extends State<_EditGhostDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _name =
+      TextEditingController(text: widget.member.displayName);
+  late final TextEditingController _email =
+      TextEditingController(text: widget.member.email ?? '');
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _email.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    return AlertDialog(
+      title: Text(l10n.memberEditTitle),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: _name,
+              autofocus: true,
+              textCapitalization: TextCapitalization.words,
+              decoration: InputDecoration(labelText: l10n.authName),
+              validator: (v) => (v == null || v.trim().isEmpty)
+                  ? l10n.validationRequired
+                  : null,
+            ),
+            const SizedBox(height: 12),
+            _GhostEmailField(controller: _email, l10n: l10n),
+            const SizedBox(height: 20),
+            FormButtons(
+              primaryLabel: l10n.actionSave,
+              onPrimary: () {
+                if (_formKey.currentState!.validate()) {
+                  Navigator.pop(context,
+                      _AddGhostResult(_name.text.trim(), _email.text.trim(), widget.member.role));
+                }
+              },
+              onCancel: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Optional email field for a ghost, with a light format check and a hint about auto-merge.
+class _GhostEmailField extends StatelessWidget {
+  const _GhostEmailField({required this.controller, required this.l10n});
+
+  final TextEditingController controller;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: TextInputType.emailAddress,
+      decoration: InputDecoration(
+        labelText: l10n.memberEmailLabel,
+        helperText: l10n.memberEmailHint,
+        helperMaxLines: 2,
+        prefixIcon: const Icon(Icons.mail_outline),
+      ),
+      validator: (v) {
+        final String s = (v ?? '').trim();
+        if (s.isEmpty) {
+          return null; // optional
+        }
+        return s.contains('@') && s.contains('.')
+            ? null
+            : l10n.validationEmail;
+      },
     );
   }
 }
