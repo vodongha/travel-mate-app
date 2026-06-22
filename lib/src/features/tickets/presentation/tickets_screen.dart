@@ -7,6 +7,7 @@ import '../../../core/actions.dart';
 import '../../../core/app_error.dart';
 import '../../../core/app_error_view.dart';
 import '../../../core/responsive.dart';
+import '../../expenses/presentation/itinerary_ref.dart';
 import '../application/tickets_controller.dart';
 import '../data/ticket_repository.dart';
 import 'ticket_format.dart';
@@ -123,6 +124,9 @@ class TicketCard extends StatelessWidget {
         l10n.ticketAssigneeGroup
       else if (ticket.memberName.isNotEmpty)
         ticket.memberName,
+      if (ticket.seat?.isNotEmpty == true) '${l10n.fieldSeat} ${ticket.seat}',
+      if (ticket.itineraryKind?.isNotEmpty == true)
+        itinerarySectionLabel(context, ticket.itineraryKind!),
     ];
     return Card(
       child: ListTile(

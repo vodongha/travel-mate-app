@@ -8,7 +8,6 @@ import '../../../core/app_error.dart';
 import '../../../core/form_buttons.dart';
 import '../../../core/geocoding.dart';
 import '../../../core/location_picker.dart';
-import '../../../core/qr.dart';
 import '../../../core/responsive.dart';
 import '../../../core/trip_dates.dart';
 import '../../auth/presentation/auth_validators.dart';
@@ -37,7 +36,6 @@ class _AddAccommodationScreenState
   final _note = TextEditingController();
   DateTime? _checkin;
   DateTime? _checkout;
-  String? _qrData;
   bool _submitting = false;
 
   bool get _editing => widget.existing != null;
@@ -53,7 +51,6 @@ class _AddAccommodationScreenState
       _note.text = a.note ?? '';
       _checkin = a.checkinTime?.toLocal();
       _checkout = a.checkoutTime?.toLocal();
-      _qrData = a.qrData;
     }
   }
 
@@ -125,7 +122,6 @@ class _AddAccommodationScreenState
           address: _trim(_address),
           checkinTimeUtc: _checkin?.toUtc(),
           checkoutTimeUtc: _checkout?.toUtc(),
-          qrData: _qrData,
           note: _trim(_note),
         );
       } else {
@@ -135,7 +131,6 @@ class _AddAccommodationScreenState
           address: _trim(_address),
           checkinTimeUtc: _checkin?.toUtc(),
           checkoutTimeUtc: _checkout?.toUtc(),
-          qrData: _qrData,
           note: _trim(_note),
         );
       }
@@ -225,11 +220,6 @@ class _AddAccommodationScreenState
                       labelText: l10n.fieldBookingCode,
                       prefixIcon:
                           const Icon(Icons.confirmation_number_outlined)),
-                ),
-                const SizedBox(height: 16),
-                QrField(
-                  value: _qrData,
-                  onChanged: (v) => setState(() => _qrData = v),
                 ),
                 const SizedBox(height: 16),
                 TextFormField(

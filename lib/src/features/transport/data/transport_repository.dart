@@ -3,20 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api_client.dart';
 
-/// A transport leg (backend `TransportResponse`). `qrData` is the decoded ticket string — we render
-/// it as a QR on view and never store an image (SPEC §2.7).
+/// A transport leg (backend `TransportResponse`). Per-person seats and boarding-pass QRs live on the
+/// linked tickets, not on the leg itself.
 class TransportItem {
   const TransportItem({
     required this.rid,
     required this.transportType,
     this.provider,
     this.bookingCode,
-    this.seat,
     this.departurePlace,
     this.arrivalPlace,
     this.departureTime,
     this.arrivalTime,
-    this.qrData,
     this.note,
   });
 
@@ -24,12 +22,10 @@ class TransportItem {
   final String transportType;
   final String? provider;
   final String? bookingCode;
-  final String? seat;
   final String? departurePlace;
   final String? arrivalPlace;
   final DateTime? departureTime;
   final DateTime? arrivalTime;
-  final String? qrData;
   final String? note;
 
   factory TransportItem.fromJson(Map<String, dynamic> json) {
@@ -39,12 +35,10 @@ class TransportItem {
       transportType: json['transportType'] as String? ?? 'FLIGHT',
       provider: json['provider'] as String?,
       bookingCode: json['bookingCode'] as String?,
-      seat: json['seat'] as String?,
       departurePlace: json['departurePlace'] as String?,
       arrivalPlace: json['arrivalPlace'] as String?,
       departureTime: parse(json['departureTime']),
       arrivalTime: parse(json['arrivalTime']),
-      qrData: json['qrData'] as String?,
       note: json['note'] as String?,
     );
   }

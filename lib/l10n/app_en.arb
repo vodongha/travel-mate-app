@@ -200,6 +200,8 @@
   "qrTicket": "Ticket QR",
   "qrScan": "Scan QR",
   "qrScanHint": "Point the camera at the QR code",
+  "qrFromImage": "Scan from image",
+  "qrNoCodeFound": "No QR code found in that image",
   "qrView": "Show QR",
   "qrEmpty": "No QR saved",
   "qrEnterManually": "Enter QR manually",
@@ -306,6 +308,8 @@
   "updateRestart": "Restart",
   "ticketCode": "Ticket code or QR",
   "ticketCodeHint": "Type a code or scan a QR",
+  "ticketForItinerary": "For itinerary item",
+  "ticketForItineraryNone": "Not linked",
   "locationMyLocation": "My location",
   "locationPermissionDenied": "Location permission denied"
 }

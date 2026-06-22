@@ -4,8 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api_client.dart';
 
 /// A ticket belonging to a trip member (backend `TicketResponse`). `qrData` is the decoded ticket
-/// string — we render it as a QR on view and never store an image (SPEC §2.7). `mine` marks the
-/// caller's own tickets (so any role can manage them).
+/// string (optional — a pass may be seat-only) rendered as a QR on view, never an image (SPEC §2.7).
+/// `mine` marks the caller's own tickets (so any role can manage them). A ticket can be attached to an
+/// itinerary item via [itineraryKind] (EVENT | TRANSPORT | ACCOMMODATION) + [itineraryRid].
 class Ticket {
   const Ticket({
     required this.rid,
@@ -17,6 +18,8 @@ class Ticket {
     required this.ticketType,
     this.qrData,
     this.seat,
+    this.itineraryKind,
+    this.itineraryRid,
     this.note,
   });
 
@@ -31,6 +34,10 @@ class Ticket {
   final String ticketType;
   final String? qrData;
   final String? seat;
+
+  /// The itinerary item this ticket is for, if any (EVENT | TRANSPORT | ACCOMMODATION) + its rid.
+  final String? itineraryKind;
+  final String? itineraryRid;
   final String? note;
 
   factory Ticket.fromJson(Map<String, dynamic> json) {
@@ -44,6 +51,8 @@ class Ticket {
       ticketType: json['ticketType'] as String? ?? 'OTHER',
       qrData: json['qrData'] as String?,
       seat: json['seat'] as String?,
+      itineraryKind: json['itineraryKind'] as String?,
+      itineraryRid: json['itineraryRid'] as String?,
       note: json['note'] as String?,
     );
   }
