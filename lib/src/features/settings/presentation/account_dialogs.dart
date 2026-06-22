@@ -70,8 +70,8 @@ Future<void> openExternal(BuildContext context, String url) async {
 }
 
 /// Opens [url] in an in-app WebView on mobile (the `/web` route shows
-/// [WebPageScreen]); on web an external site can't be reliably iframed, so it
-/// opens in a new browser tab instead. Mirrors family-budget-app.
+/// [WebPageScreen]); on web it opens in a new browser tab instead. Mirrors
+/// family-budget-app.
 Future<void> openWebPage(BuildContext context, String title, String url) async {
   if (kIsWeb) {
     final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);

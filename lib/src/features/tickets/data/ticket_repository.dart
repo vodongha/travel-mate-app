@@ -12,6 +12,7 @@ class Ticket {
     required this.memberRid,
     required this.memberName,
     required this.mine,
+    required this.shared,
     required this.title,
     required this.ticketType,
     this.qrData,
@@ -23,6 +24,9 @@ class Ticket {
   final String memberRid;
   final String memberName;
   final bool mine;
+
+  /// A group ticket: no owner, shared by the whole trip. [memberRid]/[memberName] are empty.
+  final bool shared;
   final String title;
   final String ticketType;
   final String? qrData;
@@ -35,6 +39,7 @@ class Ticket {
       memberRid: json['memberRid'] as String? ?? '',
       memberName: json['memberName'] as String? ?? '',
       mine: json['mine'] as bool? ?? false,
+      shared: json['shared'] as bool? ?? false,
       title: json['title'] as String? ?? '',
       ticketType: json['ticketType'] as String? ?? 'OTHER',
       qrData: json['qrData'] as String?,

@@ -99,8 +99,9 @@ class TimelineScreen extends ConsumerWidget {
       return;
     }
     if (action == 'expense') {
-      // Pre-attach the new expense to this event.
-      context.push('/trips/$tripRid/expenses/new', extra: event.rid);
+      // Pre-attach the new expense to this event (polymorphic itinerary link).
+      context.push('/trips/$tripRid/expenses/new',
+          extra: (kind: 'EVENT', rid: event.rid));
       return;
     }
     if (!await confirmDelete(context) || !context.mounted) {
@@ -168,19 +169,20 @@ class TimelineScreen extends ConsumerWidget {
     final Map<String, PlaceItem> placeByRid = {
       for (final PlaceItem p in places) p.rid: p
     };
-    // Sum each event's attached expenses (already in the trip's base currency).
-    final Map<String, num> costByEvent = {};
+    // Sum each itinerary item's attached expenses (already in the trip's base currency). Keyed by
+    // "KIND:rid" so events, transport legs and stays each accumulate their own costs.
+    final Map<String, num> costByItem = {};
     for (final ExpenseItem x in expenses) {
-      if (x.eventRid != null) {
-        costByEvent[x.eventRid!] =
-            (costByEvent[x.eventRid!] ?? 0) + x.amountBase;
+      if (x.itineraryKind != null && x.itineraryRid != null) {
+        final String k = '${x.itineraryKind}:${x.itineraryRid}';
+        costByItem[k] = (costByItem[k] ?? 0) + x.amountBase;
       }
     }
     final List<_Entry> entries = [];
 
     for (final EventItem e in events) {
       final PlaceItem? pl = e.placeRid == null ? null : placeByRid[e.placeRid];
-      final num cost = costByEvent[e.rid] ?? 0;
+      final num cost = costByItem['EVENT:${e.rid}'] ?? 0;
       entries.add(_Entry(
         when: e.startTime?.toLocal(),
         icon: _eventIcon(e.eventType),
@@ -200,6 +202,7 @@ class TimelineScreen extends ConsumerWidget {
         if (t.departurePlace?.isNotEmpty == true) t.departurePlace!,
         if (t.arrivalPlace?.isNotEmpty == true) t.arrivalPlace!,
       ].join(' → ');
+      final num cost = costByItem['TRANSPORT:${t.rid}'] ?? 0;
       entries.add(_Entry(
         when: t.departureTime?.toLocal(),
         icon: _transportIcon(t.transportType),
@@ -208,17 +211,24 @@ class TimelineScreen extends ConsumerWidget {
             : (t.provider?.isNotEmpty == true
                 ? t.provider!
                 : Labels.transportType(context, t.transportType)),
-        subtitle: l10n.navTransport,
+        subtitle: [
+          l10n.navTransport,
+          if (cost > 0) Money.format(cost, baseCurrency),
+        ].join(' · '),
         onTap: () =>
             context.push('/trips/$tripRid/transports/${t.rid}/edit', extra: t),
       ));
     }
     for (final AccommodationItem a in stays) {
+      final num cost = costByItem['ACCOMMODATION:${a.rid}'] ?? 0;
       entries.add(_Entry(
         when: a.checkinTime?.toLocal(),
         icon: Icons.hotel_outlined,
         title: a.name,
-        subtitle: l10n.accommodationCheckin,
+        subtitle: [
+          l10n.accommodationCheckin,
+          if (cost > 0) Money.format(cost, baseCurrency),
+        ].join(' · '),
         onTap: () => context
             .push('/trips/$tripRid/accommodations/${a.rid}/edit', extra: a),
       ));
