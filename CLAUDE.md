@@ -4,7 +4,7 @@ Guidance for Claude (and humans) working in this repo.
 
 ## What this is
 
-The **Flutter client** for the TravelMate product, targeting **Android and Web from one codebase**
+The **Flutter client** for the Travel Mate product, targeting **Android and Web from one codebase**
 (not Android-only like the sibling `family-budget-app`). The backend (Spring Boot + Spring Data JPA
 + Oracle ADB) is a **separate repo**: `vodongha/travel-mate`. This repo is frontend only — it owns
 no business rules beyond input validation; the server is the source of truth (especially for money,

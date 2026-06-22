@@ -46,8 +46,6 @@ String tripStatusLabel(BuildContext context, String status) {
       return l10n.tripStatusOngoing;
     case 'COMPLETED':
       return l10n.tripStatusCompleted;
-    case 'CANCELLED':
-      return l10n.tripStatusCancelled;
     default:
       return status;
   }
@@ -59,13 +57,9 @@ const int kTripUpcomingDays = 7;
 /// The status to *display*, derived from the trip's dates so it updates itself
 /// automatically: more than a week before the start it's PLANNING, within the
 /// last [kTripUpcomingDays] days before the start UPCOMING, between start and
-/// end (inclusive) ONGOING, after the end day COMPLETED. A trip explicitly
-/// marked CANCELLED stays cancelled. Falls back to the stored status when there
-/// are no dates to reason about.
+/// end (inclusive) ONGOING, after the end day COMPLETED. Falls back to the
+/// stored status when there are no dates to reason about.
 String tripEffectiveStatus(Trip trip) {
-  if (trip.status == 'CANCELLED') {
-    return 'CANCELLED';
-  }
   final DateTime? start = trip.startDate;
   final DateTime? end = trip.endDate;
   if (start == null && end == null) {
@@ -99,8 +93,6 @@ String tripEffectiveStatus(Trip trip) {
       return (bg: scheme.secondaryContainer, fg: scheme.onSecondaryContainer);
     case 'COMPLETED':
       return (bg: scheme.surfaceContainerHighest, fg: scheme.onSurfaceVariant);
-    case 'CANCELLED':
-      return (bg: scheme.errorContainer, fg: scheme.onErrorContainer);
     case 'PLANNING':
     default:
       return (bg: scheme.tertiaryContainer, fg: scheme.onTertiaryContainer);

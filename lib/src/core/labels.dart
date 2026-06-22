@@ -43,7 +43,8 @@ class Labels {
   // Itinerary events use the canonical Category — minus TRANSPORT and ACCOMMODATION, which are their
   // own dedicated itinerary entities (added via the "+" chooser, not as a generic event).
   static const List<String> eventTypes = [
-    'FOOD', 'SHOPPING', 'ACTIVITY', 'SIGHTSEEING', 'MEDICAL', 'PARKING', 'OTHER', //
+    'FOOD', 'SHOPPING', 'ACTIVITY', 'SIGHTSEEING', 'MEDICAL', 'PARKING',
+    'OTHER', //
   ];
 
   static String eventType(BuildContext context, String value) =>
