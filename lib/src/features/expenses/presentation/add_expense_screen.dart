@@ -313,9 +313,10 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     final List<TransportItem> transports =
         ref.watch(transportControllerProvider(widget.tripRid)).valueOrNull ??
             const [];
-    final List<AccommodationItem> stays =
-        ref.watch(accommodationControllerProvider(widget.tripRid)).valueOrNull ??
-            const [];
+    final List<AccommodationItem> stays = ref
+            .watch(accommodationControllerProvider(widget.tripRid))
+            .valueOrNull ??
+        const [];
     return buildItineraryRefs(context, events, transports, stays);
   }
 
@@ -358,8 +359,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                   : l10n.expenseNoEvent),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style:
-              attached ? null : TextStyle(color: scheme.onSurfaceVariant),
+          style: attached ? null : TextStyle(color: scheme.onSurfaceVariant),
         ),
       ),
     );
@@ -378,8 +378,10 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
             leading: const Icon(Icons.block_outlined),
             title: Text(l10n.expenseNoEvent),
             // Sentinel (empty rid) = explicitly clear, distinct from dismissing the sheet (null).
-            onTap: () => Navigator.pop(ctx,
-                const ItineraryRef(kind: '', rid: '', label: '', icon: Icons.block)),
+            onTap: () => Navigator.pop(
+                ctx,
+                const ItineraryRef(
+                    kind: '', rid: '', label: '', icon: Icons.block)),
           ),
         ];
         for (final ItineraryRef r in refs) {
@@ -388,8 +390,10 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
             tiles.add(Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
               child: Text(itinerarySectionLabel(ctx, r.kind),
-                  style: Theme.of(ctx).textTheme.labelMedium?.copyWith(
-                      color: Theme.of(ctx).colorScheme.primary)),
+                  style: Theme.of(ctx)
+                      .textTheme
+                      .labelMedium
+                      ?.copyWith(color: Theme.of(ctx).colorScheme.primary)),
             ));
           }
           tiles.add(ListTile(

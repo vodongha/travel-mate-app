@@ -1,4 +1,4 @@
-# TravelMate — App (Android + Web)
+# Travel Mate — App (Android + Web)
 
 [![Flutter](https://img.shields.io/badge/Flutter-stable-02569B?logo=flutter)](https://flutter.dev)
 [![Platforms](https://img.shields.io/badge/platforms-Android%20%7C%20Web-success)](https://flutter.dev/multi-platform)

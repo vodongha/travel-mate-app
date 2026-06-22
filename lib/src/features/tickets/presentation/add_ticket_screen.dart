@@ -54,9 +54,7 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
       _type = t.ticketType;
       _code.text = t.qrData ?? '';
       _seat.text = t.seat ?? '';
-      _memberRid = t.shared
-          ? _kGroupTicket
-          : (t.mine ? null : t.memberRid);
+      _memberRid = t.shared ? _kGroupTicket : (t.mine ? null : t.memberRid);
     }
   }
 

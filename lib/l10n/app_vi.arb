@@ -246,7 +246,6 @@
   "tripStatusUpcoming": "Sắp diễn ra",
   "tripStatusOngoing": "Đang diễn ra",
   "tripStatusCompleted": "Đã hoàn thành",
-  "tripStatusCancelled": "Đã hủy",
   "tripCountdownIn": "còn {days, plural, other{{days} ngày}}",
   "@tripCountdownIn": {
     "placeholders": {

@@ -246,7 +246,6 @@
   "tripStatusUpcoming": "Upcoming",
   "tripStatusOngoing": "Ongoing",
   "tripStatusCompleted": "Completed",
-  "tripStatusCancelled": "Cancelled",
   "tripCountdownIn": "in {days, plural, =1{1 day} other{{days} days}}",
   "@tripCountdownIn": {
     "placeholders": {

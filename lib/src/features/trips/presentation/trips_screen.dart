@@ -19,12 +19,12 @@ class TripsScreen extends ConsumerStatefulWidget {
   ConsumerState<TripsScreen> createState() => _TripsScreenState();
 }
 
-/// null = "All"; otherwise a TripStatus value.
+/// null = "All"; otherwise a derived trip status (see [tripEffectiveStatus]).
 const List<String> _statusFilters = [
   'PLANNING',
+  'UPCOMING',
   'ONGOING',
   'COMPLETED',
-  'CANCELLED'
 ];
 
 class _TripsScreenState extends ConsumerState<TripsScreen> {
