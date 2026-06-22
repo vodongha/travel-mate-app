@@ -14,24 +14,20 @@ class TransportController
     required String transportType,
     String? provider,
     String? bookingCode,
-    String? seat,
     String? departurePlace,
     String? arrivalPlace,
     DateTime? departureTimeUtc,
     DateTime? arrivalTimeUtc,
-    String? qrData,
     String? note,
   }) {
     return {
       'transportType': transportType,
       'provider': provider ?? '',
       'bookingCode': bookingCode ?? '',
-      'seat': seat ?? '',
       'departurePlace': departurePlace ?? '',
       'arrivalPlace': arrivalPlace ?? '',
       'departureTime': departureTimeUtc?.toIso8601String(),
       'arrivalTime': arrivalTimeUtc?.toIso8601String(),
-      'qrData': qrData ?? '',
       'note': note ?? '',
     };
   }
@@ -40,12 +36,10 @@ class TransportController
     required String transportType,
     String? provider,
     String? bookingCode,
-    String? seat,
     String? departurePlace,
     String? arrivalPlace,
     DateTime? departureTimeUtc,
     DateTime? arrivalTimeUtc,
-    String? qrData,
     String? note,
   }) async {
     await _repo.create(
@@ -54,12 +48,10 @@ class TransportController
         transportType: transportType,
         provider: provider,
         bookingCode: bookingCode,
-        seat: seat,
         departurePlace: departurePlace,
         arrivalPlace: arrivalPlace,
         departureTimeUtc: departureTimeUtc,
         arrivalTimeUtc: arrivalTimeUtc,
-        qrData: qrData,
         note: note,
       ),
     );
@@ -72,12 +64,10 @@ class TransportController
     required String transportType,
     String? provider,
     String? bookingCode,
-    String? seat,
     String? departurePlace,
     String? arrivalPlace,
     DateTime? departureTimeUtc,
     DateTime? arrivalTimeUtc,
-    String? qrData,
     String? note,
   }) async {
     await _repo.update(
@@ -87,12 +77,10 @@ class TransportController
         transportType: transportType,
         provider: provider,
         bookingCode: bookingCode,
-        seat: seat,
         departurePlace: departurePlace,
         arrivalPlace: arrivalPlace,
         departureTimeUtc: departureTimeUtc,
         arrivalTimeUtc: arrivalTimeUtc,
-        qrData: qrData,
         note: note,
       ),
     );

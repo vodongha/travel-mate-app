@@ -8,8 +8,8 @@ import '../../../core/actions.dart';
 import '../../../core/app_error.dart';
 import '../../../core/app_error_view.dart';
 import '../../../core/labels.dart';
-import '../../../core/qr.dart';
 import '../../../core/responsive.dart';
+import '../../trips/application/trips_controller.dart';
 import '../application/transport_controller.dart';
 import '../data/transport_repository.dart';
 
@@ -77,13 +77,17 @@ class TransportScreen extends ConsumerWidget {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final AsyncValue<List<TransportItem>> items =
         ref.watch(transportControllerProvider(tripRid));
+    final bool canEdit =
+        ref.watch(tripProvider(tripRid)).valueOrNull?.myRole != 'VIEWER';
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navTransport)),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/trips/$tripRid/transports/new'),
-        icon: const Icon(Icons.add),
-        label: Text(l10n.transportNew),
-      ),
+      floatingActionButton: canEdit
+          ? FloatingActionButton.extended(
+              onPressed: () => context.push('/trips/$tripRid/transports/new'),
+              icon: const Icon(Icons.add),
+              label: Text(l10n.transportNew),
+            )
+          : null,
       body: SafeArea(
         child: ResponsiveCenter(
           child: items.when(
@@ -103,7 +107,9 @@ class TransportScreen extends ConsumerWidget {
                       separatorBuilder: (_, __) => const SizedBox(height: 10),
                       itemBuilder: (context, i) => _TransportCard(
                         item: list[i],
-                        onMenu: () => _rowActions(context, ref, list[i]),
+                        onMenu: canEdit
+                            ? () => _rowActions(context, ref, list[i])
+                            : null,
                       ),
                     ),
                   ),
@@ -115,10 +121,11 @@ class TransportScreen extends ConsumerWidget {
 }
 
 class _TransportCard extends StatelessWidget {
-  const _TransportCard({required this.item, required this.onMenu});
+  const _TransportCard({required this.item, this.onMenu});
 
   final TransportItem item;
-  final VoidCallback onMenu;
+  // null for a VIEWER (read-only) — hides the edit/delete menu.
+  final VoidCallback? onMenu;
 
   @override
   Widget build(BuildContext context) {
@@ -134,7 +141,6 @@ class _TransportCard extends StatelessWidget {
       if (item.provider?.isNotEmpty == true) item.provider!,
       if (when.isNotEmpty) when,
     ];
-    final bool hasQr = item.qrData?.isNotEmpty == true;
     return Card(
       child: ListTile(
         leading: CircleAvatar(
@@ -149,17 +155,12 @@ class _TransportCard extends StatelessWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (hasQr)
+            if (onMenu != null)
               IconButton(
-                icon: const Icon(Icons.qr_code_2),
-                tooltip: AppLocalizations.of(context).qrView,
-                onPressed: () => showQrDialog(context, item.qrData!),
+                icon: const Icon(Icons.more_vert),
+                tooltip: AppLocalizations.of(context).actionEdit,
+                onPressed: onMenu,
               ),
-            IconButton(
-              icon: const Icon(Icons.more_vert),
-              tooltip: AppLocalizations.of(context).actionEdit,
-              onPressed: onMenu,
-            ),
           ],
         ),
         onTap: onMenu,

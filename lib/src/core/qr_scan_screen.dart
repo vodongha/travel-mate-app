@@ -1,9 +1,14 @@
 import 'dart:math' as math;
 
+import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:image/image.dart' as img;
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:zxing2/qrcode.dart' hide BarcodeFormat;
 
 import '../../l10n/app_localizations.dart';
 
@@ -100,11 +105,72 @@ class _QrScanScreenState extends State<QrScanScreen>
     }
   }
 
+  /// Pick an image from the gallery and decode a QR out of it — a path that works even where the
+  /// live camera can't (web, or a denied/unavailable camera). Decoding is pure Dart (zxing2) so it
+  /// runs on web too. Uses the Photo Picker (no storage permission).
+  Future<void> _scanFromImage() async {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final XFile? file =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (file == null || _handled || !mounted) {
+      return;
+    }
+    final Uint8List bytes = await file.readAsBytes();
+    // decodeImage is CPU-bound; keep images reasonable (phone screenshots are fine).
+    final String? code = _decodeQrFromBytes(bytes);
+    if (!mounted) {
+      return;
+    }
+    if (code != null && code.isNotEmpty) {
+      _handled = true;
+      Navigator.of(context).pop(code);
+    } else {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.qrNoCodeFound)));
+    }
+  }
+
+  /// Decode a QR string from raw image bytes with zxing2, or null if none is found.
+  static String? _decodeQrFromBytes(Uint8List bytes) {
+    final img.Image? image = img.decodeImage(bytes);
+    if (image == null) {
+      return null;
+    }
+    final LuminanceSource source = RGBLuminanceSource(
+      image.width,
+      image.height,
+      image
+          .convert(numChannels: 4)
+          .getBytes(order: img.ChannelOrder.abgr)
+          .buffer
+          .asInt32List(),
+    );
+    final BinaryBitmap bitmap = BinaryBitmap(HybridBinarizer(source));
+    try {
+      return QRCodeReader().decode(bitmap).text;
+    } on FormatReaderException {
+      return null;
+    } on NotFoundException {
+      return null;
+    } on ChecksumException {
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.qrScan)),
+      appBar: AppBar(
+        title: Text(l10n.qrScan),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.photo_library_outlined),
+            tooltip: l10n.qrFromImage,
+            onPressed: _scanFromImage,
+          ),
+        ],
+      ),
       body: _checking
           ? const Center(child: CircularProgressIndicator())
           : _denied

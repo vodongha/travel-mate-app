@@ -48,9 +48,13 @@ class TimelineScreen extends ConsumerWidget {
 
   final String tripRid;
 
-  Future<void> _eventActions(
-      BuildContext context, WidgetRef ref, EventItem event,
-      [PlaceItem? place]) async {
+  Future<void> _eventActions(BuildContext context, WidgetRef ref,
+      EventItem event, PlaceItem? place, bool canEdit) async {
+    // A VIEWER only ever gets "Open in Google Maps" (read-only); nothing to show
+    // if there's no place either.
+    if (!canEdit && place == null) {
+      return;
+    }
     final AppLocalizations l10n = AppLocalizations.of(context);
     final String? action = await showModalBottomSheet<String>(
       context: context,
@@ -65,23 +69,25 @@ class TimelineScreen extends ConsumerWidget {
                 title: Text(l10n.openInMaps),
                 onTap: () => Navigator.pop(ctx, 'maps'),
               ),
-            ListTile(
-              leading: const Icon(Icons.add_card_outlined),
-              title: Text(l10n.expenseNew),
-              onTap: () => Navigator.pop(ctx, 'expense'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.edit_outlined),
-              title: Text(l10n.actionEdit),
-              onTap: () => Navigator.pop(ctx, 'edit'),
-            ),
-            ListTile(
-              leading: Icon(Icons.delete_outline,
-                  color: Theme.of(ctx).colorScheme.error),
-              title: Text(l10n.actionDelete,
-                  style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
-              onTap: () => Navigator.pop(ctx, 'delete'),
-            ),
+            if (canEdit) ...[
+              ListTile(
+                leading: const Icon(Icons.add_card_outlined),
+                title: Text(l10n.expenseNew),
+                onTap: () => Navigator.pop(ctx, 'expense'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.edit_outlined),
+                title: Text(l10n.actionEdit),
+                onTap: () => Navigator.pop(ctx, 'edit'),
+              ),
+              ListTile(
+                leading: Icon(Icons.delete_outline,
+                    color: Theme.of(ctx).colorScheme.error),
+                title: Text(l10n.actionDelete,
+                    style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
+                onTap: () => Navigator.pop(ctx, 'delete'),
+              ),
+            ],
           ],
         ),
       ),
@@ -124,12 +130,18 @@ class TimelineScreen extends ConsumerWidget {
   Future<void> _itemActions(
     BuildContext context,
     WidgetRef ref, {
+    required bool canEdit,
     required String kind, // 'TRANSPORT' | 'ACCOMMODATION'
     required String rid,
     required String editPath,
     required Object editExtra,
     required Future<void> Function() onDelete,
   }) async {
+    // Transport/accommodation rows have no read-only action — a VIEWER can't edit
+    // them, so the sheet would be empty.
+    if (!canEdit) {
+      return;
+    }
     final AppLocalizations l10n = AppLocalizations.of(context);
     final String? action = await showModalBottomSheet<String>(
       context: context,
@@ -273,6 +285,7 @@ class TimelineScreen extends ConsumerWidget {
     List<PlaceItem> places,
     List<ExpenseItem> expenses,
     String baseCurrency,
+    bool canEdit,
   ) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final Map<String, PlaceItem> placeByRid = {
@@ -301,9 +314,9 @@ class TimelineScreen extends ConsumerWidget {
           if (pl != null && pl.name.isNotEmpty) pl.name,
           if (cost > 0) Money.format(cost, baseCurrency),
         ].join(' · '),
-        onTap: () => _eventActions(context, ref, e, pl),
+        onTap: () => _eventActions(context, ref, e, pl, canEdit),
         // Long-press → options menu (Open in Maps when it has a place, Edit, Delete).
-        onLongPress: () => _eventActions(context, ref, e, pl),
+        onLongPress: () => _eventActions(context, ref, e, pl, canEdit),
       ));
     }
     for (final TransportItem t in transports) {
@@ -325,6 +338,7 @@ class TimelineScreen extends ConsumerWidget {
           if (cost > 0) Money.format(cost, baseCurrency),
         ].join(' · '),
         onTap: () => _itemActions(context, ref,
+            canEdit: canEdit,
             kind: 'TRANSPORT',
             rid: t.rid,
             editPath: '/trips/$tripRid/transports/${t.rid}/edit',
@@ -333,6 +347,7 @@ class TimelineScreen extends ConsumerWidget {
                 .read(transportControllerProvider(tripRid).notifier)
                 .delete(t.rid)),
         onLongPress: () => _itemActions(context, ref,
+            canEdit: canEdit,
             kind: 'TRANSPORT',
             rid: t.rid,
             editPath: '/trips/$tripRid/transports/${t.rid}/edit',
@@ -353,6 +368,7 @@ class TimelineScreen extends ConsumerWidget {
           if (cost > 0) Money.format(cost, baseCurrency),
         ].join(' · '),
         onTap: () => _itemActions(context, ref,
+            canEdit: canEdit,
             kind: 'ACCOMMODATION',
             rid: a.rid,
             editPath: '/trips/$tripRid/accommodations/${a.rid}/edit',
@@ -361,6 +377,7 @@ class TimelineScreen extends ConsumerWidget {
                 .read(accommodationControllerProvider(tripRid).notifier)
                 .delete(a.rid)),
         onLongPress: () => _itemActions(context, ref,
+            canEdit: canEdit,
             kind: 'ACCOMMODATION',
             rid: a.rid,
             editPath: '/trips/$tripRid/accommodations/${a.rid}/edit',
@@ -395,16 +412,19 @@ class TimelineScreen extends ConsumerWidget {
         ref.watch(placeControllerProvider(tripRid)).valueOrNull ?? const [];
     final List<ExpenseItem> expenses =
         ref.watch(expensesControllerProvider(tripRid)).valueOrNull ?? const [];
-    final String baseCurrency =
-        ref.watch(tripProvider(tripRid)).valueOrNull?.baseCurrency ?? 'VND';
+    final trip = ref.watch(tripProvider(tripRid)).valueOrNull;
+    final String baseCurrency = trip?.baseCurrency ?? 'VND';
+    final bool canEdit = trip?.myRole != 'VIEWER';
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navTimeline)),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _addToItinerary(context, l10n),
-        icon: const Icon(Icons.add),
-        label: Text(l10n.eventNew),
-      ),
+      floatingActionButton: canEdit
+          ? FloatingActionButton.extended(
+              onPressed: () => _addToItinerary(context, l10n),
+              icon: const Icon(Icons.add),
+              label: Text(l10n.eventNew),
+            )
+          : null,
       body: SafeArea(
         child: ResponsiveCenter(
           child: events.when(
@@ -415,7 +435,7 @@ class TimelineScreen extends ConsumerWidget {
                     ref.invalidate(eventsControllerProvider(tripRid))),
             data: (list) {
               final List<_Entry> entries = _entries(context, ref, list,
-                  transports, stays, places, expenses, baseCurrency);
+                  transports, stays, places, expenses, baseCurrency, canEdit);
               if (entries.isEmpty) {
                 return Center(child: Text(l10n.timelineEmpty));
               }

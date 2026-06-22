@@ -200,6 +200,8 @@
   "qrTicket": "Mã QR vé",
   "qrScan": "Quét mã QR",
   "qrScanHint": "Hướng camera vào mã QR",
+  "qrFromImage": "Quét từ ảnh",
+  "qrNoCodeFound": "Không tìm thấy mã QR trong ảnh",
   "qrView": "Xem mã QR",
   "qrEmpty": "Chưa có mã QR",
   "qrEnterManually": "Nhập mã QR thủ công",
@@ -306,6 +308,8 @@
   "updateRestart": "Khởi động lại",
   "ticketCode": "Mã vé hoặc QR",
   "ticketCodeHint": "Nhập mã hoặc quét QR",
+  "ticketForItinerary": "Thuộc mục lịch trình",
+  "ticketForItineraryNone": "Không gắn",
   "locationMyLocation": "Vị trí của tôi",
   "locationPermissionDenied": "Quyền vị trí bị từ chối"
 }

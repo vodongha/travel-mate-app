@@ -56,9 +56,10 @@ requests, and as keys. There is no numeric id on the client side.
 
 QR codes are handled as **strings, never images** (backend SPEC §2.7):
 
-- **Saving a ticket QR:** scan it with `mobile_scanner` → take the **decoded string** → send that
-  string to the backend (e.g. `qrData` on a transport/accommodation). Never upload or store the QR
-  image.
+- **Saving a ticket QR:** get the **decoded string** — scan it with the live camera (`mobile_scanner`)
+  or pick an image and decode it (`image_picker` + `controller.analyzeImage`, the path that works on
+  web / where the camera can't) — then send the string as `qrData` on the **ticket**. The QR lives on
+  the ticket, not on the transport/accommodation (those carry no QR). Never upload or store the image.
 - **Viewing:** read the stored string and **regenerate the QR client-side** with `qr_flutter`.
 - **Invitations:** the backend returns the invite **link string** (`inviteUrl`); the app renders it
   as a QR with `qr_flutter`. Scanning an invite QR yields that link, which the app opens / posts to
@@ -120,7 +121,10 @@ Full detail in the backend's `docs/SPEC.md` §4/§7.
   SIGHTSEEING, MEDICAL, PARKING, OTHER) for events/places/tickets/expenses; `TransportType` is a
   separate sub-type. See `Labels` in `core/labels.dart`.
 - **Tickets:** per-member, or a **group ticket** (`shared: true`, no owner — needs EDITOR); group
-  tickets appear in everyone's `/tickets/mine`.
+  tickets appear in everyone's `/tickets/mine`. A ticket is the scannable pass (boarding pass /
+  e-ticket / entrance pass) and may attach to an itinerary item via `itineraryKind`
+  (EVENT/TRANSPORT/ACCOMMODATION) + `itineraryRid`, plus an optional `seat`; `qrData` is optional
+  (a seat-only pass). Transport/accommodation no longer carry a seat or QR.
 - **Settlement:** `GET /trips/{tripRid}/settlement` → net balances + minimised transactions.
 - **Dashboard/report:** `GET /trips/{tripRid}/dashboard`, `GET /trips/{tripRid}/report`.
 

@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api_client.dart';
 
-/// A lodging booking (backend `AccommodationResponse`). `qrData` is the decoded booking string,
-/// rendered as a QR on view — never stored as an image (SPEC §2.7).
+/// A lodging booking (backend `AccommodationResponse`). A booking voucher/QR is kept as a (group)
+/// ticket linked to this stay, not as a field here.
 class AccommodationItem {
   const AccommodationItem({
     required this.rid,
@@ -13,7 +13,6 @@ class AccommodationItem {
     this.address,
     this.checkinTime,
     this.checkoutTime,
-    this.qrData,
     this.note,
   });
 
@@ -23,7 +22,6 @@ class AccommodationItem {
   final String? address;
   final DateTime? checkinTime;
   final DateTime? checkoutTime;
-  final String? qrData;
   final String? note;
 
   factory AccommodationItem.fromJson(Map<String, dynamic> json) {
@@ -35,7 +33,6 @@ class AccommodationItem {
       address: json['address'] as String?,
       checkinTime: parse(json['checkinTime']),
       checkoutTime: parse(json['checkoutTime']),
-      qrData: json['qrData'] as String?,
       note: json['note'] as String?,
     );
   }
