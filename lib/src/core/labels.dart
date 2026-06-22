@@ -40,35 +40,14 @@ class Labels {
     return value == 'UNEXPECTED' ? l.typeUNEXPECTED : l.typePLANNED;
   }
 
+  // Itinerary events use the canonical Category — minus TRANSPORT and ACCOMMODATION, which are their
+  // own dedicated itinerary entities (added via the "+" chooser, not as a generic event).
   static const List<String> eventTypes = [
-    'TRANSPORT',
-    'HOTEL',
-    'FOOD',
-    'ACTIVITY',
-    'SIGHTSEEING',
-    'SHOPPING',
-    'OTHER',
+    'FOOD', 'SHOPPING', 'ACTIVITY', 'SIGHTSEEING', 'MEDICAL', 'PARKING', 'OTHER', //
   ];
 
-  static String eventType(BuildContext context, String value) {
-    final AppLocalizations l = AppLocalizations.of(context);
-    switch (value) {
-      case 'TRANSPORT':
-        return l.evtTRANSPORT;
-      case 'HOTEL':
-        return l.evtHOTEL;
-      case 'FOOD':
-        return l.evtFOOD;
-      case 'ACTIVITY':
-        return l.evtACTIVITY;
-      case 'SIGHTSEEING':
-        return l.evtSIGHTSEEING;
-      case 'SHOPPING':
-        return l.evtSHOPPING;
-      default:
-        return l.evtOTHER;
-    }
-  }
+  static String eventType(BuildContext context, String value) =>
+      category(context, value);
 
   static const List<String> transportTypes = [
     'FLIGHT', 'TRAIN', 'BUS', 'FERRY', 'TAXI', 'RENTAL_VEHICLE', //
@@ -92,50 +71,17 @@ class Labels {
     }
   }
 
-  static const List<String> placeTypes = [
-    'HOTEL', 'RESTAURANT', 'ATTRACTION', 'AIRPORT', 'STATION', 'SHOPPING',
-    'OTHER', //
-  ];
+  // Places use the full canonical Category.
+  static const List<String> placeTypes = categories;
 
-  static String placeType(BuildContext context, String value) {
-    final AppLocalizations l = AppLocalizations.of(context);
-    switch (value) {
-      case 'HOTEL':
-        return l.ptHOTEL;
-      case 'RESTAURANT':
-        return l.ptRESTAURANT;
-      case 'ATTRACTION':
-        return l.ptATTRACTION;
-      case 'AIRPORT':
-        return l.ptAIRPORT;
-      case 'STATION':
-        return l.ptSTATION;
-      case 'SHOPPING':
-        return l.ptSHOPPING;
-      default:
-        return l.ptOTHER;
-    }
-  }
+  static String placeType(BuildContext context, String value) =>
+      category(context, value);
 
-  static const List<String> ticketTypes = [
-    'TRANSPORT', 'ACCOMMODATION', 'SIGHTSEEING', 'EVENT', 'OTHER', //
-  ];
+  // Tickets use the full canonical Category.
+  static const List<String> ticketTypes = categories;
 
-  static String ticketType(BuildContext context, String value) {
-    final AppLocalizations l = AppLocalizations.of(context);
-    switch (value) {
-      case 'TRANSPORT':
-        return l.tkTRANSPORT;
-      case 'ACCOMMODATION':
-        return l.tkACCOMMODATION;
-      case 'SIGHTSEEING':
-        return l.tkSIGHTSEEING;
-      case 'EVENT':
-        return l.tkEVENT;
-      default:
-        return l.tkOTHER;
-    }
-  }
+  static String ticketType(BuildContext context, String value) =>
+      category(context, value);
 
   static String splitType(BuildContext context, String value) {
     final AppLocalizations l = AppLocalizations.of(context);

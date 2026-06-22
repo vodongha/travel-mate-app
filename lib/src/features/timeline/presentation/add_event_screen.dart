@@ -198,7 +198,9 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                 DropdownButtonFormField<String>(
                   initialValue: _eventType,
                   decoration: InputDecoration(labelText: l10n.expenseType),
-                  items: Labels.eventTypes
+                  // Include the current value even if it's not in the standard list — a legacy event
+                  // migrated to TRANSPORT/ACCOMMODATION can still be opened without crashing.
+                  items: <String>{...Labels.eventTypes, _eventType}
                       .map((t) => DropdownMenuItem(
                           value: t, child: Text(Labels.eventType(context, t))))
                       .toList(),

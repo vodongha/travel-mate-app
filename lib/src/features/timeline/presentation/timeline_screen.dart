@@ -119,11 +119,54 @@ class TimelineScreen extends ConsumerWidget {
     }
   }
 
+  /// "+" on the timeline: pick what kind of itinerary item to add. Transport and accommodation are
+  /// their own entities (single source of truth, shown here and on their own screens); everything
+  /// else is a generic event.
+  Future<void> _addToItinerary(BuildContext context, AppLocalizations l10n) async {
+    final String? choice = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.event_note_outlined),
+              title: Text(l10n.itineraryEvents),
+              onTap: () => Navigator.pop(ctx, 'event'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.directions_transit_outlined),
+              title: Text(l10n.navTransport),
+              onTap: () => Navigator.pop(ctx, 'transport'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.hotel_outlined),
+              title: Text(l10n.navAccommodation),
+              onTap: () => Navigator.pop(ctx, 'accommodation'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (choice == null || !context.mounted) {
+      return;
+    }
+    switch (choice) {
+      case 'transport':
+        context.push('/trips/$tripRid/transports/new');
+      case 'accommodation':
+        context.push('/trips/$tripRid/accommodations/new');
+      default:
+        context.push('/trips/$tripRid/timeline/new');
+    }
+  }
+
   static IconData _eventIcon(String type) {
     switch (type) {
       case 'TRANSPORT':
         return Icons.commute_outlined;
-      case 'HOTEL':
+      case 'ACCOMMODATION':
         return Icons.hotel_outlined;
       case 'FOOD':
         return Icons.restaurant_outlined;
@@ -264,7 +307,7 @@ class TimelineScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navTimeline)),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/trips/$tripRid/timeline/new'),
+        onPressed: () => _addToItinerary(context, l10n),
         icon: const Icon(Icons.add),
         label: Text(l10n.eventNew),
       ),
