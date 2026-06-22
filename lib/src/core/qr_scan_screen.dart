@@ -193,36 +193,52 @@ class _QrScanScreenState extends State<QrScanScreen>
           width: side,
           height: side,
         );
+        final Color background = Theme.of(context).scaffoldBackgroundColor;
+        final Widget camera = MobileScanner(
+          controller: _controller,
+          onDetect: _onDetect,
+          errorBuilder: (context, error) => _CameraProblem(
+            l10n: l10n,
+            onRetry: _init,
+            permission: false,
+            detail: _describe(error),
+          ),
+        );
+
+        // Same look on both platforms: opaque app background around a 1:1 window that shows the
+        // camera, with corner brackets. They get there differently because Flutter can't reveal an
+        // HTML platform view through a "hole" punched in content drawn over it (web):
+        //   • mobile — full-screen camera, with an opaque mask covering everything but the window.
+        //   • web — the camera is confined to the window (clipped), the rest is a plain opaque
+        //     background, and the frame painter draws only the outline + brackets (transparent fill).
+        final List<Widget> layers = kIsWeb
+            ? [
+                Positioned.fill(child: ColoredBox(color: background)),
+                Positioned.fromRect(
+                  rect: window,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(22),
+                    child: camera,
+                  ),
+                ),
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: _FramePainter(window, accent, Colors.transparent),
+                  ),
+                ),
+              ]
+            : [
+                Positioned.fill(child: camera),
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: _FramePainter(window, accent, background),
+                  ),
+                ),
+              ];
+
         return Stack(
           children: [
-            Positioned.fill(
-              child: MobileScanner(
-                controller: _controller,
-                onDetect: _onDetect,
-                errorBuilder: (context, error) => _CameraProblem(
-                  l10n: l10n,
-                  onRetry: _init,
-                  permission: false,
-                  detail: _describe(error),
-                ),
-              ),
-            ),
-            // Dim everything except the window + corner brackets. On mobile the camera composites
-            // under Flutter, so an opaque app-background fill gives a clean "only the window shows
-            // the camera" look. On web the camera is an HTML platform view that Flutter draws OVER,
-            // so an opaque fill would hide the whole preview (camera on, but black) — use a
-            // translucent scrim there so the live camera shows through, dimmed.
-            Positioned.fill(
-              child: CustomPaint(
-                painter: _FramePainter(
-                  window,
-                  accent,
-                  kIsWeb
-                      ? Colors.black.withValues(alpha: 0.55)
-                      : Theme.of(context).scaffoldBackgroundColor,
-                ),
-              ),
-            ),
+            ...layers,
             // Sweeping, glowing scan line.
             AnimatedBuilder(
               animation: _scan,
