@@ -141,9 +141,16 @@ class _QrScanScreenState extends State<QrScanScreen>
                 ),
               ),
             ),
-            // Dimmed mask + corner brackets around the window.
+            // Opaque app background everywhere except the window + corner
+            // brackets — so the camera only shows inside the 1:1 frame.
             Positioned.fill(
-              child: CustomPaint(painter: _FramePainter(window, accent)),
+              child: CustomPaint(
+                painter: _FramePainter(
+                  window,
+                  accent,
+                  Theme.of(context).scaffoldBackgroundColor,
+                ),
+              ),
             ),
             // Sweeping, glowing scan line.
             AnimatedBuilder(
@@ -205,10 +212,11 @@ class _QrScanScreenState extends State<QrScanScreen>
 /// Paints the dim overlay with a transparent rounded-square cutout (the framing
 /// window) and a bright corner bracket at each corner.
 class _FramePainter extends CustomPainter {
-  _FramePainter(this.window, this.accent);
+  _FramePainter(this.window, this.accent, this.background);
 
   final Rect window;
   final Color accent;
+  final Color background;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -216,13 +224,14 @@ class _FramePainter extends CustomPainter {
     final RRect hole =
         RRect.fromRectAndRadius(window, const Radius.circular(radius));
 
-    // Dim everything outside the window.
+    // Cover everything outside the window with the opaque app background, so the
+    // camera preview is only visible through the 1:1 window.
     final Path mask = Path.combine(
       PathOperation.difference,
       Path()..addRect(Offset.zero & size),
       Path()..addRRect(hole),
     );
-    canvas.drawPath(mask, Paint()..color = const Color(0xB3000000));
+    canvas.drawPath(mask, Paint()..color = background);
 
     // A faint outline around the window.
     canvas.drawRRect(
@@ -260,7 +269,9 @@ class _FramePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _FramePainter old) =>
-      old.window != window || old.accent != accent;
+      old.window != window ||
+      old.accent != accent ||
+      old.background != background;
 }
 
 /// Shown when the camera can't be used. For a denied permission it explains how
