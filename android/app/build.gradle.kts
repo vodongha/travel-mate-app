@@ -56,13 +56,16 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
-            // Do NOT run R8/code-shrinking: it renames/strips classes that the
-            // camera stack (mobile_scanner / MLKit / CameraX) reaches by
-            // reflection, which crashed the QR scanner at runtime with a
-            // NullPointerException on obfuscated names (genericError: "Attempt
-            // to invoke virtual method 'a7…' on a null object reference").
-            isMinifyEnabled = false
-            isShrinkResources = false
+            // Run R8 (shrink + obfuscate) for a smaller bundle and a mapping.txt on upload. The
+            // camera stack (mobile_scanner / MLKit / CameraX) and Play Core are reached by
+            // reflection and would crash the QR scanner if stripped/renamed — proguard-rules.pro
+            // keeps them. (R8 was previously off because un-kept obfuscation broke the scanner.)
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }

@@ -1,7 +1,7 @@
 name: travel_mate_app
 description: "TravelMate — group-trip planning & shared-expense (Android + Web)."
 publish_to: "none"
-version: 1.0.0+8
+version: 1.0.0+9
 
 environment:
   sdk: ">=3.5.0 <4.0.0"
@@ -42,6 +42,13 @@ dependencies:
   phone_form_field: ^10.0.17
   # Scan a ticket QR into its decoded string (camera). We store the string, render on view.
   mobile_scanner: ^7.2.0
+  # Pick an image from the gallery to scan a QR out of it (works where the live camera can't —
+  # notably web). Uses the Android Photo Picker, so no storage permission is needed.
+  image_picker: ^1.1.2
+  # Decode a QR from a picked image in pure Dart — works on web too (mobile_scanner.analyzeImage
+  # throws UnsupportedError on web). `image` decodes the file to pixels; `zxing2` reads the QR.
+  image: ^4.2.0
+  zxing2: ^0.2.3
   # Request the camera permission at runtime before opening the scanner (else "genericError").
   permission_handler: ^11.3.1
   # OpenStreetMap map for trip places (no API key needed). latlong2 supplies LatLng.
