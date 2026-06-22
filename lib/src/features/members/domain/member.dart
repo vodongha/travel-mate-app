@@ -5,6 +5,7 @@ class Member {
     required this.displayName,
     required this.role,
     required this.ghost,
+    this.email,
     this.mine = false,
     this.joinedAt,
   });
@@ -13,6 +14,9 @@ class Member {
   final String displayName;
   final String role;
   final bool ghost;
+
+  /// Optional email on a ghost — lets the ghost auto-merge into the account that joins with it.
+  final String? email;
 
   /// True for the membership belonging to the signed-in user (the "Myself" entry).
   final bool mine;
@@ -25,6 +29,7 @@ class Member {
       displayName: json['displayName'] as String,
       role: json['role'] as String? ?? 'VIEWER',
       ghost: json['ghost'] as bool? ?? false,
+      email: json['email'] as String?,
       mine: json['mine'] as bool? ?? false,
       joinedAt: joined is String ? DateTime.tryParse(joined) : null,
     );
