@@ -28,15 +28,44 @@ const List<String> _statusFilters = [
 ];
 
 class _TripsScreenState extends ConsumerState<TripsScreen> {
+  static const int _pageSize = 12;
+
   final TextEditingController _search = TextEditingController();
+  final ScrollController _scroll = ScrollController();
   String _query = '';
   String? _status;
+  // How many trips are currently revealed; grows as the user scrolls (client-side
+  // pagination over the already-fetched, filtered + date-sorted list).
+  int _visible = _pageSize;
+  // Count of currently-filtered trips, captured in build so _onScroll knows when to stop.
+  int _filteredCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(_onScroll);
+  }
 
   @override
   void dispose() {
+    _scroll.removeListener(_onScroll);
+    _scroll.dispose();
     _search.dispose();
     super.dispose();
   }
+
+  void _onScroll() {
+    if (_visible >= _filteredCount) {
+      return; // everything is already shown
+    }
+    // Reveal the next page when the user nears the bottom.
+    if (_scroll.position.pixels >= _scroll.position.maxScrollExtent - 400) {
+      setState(() => _visible += _pageSize);
+    }
+  }
+
+  // Any filter change resets pagination to the first page.
+  void _resetPaging() => _visible = _pageSize;
 
   List<Trip> _filter(List<Trip> list) {
     final String q = _query.trim().toLowerCase();
@@ -50,6 +79,36 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
       return t.name.toLowerCase().contains(q) ||
           (t.destination?.toLowerCase().contains(q) ?? false);
     }).toList();
+  }
+
+  /// Sort newest-first by start (or end) date; trips with no date sink to the bottom.
+  List<Trip> _sortByDate(List<Trip> trips) {
+    DateTime? dateOf(Trip t) => t.startDate ?? t.endDate;
+    return [...trips]..sort((a, b) {
+        final DateTime? da = dateOf(a);
+        final DateTime? db = dateOf(b);
+        if (da == null && db == null) return 0;
+        if (da == null) return 1;
+        if (db == null) return -1;
+        return db.compareTo(da);
+      });
+  }
+
+  /// Flatten an already date-sorted list into year-header strings interleaved with that year's
+  /// trips; trips with no date fall under [undatedLabel].
+  List<Object> _groupByYear(List<Trip> trips, String undatedLabel) {
+    final List<Object> rows = [];
+    String? currentHeader;
+    for (final Trip t in trips) {
+      final DateTime? d = t.startDate ?? t.endDate;
+      final String header = d == null ? undatedLabel : '${d.year}';
+      if (header != currentHeader) {
+        currentHeader = header;
+        rows.add(header);
+      }
+      rows.add(t);
+    }
+    return rows;
   }
 
   @override
@@ -90,14 +149,27 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
               if (list.isEmpty) {
                 return _EmptyState(l10n: l10n);
               }
-              final List<Trip> filtered = _filter(list);
+              final List<Trip> filtered = _sortByDate(_filter(list));
+              _filteredCount = filtered.length;
+              // Reveal only the first _visible trips (client-side scroll pagination).
+              final List<Trip> visible =
+                  filtered.take(_visible).toList(growable: false);
+              final bool hasMore = visible.length < filtered.length;
+              // Group the revealed trips into year sections (newest first).
+              final List<Object> rows = _groupByYear(visible, l10n.tripNoDates);
               return Column(
                 children: [
                   _TripsToolbar(
                     controller: _search,
                     status: _status,
-                    onQuery: (v) => setState(() => _query = v),
-                    onStatus: (s) => setState(() => _status = s),
+                    onQuery: (v) => setState(() {
+                      _query = v;
+                      _resetPaging();
+                    }),
+                    onStatus: (s) => setState(() {
+                      _status = s;
+                      _resetPaging();
+                    }),
                   ),
                   Expanded(
                     child: RefreshIndicator(
@@ -115,13 +187,32 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                                                 .onSurfaceVariant))),
                               ],
                             )
-                          : ListView.separated(
+                          : ListView.builder(
+                              controller: _scroll,
                               padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
-                              itemCount: filtered.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(height: 12),
-                              itemBuilder: (context, i) =>
-                                  _TripCard(trip: filtered[i]),
+                              // +1 trailing row for the "loading more" indicator.
+                              itemCount: rows.length + (hasMore ? 1 : 0),
+                              itemBuilder: (context, i) {
+                                if (i >= rows.length) {
+                                  return const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 24),
+                                    child: Center(
+                                        child: SizedBox(
+                                            height: 24,
+                                            width: 24,
+                                            child: CircularProgressIndicator(
+                                                strokeWidth: 2.4))),
+                                  );
+                                }
+                                final Object row = rows[i];
+                                if (row is String) {
+                                  return _YearHeader(label: row, first: i == 0);
+                                }
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: _TripCard(trip: row as Trip),
+                                );
+                              },
                             ),
                     ),
                   ),
@@ -200,6 +291,35 @@ class _TripsToolbar extends StatelessWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A year section header in the trips list (e.g. "2026").
+class _YearHeader extends StatelessWidget {
+  const _YearHeader({required this.label, required this.first});
+
+  final String label;
+  final bool first;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(4, first ? 4 : 16, 4, 8),
+      child: Row(
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: scheme.onSurfaceVariant,
+                ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Divider(color: scheme.outlineVariant, height: 1)),
         ],
       ),
     );
