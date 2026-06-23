@@ -27,8 +27,6 @@ class AddTransportScreen extends ConsumerStatefulWidget {
 
 class _AddTransportScreenState extends ConsumerState<AddTransportScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _provider = TextEditingController();
-  final _bookingCode = TextEditingController();
   final _from = TextEditingController();
   final _to = TextEditingController();
   final _note = TextEditingController();
@@ -45,8 +43,6 @@ class _AddTransportScreenState extends ConsumerState<AddTransportScreen> {
     final TransportItem? t = widget.existing;
     if (t != null) {
       _type = t.transportType;
-      _provider.text = t.provider ?? '';
-      _bookingCode.text = t.bookingCode ?? '';
       _from.text = t.departurePlace ?? '';
       _to.text = t.arrivalPlace ?? '';
       _note.text = t.note ?? '';
@@ -57,8 +53,6 @@ class _AddTransportScreenState extends ConsumerState<AddTransportScreen> {
 
   @override
   void dispose() {
-    _provider.dispose();
-    _bookingCode.dispose();
     _from.dispose();
     _to.dispose();
     _note.dispose();
@@ -114,8 +108,6 @@ class _AddTransportScreenState extends ConsumerState<AddTransportScreen> {
         await controller.edit(
           rid: widget.existing!.rid,
           transportType: _type,
-          provider: _trim(_provider),
-          bookingCode: _trim(_bookingCode),
           departurePlace: _trim(_from),
           arrivalPlace: _trim(_to),
           departureTimeUtc: _departure?.toUtc(),
@@ -125,8 +117,6 @@ class _AddTransportScreenState extends ConsumerState<AddTransportScreen> {
       } else {
         await controller.create(
           transportType: _type,
-          provider: _trim(_provider),
-          bookingCode: _trim(_bookingCode),
           departurePlace: _trim(_from),
           arrivalPlace: _trim(_to),
           departureTimeUtc: _departure?.toUtc(),
@@ -228,21 +218,6 @@ class _AddTransportScreenState extends ConsumerState<AddTransportScreen> {
                       setState(() => _arrival = d);
                     }
                   },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _provider,
-                  decoration: InputDecoration(
-                      labelText: l10n.transportProvider,
-                      prefixIcon: const Icon(Icons.business_outlined)),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _bookingCode,
-                  decoration: InputDecoration(
-                      labelText: l10n.fieldBookingCode,
-                      prefixIcon:
-                          const Icon(Icons.confirmation_number_outlined)),
                 ),
                 const SizedBox(height: 16),
                 TextFormField(

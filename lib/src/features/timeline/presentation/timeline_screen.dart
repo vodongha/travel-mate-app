@@ -17,6 +17,8 @@ import '../../expenses/application/expenses_controller.dart';
 import '../../expenses/data/expense_repository.dart';
 import '../../places/application/place_controller.dart';
 import '../../places/data/place_repository.dart';
+import '../../tickets/application/tickets_controller.dart';
+import '../../tickets/data/ticket_repository.dart';
 import '../../transport/application/transport_controller.dart';
 import '../../transport/data/transport_repository.dart';
 import '../../trips/application/trips_controller.dart';
@@ -351,10 +353,19 @@ class TimelineScreen extends ConsumerWidget {
     List<AccommodationItem> stays,
     List<PlaceItem> places,
     List<ExpenseItem> expenses,
+    List<Ticket> myTickets,
     String baseCurrency,
     bool canEdit,
   ) {
     final AppLocalizations l10n = AppLocalizations.of(context);
+    // The caller's ticket for each transport leg — carrier/booking code/seat are read from it (the
+    // leg itself no longer carries them). First mine ticket linked to the leg wins.
+    final Map<String, Ticket> myTicketByLeg = {};
+    for (final Ticket tk in myTickets) {
+      if (tk.itineraryKind == 'TRANSPORT' && tk.itineraryRid != null) {
+        myTicketByLeg.putIfAbsent(tk.itineraryRid!, () => tk);
+      }
+    }
     final Map<String, PlaceItem> placeByRid = {
       for (final PlaceItem p in places) p.rid: p
     };
@@ -405,10 +416,12 @@ class TimelineScreen extends ConsumerWidget {
         if (t.arrivalPlace?.isNotEmpty == true) t.arrivalPlace!,
       ].join(' → ');
       final num cost = costByItem['TRANSPORT:${t.rid}'] ?? 0;
+      // Carrier/booking code/seat come from the caller's own ticket for this leg, if any.
+      final Ticket? tk = myTicketByLeg[t.rid];
       entries.add(_Entry(
         when: t.departureTime?.toLocal(),
         icon: _transportIcon(t.transportType),
-        // The itinerary shows only what/where/when — the carrier/booking code live in the ticket.
+        // The leg shows only what/where/when — the carrier/booking code live on the ticket.
         title: route.isNotEmpty
             ? route
             : Labels.transportType(context, t.transportType),
@@ -426,6 +439,12 @@ class TimelineScreen extends ConsumerWidget {
               (l10n.transportFrom, t.departurePlace ?? ''),
               (l10n.transportTo, t.arrivalPlace ?? ''),
               (l10n.eventStart, _dt(context, t.departureTime)),
+              // Read back from "my ticket" for this leg (carrier, booking code, seat).
+              if (tk?.provider?.isNotEmpty == true)
+                (l10n.transportProvider, tk!.provider!),
+              if (tk?.bookingCode?.isNotEmpty == true)
+                (l10n.fieldBookingCode, tk!.bookingCode!),
+              if (tk?.seat?.isNotEmpty == true) (l10n.fieldSeat, tk!.seat!),
               if (cost > 0) (l10n.timelineCosts, Money.format(cost, baseCurrency)),
               (l10n.eventNote, t.note ?? ''),
             ]),
@@ -496,6 +515,8 @@ class TimelineScreen extends ConsumerWidget {
         ref.watch(placeControllerProvider(tripRid)).valueOrNull ?? const [];
     final List<ExpenseItem> expenses =
         ref.watch(expensesControllerProvider(tripRid)).valueOrNull ?? const [];
+    final List<Ticket> myTickets =
+        ref.watch(myTicketsControllerProvider(tripRid)).valueOrNull ?? const [];
     final trip = ref.watch(tripProvider(tripRid)).valueOrNull;
     final String baseCurrency = trip?.baseCurrency ?? 'VND';
     final bool canEdit = trip?.myRole != 'VIEWER';
@@ -519,7 +540,8 @@ class TimelineScreen extends ConsumerWidget {
                     ref.invalidate(eventsControllerProvider(tripRid))),
             data: (list) {
               final List<_Entry> entries = _entries(context, ref, list,
-                  transports, stays, places, expenses, baseCurrency, canEdit);
+                  transports, stays, places, expenses, myTickets, baseCurrency,
+                  canEdit);
               if (entries.isEmpty) {
                 return Center(child: Text(l10n.timelineEmpty));
               }
@@ -530,6 +552,7 @@ class TimelineScreen extends ConsumerWidget {
                   ref.invalidate(accommodationControllerProvider(tripRid));
                   ref.invalidate(placeControllerProvider(tripRid));
                   ref.invalidate(expensesControllerProvider(tripRid));
+                  ref.invalidate(myTicketsControllerProvider(tripRid));
                 },
                 child: _DayTimeline(entries: entries),
               );

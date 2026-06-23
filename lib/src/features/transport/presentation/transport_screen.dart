@@ -50,9 +50,7 @@ class TransportScreen extends ConsumerWidget {
     if (from.isNotEmpty || to.isNotEmpty) {
       return '$from → $to';
     }
-    return item.provider?.isNotEmpty == true
-        ? item.provider!
-        : Labels.transportType(context, item.transportType);
+    return Labels.transportType(context, item.transportType);
   }
 
   static IconData _iconOf(String type) {
@@ -138,7 +136,6 @@ class _TransportCard extends StatelessWidget {
             .format(item.departureTime!.toLocal());
     final List<String> subParts = [
       Labels.transportType(context, item.transportType),
-      if (item.provider?.isNotEmpty == true) item.provider!,
       if (when.isNotEmpty) when,
     ];
     return Card(
