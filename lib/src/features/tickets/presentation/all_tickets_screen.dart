@@ -121,7 +121,7 @@ class AllTicketsScreen extends ConsumerWidget {
                               extra: t,
                             ),
                             // You can always manage your own; an editor manages anyone's.
-                            onMenu: (t.mine || isEditor)
+                            onLongPress: (t.mine || isEditor)
                                 ? () => _rowActions(context, ref, t)
                                 : null,
                           ),

@@ -272,6 +272,8 @@
   "ticketEditTitle": "Edit ticket",
   "ticketsEmpty": "No tickets yet",
   "ticketsAll": "All tickets",
+  "ticketsSearchHint": "Search tickets",
+  "ticketsNoMatch": "No tickets match",
   "ticketUntitled": "Ticket",
   "ticketAssignee": "Belongs to",
   "ticketAssigneeHint": "Leave empty for your own ticket",
