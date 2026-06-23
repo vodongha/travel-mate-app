@@ -274,6 +274,7 @@
   "ticketsAll": "All tickets",
   "ticketUntitled": "Ticket",
   "ticketAssignee": "Belongs to",
+  "ticketAssigneeHint": "Leave empty for your own ticket",
   "ticketAssigneeMyself": "Myself",
   "ticketAssigneeGroup": "Whole group",
   "tkTRANSPORT": "Transport",

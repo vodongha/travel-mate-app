@@ -122,8 +122,8 @@ class TicketCard extends StatelessWidget {
       ticketTypeLabel(context, ticket.ticketType),
       if (ticket.shared)
         l10n.ticketAssigneeGroup
-      else if (ticket.memberName.isNotEmpty)
-        ticket.memberName,
+      else if (ticket.ownerLabel.isNotEmpty)
+        ticket.ownerLabel,
       if (ticket.seat?.isNotEmpty == true) '${l10n.fieldSeat} ${ticket.seat}',
       if (ticket.itineraryKind?.isNotEmpty == true)
         itinerarySectionLabel(context, ticket.itineraryKind!),

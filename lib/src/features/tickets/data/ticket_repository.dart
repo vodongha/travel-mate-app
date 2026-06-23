@@ -10,8 +10,8 @@ import '../../../core/api_client.dart';
 class Ticket {
   const Ticket({
     required this.rid,
-    required this.memberRid,
-    required this.memberName,
+    required this.memberRids,
+    required this.memberNames,
     required this.mine,
     required this.shared,
     required this.title,
@@ -24,11 +24,13 @@ class Ticket {
   });
 
   final String rid;
-  final String memberRid;
-  final String memberName;
+
+  /// The members this ticket covers (may be several). Empty when it's a group ticket.
+  final List<String> memberRids;
+  final List<String> memberNames;
   final bool mine;
 
-  /// A group ticket: no owner, shared by the whole trip. [memberRid]/[memberName] are empty.
+  /// A group ticket: no specific members, shared by the whole trip ([memberRids] is empty).
   final bool shared;
   final String title;
   final String ticketType;
@@ -40,11 +42,16 @@ class Ticket {
   final String? itineraryRid;
   final String? note;
 
+  /// Comma-joined owner names for display ("" for a group ticket).
+  String get ownerLabel => memberNames.join(', ');
+
   factory Ticket.fromJson(Map<String, dynamic> json) {
+    List<String> strs(Object? v) =>
+        v is List ? v.map((e) => e.toString()).toList() : const [];
     return Ticket(
       rid: json['rid'] as String,
-      memberRid: json['memberRid'] as String? ?? '',
-      memberName: json['memberName'] as String? ?? '',
+      memberRids: strs(json['memberRids']),
+      memberNames: strs(json['memberNames']),
       mine: json['mine'] as bool? ?? false,
       shared: json['shared'] as bool? ?? false,
       title: json['title'] as String? ?? '',
