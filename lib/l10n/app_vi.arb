@@ -10,6 +10,7 @@
   "actionAdd": "Thêm",
   "actionRemove": "Xoá",
   "actionClose": "Đóng",
+  "actionView": "Xem",
   "actionEdit": "Sửa",
   "actionDelete": "Xoá",
   "deleteConfirmTitle": "Xoá?",
