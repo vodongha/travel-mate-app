@@ -221,8 +221,6 @@ class MembersScreen extends ConsumerWidget {
   }
 }
 
-enum _MemberAction { changeRole, edit, merge, remove }
-
 class _MemberTile extends StatelessWidget {
   const _MemberTile({
     required this.member,
@@ -280,64 +278,56 @@ class _MemberTile extends StatelessWidget {
                     fontSize: 12, color: scheme.onSurfaceVariant)),
         ],
       ),
-      trailing: !showActions
-          ? null
-          : PopupMenuButton<_MemberAction>(
-              icon: const Icon(Icons.more_vert),
-              tooltip: l10n.actionEdit,
-              onSelected: (a) {
-                switch (a) {
-                  case _MemberAction.changeRole:
-                    onChangeRole();
-                  case _MemberAction.edit:
-                    onEdit();
-                  case _MemberAction.merge:
-                    onMerge();
-                  case _MemberAction.remove:
-                    onRemove();
-                }
+      // No ⋮ button — long-press opens the actions sheet, consistent across the app.
+      onLongPress: showActions ? () => _showActions(context, l10n, scheme) : null,
+    );
+  }
+
+  void _showActions(BuildContext context, AppLocalizations l10n, ColorScheme scheme) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.badge_outlined),
+              title: Text(l10n.memberChangeRole),
+              onTap: () {
+                Navigator.pop(ctx);
+                onChangeRole();
               },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: _MemberAction.changeRole,
-                  child: ListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.badge_outlined),
-                    title: Text(l10n.memberChangeRole),
-                  ),
-                ),
-                if (member.ghost)
-                  PopupMenuItem(
-                    value: _MemberAction.edit,
-                    child: ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.edit_outlined),
-                      title: Text(l10n.actionEdit),
-                    ),
-                  ),
-                PopupMenuItem(
-                  value: _MemberAction.merge,
-                  child: ListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.merge_outlined),
-                    title: Text(l10n.memberMergeAction),
-                  ),
-                ),
-                PopupMenuItem(
-                  value: _MemberAction.remove,
-                  child: ListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(Icons.delete_outline, color: scheme.error),
-                    title: Text(l10n.actionRemove,
-                        style: TextStyle(color: scheme.error)),
-                  ),
-                ),
-              ],
             ),
+            if (member.ghost)
+              ListTile(
+                leading: const Icon(Icons.edit_outlined),
+                title: Text(l10n.actionEdit),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  onEdit();
+                },
+              ),
+            ListTile(
+              leading: const Icon(Icons.merge_outlined),
+              title: Text(l10n.memberMergeAction),
+              onTap: () {
+                Navigator.pop(ctx);
+                onMerge();
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.delete_outline, color: scheme.error),
+              title: Text(l10n.actionRemove,
+                  style: TextStyle(color: scheme.error)),
+              onTap: () {
+                Navigator.pop(ctx);
+                onRemove();
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

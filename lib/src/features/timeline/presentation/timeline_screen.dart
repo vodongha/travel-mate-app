@@ -328,11 +328,10 @@ class TimelineScreen extends ConsumerWidget {
       entries.add(_Entry(
         when: t.departureTime?.toLocal(),
         icon: _transportIcon(t.transportType),
+        // The itinerary shows only what/where/when — the carrier/booking code live in the ticket.
         title: route.isNotEmpty
             ? route
-            : (t.provider?.isNotEmpty == true
-                ? t.provider!
-                : Labels.transportType(context, t.transportType)),
+            : Labels.transportType(context, t.transportType),
         subtitle: [
           l10n.navTransport,
           if (cost > 0) Money.format(cost, baseCurrency),
