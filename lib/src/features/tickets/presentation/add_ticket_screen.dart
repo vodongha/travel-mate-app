@@ -21,12 +21,8 @@ import '../../trips/application/trips_controller.dart';
 import '../application/tickets_controller.dart';
 import '../data/ticket_repository.dart';
 
-/// Sentinel "Belongs to" value for a group ticket (no owner, shared by the whole trip), distinct
-/// from null (myself) and a member rid.
-const String _kGroupTicket = '__group__';
-
 /// Add or edit a ticket. The QR is captured as a decoded string via [QrField] (scan with
-/// mobile_scanner or type/paste). EDITOR/OWNER may assign the ticket to another member or make it a
+/// mobile_scanner or type/paste). EDITOR/OWNER may assign the ticket to several members or make it a
 /// group ticket; everyone else can only manage their own (picker hidden → the caller's own ticket).
 class AddTicketScreen extends ConsumerStatefulWidget {
   const AddTicketScreen({super.key, required this.tripRid, this.existing});
@@ -45,8 +41,10 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
   final _code = TextEditingController();
   final _seat = TextEditingController();
   String _type = 'OTHER';
-  // null ⇒ "myself" (server omits memberRid); [_kGroupTicket] ⇒ group ticket; else a member rid.
-  String? _memberRid;
+  // Who the ticket covers: a set of member rids, or a group ticket (whole trip). Empty set (and not
+  // group) ⇒ the caller's own ticket. The two are mutually exclusive.
+  final Set<String> _memberRids = {};
+  bool _group = false;
   // The itinerary item this ticket is for (a flight leg, stay, event), if any.
   String? _itineraryKind;
   String? _itineraryRid;
@@ -64,7 +62,10 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
       _type = t.ticketType;
       _code.text = t.qrData ?? '';
       _seat.text = t.seat ?? '';
-      _memberRid = t.shared ? _kGroupTicket : (t.mine ? null : t.memberRid);
+      _group = t.shared;
+      if (!t.shared) {
+        _memberRids.addAll(t.memberRids);
+      }
       _itineraryKind = t.itineraryKind;
       _itineraryRid = t.itineraryRid;
     }
@@ -96,15 +97,21 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
       return;
     }
     setState(() => _submitting = true);
-    final bool shared = _memberRid == _kGroupTicket;
-    final String? memberRid = shared ? null : _memberRid;
+    final String? myRole =
+        ref.read(tripProvider(widget.tripRid)).valueOrNull?.myRole;
+    final bool canAssign = myRole == 'OWNER' || myRole == 'EDITOR';
+    // Only an EDITOR/OWNER controls who a ticket covers; otherwise it's the caller's own (don't send
+    // members, so an edit leaves them unchanged and a create defaults to the caller).
+    final bool shared = canAssign && _group;
+    final List<String>? memberRids =
+        !canAssign ? null : (_group ? null : _memberRids.toList());
     try {
       final controller =
           ref.read(allTicketsControllerProvider(widget.tripRid).notifier);
       if (_editing) {
         await controller.edit(
           rid: widget.existing!.rid,
-          memberRid: memberRid,
+          memberRids: memberRids,
           shared: shared,
           title: _title.text.trim(),
           ticketType: _type,
@@ -116,7 +123,7 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
         );
       } else {
         await controller.create(
-          memberRid: memberRid,
+          memberRids: memberRids,
           shared: shared,
           title: _title.text.trim(),
           ticketType: _type,
@@ -218,13 +225,7 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
                   members.when(
                     loading: () => const LinearProgressIndicator(),
                     error: (_, __) => const SizedBox.shrink(),
-                    data: (list) => _AssigneeField(
-                      // Exclude the caller's own membership — the "Myself" option
-                      // already covers it (no duplicate name).
-                      members: list.where((m) => !m.mine).toList(),
-                      value: _memberRid,
-                      onChanged: (v) => setState(() => _memberRid = v),
-                    ),
+                    data: (list) => _assignee(context, l10n, list),
                   ),
                 if (canAssign) const SizedBox(height: 16),
                 TextFormField(
@@ -363,42 +364,49 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
       }
     });
   }
-}
 
-/// Picks who the ticket belongs to. The default (null value) is "myself" — the server reads an
-/// omitted memberRid as the caller's own ticket.
-class _AssigneeField extends StatelessWidget {
-  const _AssigneeField({
-    required this.members,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final List<Member> members;
-  final String? value;
-  final ValueChanged<String?> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final AppLocalizations l10n = AppLocalizations.of(context);
-    // Guard against a stale rid that's no longer in the list (the group sentinel is always valid).
-    final bool valid = value == null ||
-        value == _kGroupTicket ||
-        members.any((m) => m.rid == value);
-    return DropdownButtonFormField<String?>(
-      initialValue: valid ? value : null,
-      decoration: InputDecoration(
-          labelText: l10n.ticketAssignee,
-          prefixIcon: const Icon(Icons.person_outline)),
-      items: [
-        DropdownMenuItem<String?>(
-            value: null, child: Text(l10n.ticketAssigneeMyself)),
-        DropdownMenuItem<String?>(
-            value: _kGroupTicket, child: Text(l10n.ticketAssigneeGroup)),
-        ...members.map((m) => DropdownMenuItem<String?>(
-            value: m.rid, child: Text(m.displayName))),
+  /// "Belongs to" — pick several members (checkboxes), or the whole group (a separate, mutually
+  /// exclusive option). No members + not group = the caller's own ticket.
+  Widget _assignee(BuildContext context, AppLocalizations l10n, List<Member> list) {
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l10n.ticketAssignee, style: Theme.of(context).textTheme.labelLarge),
+        // "Cả nhóm" is a distinct option, not a per-member checkbox; turning it on clears members.
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          secondary: const Icon(Icons.groups_outlined),
+          title: Text(l10n.ticketAssigneeGroup),
+          value: _group,
+          onChanged: (v) => setState(() {
+            _group = v;
+            if (v) _memberRids.clear();
+          }),
+        ),
+        if (!_group)
+          ...list.map((m) => CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                value: _memberRids.contains(m.rid),
+                title: Text(m.mine
+                    ? '${m.displayName} (${l10n.ticketAssigneeMyself})'
+                    : m.displayName),
+                onChanged: (v) => setState(() {
+                  if (v == true) {
+                    _memberRids.add(m.rid);
+                  } else {
+                    _memberRids.remove(m.rid);
+                  }
+                }),
+              )),
+        if (!_group && _memberRids.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(l10n.ticketAssigneeHint,
+                style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
+          ),
       ],
-      onChanged: onChanged,
     );
   }
 }

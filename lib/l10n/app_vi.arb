@@ -274,6 +274,7 @@
   "ticketsAll": "Tất cả vé",
   "ticketUntitled": "Vé",
   "ticketAssignee": "Thuộc về",
+  "ticketAssigneeHint": "Để trống = vé của bạn",
   "ticketAssigneeMyself": "Tôi",
   "ticketAssigneeGroup": "Cả nhóm",
   "tkTRANSPORT": "Di chuyển",

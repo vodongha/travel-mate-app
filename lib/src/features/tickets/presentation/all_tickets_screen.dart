@@ -51,9 +51,8 @@ class AllTicketsScreen extends ConsumerWidget {
       List<Ticket> list, String groupLabel) {
     final Map<String, List<Ticket>> byMember = {};
     for (final Ticket t in list) {
-      final String name = t.shared
-          ? groupLabel
-          : (t.memberName.isEmpty ? t.memberRid : t.memberName);
+      final String name =
+          t.shared ? groupLabel : (t.ownerLabel.isEmpty ? groupLabel : t.ownerLabel);
       byMember.putIfAbsent(name, () => <Ticket>[]).add(t);
     }
     final List<MapEntry<String, List<Ticket>>> entries =
