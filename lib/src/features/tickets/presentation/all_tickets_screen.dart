@@ -116,6 +116,7 @@ class AllTicketsScreen extends ConsumerWidget {
                           padding: const EdgeInsets.only(bottom: 10),
                           child: TicketCard(
                             ticket: t,
+                            provider: t.provider,
                             onTap: () => context.push(
                               '/trips/$tripRid/tickets/${t.rid}/qr',
                               extra: t,

@@ -12,8 +12,6 @@ class TransportController
 
   Map<String, dynamic> _body({
     required String transportType,
-    String? provider,
-    String? bookingCode,
     String? departurePlace,
     String? arrivalPlace,
     DateTime? departureTimeUtc,
@@ -22,8 +20,6 @@ class TransportController
   }) {
     return {
       'transportType': transportType,
-      'provider': provider ?? '',
-      'bookingCode': bookingCode ?? '',
       'departurePlace': departurePlace ?? '',
       'arrivalPlace': arrivalPlace ?? '',
       'departureTime': departureTimeUtc?.toIso8601String(),
@@ -34,8 +30,6 @@ class TransportController
 
   Future<void> create({
     required String transportType,
-    String? provider,
-    String? bookingCode,
     String? departurePlace,
     String? arrivalPlace,
     DateTime? departureTimeUtc,
@@ -46,8 +40,6 @@ class TransportController
       arg,
       _body(
         transportType: transportType,
-        provider: provider,
-        bookingCode: bookingCode,
         departurePlace: departurePlace,
         arrivalPlace: arrivalPlace,
         departureTimeUtc: departureTimeUtc,
@@ -62,8 +54,6 @@ class TransportController
   Future<void> edit({
     required String rid,
     required String transportType,
-    String? provider,
-    String? bookingCode,
     String? departurePlace,
     String? arrivalPlace,
     DateTime? departureTimeUtc,
@@ -75,8 +65,6 @@ class TransportController
       rid,
       _body(
         transportType: transportType,
-        provider: provider,
-        bookingCode: bookingCode,
         departurePlace: departurePlace,
         arrivalPlace: arrivalPlace,
         departureTimeUtc: departureTimeUtc,

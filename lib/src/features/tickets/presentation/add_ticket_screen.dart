@@ -40,6 +40,10 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
   final _note = TextEditingController();
   final _code = TextEditingController();
   final _seat = TextEditingController();
+  final _provider = TextEditingController();
+  final _bookingCode = TextEditingController();
+  final _memberSearch = TextEditingController();
+  String _memberQuery = '';
   String _type = 'OTHER';
   // Who the ticket covers: a set of member rids, or a group ticket (whole trip). Empty set (and not
   // group) ⇒ the caller's own ticket. The two are mutually exclusive.
@@ -62,6 +66,8 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
       _type = t.ticketType;
       _code.text = t.qrData ?? '';
       _seat.text = t.seat ?? '';
+      _provider.text = t.provider ?? '';
+      _bookingCode.text = t.bookingCode ?? '';
       _group = t.shared;
       if (!t.shared) {
         _memberRids.addAll(t.memberRids);
@@ -77,6 +83,9 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
     _note.dispose();
     _code.dispose();
     _seat.dispose();
+    _provider.dispose();
+    _bookingCode.dispose();
+    _memberSearch.dispose();
     super.dispose();
   }
 
@@ -117,6 +126,8 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
           ticketType: _type,
           qrData: _trim(_code),
           seat: _type == 'TRANSPORT' ? _trim(_seat) : null,
+          provider: _type == 'TRANSPORT' ? _trim(_provider) : null,
+          bookingCode: _type == 'TRANSPORT' ? _trim(_bookingCode) : null,
           itineraryKind: _itineraryKind,
           itineraryRid: _itineraryRid,
           note: _trim(_note),
@@ -129,6 +140,8 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
           ticketType: _type,
           qrData: _trim(_code),
           seat: _type == 'TRANSPORT' ? _trim(_seat) : null,
+          provider: _type == 'TRANSPORT' ? _trim(_provider) : null,
+          bookingCode: _type == 'TRANSPORT' ? _trim(_bookingCode) : null,
           itineraryKind: _itineraryKind,
           itineraryRid: _itineraryRid,
           note: _trim(_note),
@@ -209,6 +222,21 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
                   ),
                 ),
                 if (_type == 'TRANSPORT') ...[
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _provider,
+                    decoration: InputDecoration(
+                        labelText: l10n.transportProvider,
+                        prefixIcon: const Icon(Icons.business_outlined)),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _bookingCode,
+                    decoration: InputDecoration(
+                        labelText: l10n.fieldBookingCode,
+                        prefixIcon:
+                            const Icon(Icons.confirmation_number_outlined)),
+                  ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _seat,
@@ -366,9 +394,16 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
   }
 
   /// "Belongs to" — pick several members (checkboxes), or the whole group (a separate, mutually
-  /// exclusive option). No members + not group = the caller's own ticket.
+  /// exclusive option). No members + not group = the caller's own ticket. With many members the list
+  /// gets a search box and is height-capped so it scrolls inside the form instead of pushing it down.
   Widget _assignee(BuildContext context, AppLocalizations l10n, List<Member> list) {
     final ColorScheme scheme = Theme.of(context).colorScheme;
+    // Only bother with search once the list is long enough to be awkward to scan.
+    final bool searchable = list.length > 6;
+    final String q = _memberQuery.trim().toLowerCase();
+    final List<Member> filtered = q.isEmpty
+        ? list
+        : list.where((m) => m.displayName.toLowerCase().contains(q)).toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -384,28 +419,74 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
             if (v) _memberRids.clear();
           }),
         ),
-        if (!_group)
-          ...list.map((m) => CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                controlAffinity: ListTileControlAffinity.leading,
-                value: _memberRids.contains(m.rid),
-                title: Text(m.mine
-                    ? '${m.displayName} (${l10n.ticketAssigneeMyself})'
-                    : m.displayName),
-                onChanged: (v) => setState(() {
-                  if (v == true) {
-                    _memberRids.add(m.rid);
-                  } else {
-                    _memberRids.remove(m.rid);
-                  }
-                }),
-              )),
-        if (!_group && _memberRids.isEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(l10n.ticketAssigneeHint,
-                style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
+        if (!_group) ...[
+          if (searchable)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: TextField(
+                controller: _memberSearch,
+                onChanged: (v) => setState(() => _memberQuery = v),
+                decoration: InputDecoration(
+                  isDense: true,
+                  hintText: l10n.ticketsSearchHint,
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _memberQuery.isEmpty
+                      ? null
+                      : IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _memberSearch.clear();
+                            setState(() => _memberQuery = '');
+                          }),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          // Cap the height so a big trip (100+ members) scrolls here, not in the whole form.
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 260),
+            child: filtered.isEmpty
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Text(l10n.ticketsNoMatch,
+                        style: TextStyle(
+                            fontSize: 13, color: scheme.onSurfaceVariant)),
+                  )
+                : Scrollbar(
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: filtered.length,
+                      itemBuilder: (context, i) {
+                        final Member m = filtered[i];
+                        return CheckboxListTile(
+                          contentPadding: EdgeInsets.zero,
+                          controlAffinity: ListTileControlAffinity.leading,
+                          value: _memberRids.contains(m.rid),
+                          title: Text(m.mine
+                              ? '${m.displayName} (${l10n.ticketAssigneeMyself})'
+                              : m.displayName),
+                          onChanged: (v) => setState(() {
+                            if (v == true) {
+                              _memberRids.add(m.rid);
+                            } else {
+                              _memberRids.remove(m.rid);
+                            }
+                          }),
+                        );
+                      },
+                    ),
+                  ),
           ),
+          if (_memberRids.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(l10n.ticketAssigneeHint,
+                  style:
+                      TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
+            ),
+        ],
       ],
     );
   }

@@ -14,6 +14,16 @@ class TicketQrScreen extends StatelessWidget {
 
   final Ticket ticket;
 
+  /// "Carrier · CODE · Seat 12A" — whichever of the ticket's carrier/booking-code/seat are set.
+  String? _carrierLine(AppLocalizations l10n) {
+    final List<String> parts = [
+      if (ticket.provider?.isNotEmpty == true) ticket.provider!,
+      if (ticket.bookingCode?.isNotEmpty == true) ticket.bookingCode!,
+      if (ticket.seat?.isNotEmpty == true) '${l10n.fieldSeat} ${ticket.seat}',
+    ];
+    return parts.isEmpty ? null : parts.join(' · ');
+  }
+
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
@@ -116,6 +126,14 @@ class TicketQrScreen extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.black54, fontSize: 15),
                 ),
+                if (_carrierLine(l10n) case final String line) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    line,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.black54, fontSize: 14),
+                  ),
+                ],
                 if (ticket.ownerLabel.isNotEmpty) ...[
                   const SizedBox(height: 2),
                   Text(

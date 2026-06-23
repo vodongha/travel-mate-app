@@ -10,6 +10,7 @@
   "actionAdd": "Add",
   "actionRemove": "Remove",
   "actionClose": "Close",
+  "actionView": "View",
   "actionEdit": "Edit",
   "actionDelete": "Delete",
   "deleteConfirmTitle": "Delete?",

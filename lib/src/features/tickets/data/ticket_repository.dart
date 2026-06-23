@@ -18,6 +18,8 @@ class Ticket {
     required this.ticketType,
     this.qrData,
     this.seat,
+    this.provider,
+    this.bookingCode,
     this.itineraryKind,
     this.itineraryRid,
     this.note,
@@ -36,6 +38,10 @@ class Ticket {
   final String ticketType;
   final String? qrData;
   final String? seat;
+
+  /// Carrier/airline + booking (PNR) code — owned by the ticket (mainly for TRANSPORT tickets).
+  final String? provider;
+  final String? bookingCode;
 
   /// The itinerary item this ticket is for, if any (EVENT | TRANSPORT | ACCOMMODATION) + its rid.
   final String? itineraryKind;
@@ -58,6 +64,8 @@ class Ticket {
       ticketType: json['ticketType'] as String? ?? 'OTHER',
       qrData: json['qrData'] as String?,
       seat: json['seat'] as String?,
+      provider: json['provider'] as String?,
+      bookingCode: json['bookingCode'] as String?,
       itineraryKind: json['itineraryKind'] as String?,
       itineraryRid: json['itineraryRid'] as String?,
       note: json['note'] as String?,
