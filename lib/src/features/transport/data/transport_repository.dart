@@ -3,14 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api_client.dart';
 
-/// A transport leg (backend `TransportResponse`). Per-person seats and boarding-pass QRs live on the
-/// linked tickets, not on the leg itself.
+/// A transport leg (backend `TransportResponse`). The leg holds only what/where/when; the carrier,
+/// booking code, per-person seat and boarding-pass QR live on the linked tickets, not on the leg.
 class TransportItem {
   const TransportItem({
     required this.rid,
     required this.transportType,
-    this.provider,
-    this.bookingCode,
     this.departurePlace,
     this.arrivalPlace,
     this.departureTime,
@@ -20,8 +18,6 @@ class TransportItem {
 
   final String rid;
   final String transportType;
-  final String? provider;
-  final String? bookingCode;
   final String? departurePlace;
   final String? arrivalPlace;
   final DateTime? departureTime;
@@ -33,8 +29,6 @@ class TransportItem {
     return TransportItem(
       rid: json['rid'] as String,
       transportType: json['transportType'] as String? ?? 'FLIGHT',
-      provider: json['provider'] as String?,
-      bookingCode: json['bookingCode'] as String?,
       departurePlace: json['departurePlace'] as String?,
       arrivalPlace: json['arrivalPlace'] as String?,
       departureTime: parse(json['departureTime']),

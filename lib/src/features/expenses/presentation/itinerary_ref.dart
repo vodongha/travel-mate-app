@@ -69,10 +69,7 @@ List<ItineraryRef> buildItineraryRefs(
 }
 
 String _transportLabel(BuildContext context, TransportItem t) {
-  final String provider = t.provider?.trim() ?? '';
-  if (provider.isNotEmpty) {
-    return provider;
-  }
+  // The leg holds only what/where/when now — label by route, falling back to its type.
   final String dep = t.departurePlace?.trim() ?? '';
   final String arr = t.arrivalPlace?.trim() ?? '';
   if (dep.isNotEmpty || arr.isNotEmpty) {

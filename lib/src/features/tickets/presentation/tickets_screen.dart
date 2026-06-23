@@ -99,7 +99,8 @@ class _TicketsScreenState extends ConsumerState<TicketsScreen> {
     }
   }
 
-  /// Build the (time, provider) for each ticket from the itinerary item it links to.
+  /// Resolve each ticket's time from the itinerary item it links to. The carrier (provider) now lives
+  /// on the ticket itself, so it's read straight from the ticket — not derived from the leg.
   List<_DatedTicket> _decorate(BuildContext context, List<Ticket> tickets) {
     final List<EventItem> events =
         ref.watch(eventsControllerProvider(widget.tripRid)).valueOrNull ??
@@ -116,23 +117,18 @@ class _TicketsScreenState extends ConsumerState<TicketsScreen> {
     final Map<String, DateTime?> transportWhen = {
       for (final t in transports) t.rid: t.departureTime
     };
-    final Map<String, String?> transportProvider = {
-      for (final t in transports) t.rid: t.provider
-    };
 
     return tickets.map((t) {
       DateTime? when;
-      String? provider;
       switch (t.itineraryKind) {
         case 'EVENT':
           when = eventWhen[t.itineraryRid];
         case 'TRANSPORT':
           when = transportWhen[t.itineraryRid];
-          provider = transportProvider[t.itineraryRid];
         case 'ACCOMMODATION':
           when = stayWhen[t.itineraryRid];
       }
-      return _DatedTicket(t, when?.toLocal(), provider);
+      return _DatedTicket(t, when?.toLocal(), t.provider);
     }).toList();
   }
 
@@ -189,6 +185,7 @@ class _TicketsScreenState extends ConsumerState<TicketsScreen> {
       return d.ticket.title.toLowerCase().contains(q) ||
           d.ticket.ownerLabel.toLowerCase().contains(q) ||
           (d.provider?.toLowerCase().contains(q) ?? false) ||
+          (d.ticket.bookingCode?.toLowerCase().contains(q) ?? false) ||
           ticketTypeLabel(context, d.ticket.ticketType).toLowerCase().contains(q);
     }).toList()
       ..sort((a, b) {
@@ -442,8 +439,9 @@ class TicketCard extends StatelessWidget {
         l10n.ticketAssigneeGroup
       else if (ticket.ownerLabel.isNotEmpty)
         ticket.ownerLabel,
-      // The carrier lives with the ticket (hidden on the itinerary itself).
+      // Carrier + booking code live with the ticket (hidden on the itinerary itself).
       if (provider?.isNotEmpty == true) provider!,
+      if (ticket.bookingCode?.isNotEmpty == true) ticket.bookingCode!,
       if (ticket.seat?.isNotEmpty == true) '${l10n.fieldSeat} ${ticket.seat}',
     ];
     final bool highlight = isCurrent || isNext;
