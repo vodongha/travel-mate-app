@@ -38,24 +38,25 @@ class PlacesScreen extends ConsumerWidget {
 
   final String tripRid;
 
+  /// Open this place in Google Maps — the row's primary tap action.
+  Future<void> _openMaps(BuildContext context, PlaceItem item) async {
+    await openInGoogleMaps(
+      context,
+      lat: item.latitude,
+      lng: item.longitude,
+      query: item.address ?? item.name,
+    );
+  }
+
   Future<void> _rowActions(BuildContext context, WidgetRef ref, PlaceItem item,
       {required bool canEdit}) async {
-    // A VIEWER still gets "Open in Google Maps" (read-only) — just no edit/delete.
+    // Maps is now the row's primary tap; the long-press menu is just edit/delete.
     final RowAction? action = await showRowActions(context,
         title: item.name,
-        allowMaps: true,
+        allowMaps: false,
         allowEdit: canEdit,
         allowDelete: canEdit);
     if (action == null || !context.mounted) {
-      return;
-    }
-    if (action == RowAction.maps) {
-      await openInGoogleMaps(
-        context,
-        lat: item.latitude,
-        lng: item.longitude,
-        query: item.address ?? item.name,
-      );
       return;
     }
     if (action == RowAction.edit) {
@@ -142,14 +143,17 @@ class PlacesScreen extends ConsumerWidget {
                                 : Text(sub.join(' · '),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis),
+                            // Primary action is now "open in Google Maps"; edit/delete moved to the
+                            // long-press menu (so the map is one tap, per the design).
                             trailing: IconButton(
-                              icon: const Icon(Icons.more_vert),
-                              tooltip: l10n.actionEdit,
-                              onPressed: () => _rowActions(context, ref, p, canEdit: canEdit),
+                              icon: const Icon(Icons.map_outlined),
+                              tooltip: l10n.openInMaps,
+                              onPressed: () => _openMaps(context, p),
                             ),
-                            onTap: () => _rowActions(context, ref, p, canEdit: canEdit),
-                            // Long-press opens the same options menu (Maps/Edit/Delete).
-                            onLongPress: () => _rowActions(context, ref, p, canEdit: canEdit),
+                            onTap: () => _openMaps(context, p),
+                            onLongPress: canEdit
+                                ? () => _rowActions(context, ref, p, canEdit: canEdit)
+                                : null,
                           ),
                         );
                       },
