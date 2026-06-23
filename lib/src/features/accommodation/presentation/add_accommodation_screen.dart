@@ -31,7 +31,6 @@ class _AddAccommodationScreenState
     extends ConsumerState<AddAccommodationScreen> {
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
-  final _bookingCode = TextEditingController();
   final _address = TextEditingController();
   final _note = TextEditingController();
   DateTime? _checkin;
@@ -46,7 +45,6 @@ class _AddAccommodationScreenState
     final AccommodationItem? a = widget.existing;
     if (a != null) {
       _name.text = a.name;
-      _bookingCode.text = a.bookingCode ?? '';
       _address.text = a.address ?? '';
       _note.text = a.note ?? '';
       _checkin = a.checkinTime?.toLocal();
@@ -57,7 +55,6 @@ class _AddAccommodationScreenState
   @override
   void dispose() {
     _name.dispose();
-    _bookingCode.dispose();
     _address.dispose();
     _note.dispose();
     super.dispose();
@@ -118,7 +115,6 @@ class _AddAccommodationScreenState
         await controller.edit(
           rid: widget.existing!.rid,
           name: _name.text.trim(),
-          bookingCode: _trim(_bookingCode),
           address: _trim(_address),
           checkinTimeUtc: _checkin?.toUtc(),
           checkoutTimeUtc: _checkout?.toUtc(),
@@ -127,7 +123,6 @@ class _AddAccommodationScreenState
       } else {
         await controller.create(
           name: _name.text.trim(),
-          bookingCode: _trim(_bookingCode),
           address: _trim(_address),
           checkinTimeUtc: _checkin?.toUtc(),
           checkoutTimeUtc: _checkout?.toUtc(),
@@ -212,14 +207,6 @@ class _AddAccommodationScreenState
                       setState(() => _checkout = d);
                     }
                   },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _bookingCode,
-                  decoration: InputDecoration(
-                      labelText: l10n.fieldBookingCode,
-                      prefixIcon:
-                          const Icon(Icons.confirmation_number_outlined)),
                 ),
                 const SizedBox(height: 16),
                 TextFormField(

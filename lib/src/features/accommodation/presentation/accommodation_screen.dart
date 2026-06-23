@@ -8,6 +8,8 @@ import '../../../core/actions.dart';
 import '../../../core/app_error.dart';
 import '../../../core/app_error_view.dart';
 import '../../../core/responsive.dart';
+import '../../tickets/application/tickets_controller.dart';
+import '../../tickets/data/ticket_repository.dart';
 import '../../trips/application/trips_controller.dart';
 import '../application/accommodation_controller.dart';
 import '../data/accommodation_repository.dart';
@@ -43,6 +45,68 @@ class AccommodationScreen extends ConsumerWidget {
     }
   }
 
+  /// Read-only detail (the eye / tap action). The booking code is read back from the caller's own
+  /// ticket for this stay, if any. Long-press is for edit/delete.
+  void _showDetail(BuildContext context, AccommodationItem item, Ticket? tk) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final String locale = Localizations.localeOf(context).toLanguageTag();
+    String dt(DateTime? t) => t == null
+        ? ''
+        : DateFormat.yMMMEd(locale).add_Hm().format(t.toLocal());
+    final List<(String, String)> rows = [
+      (l10n.fieldAddress, item.address ?? ''),
+      (l10n.accommodationCheckin, dt(item.checkinTime)),
+      (l10n.accommodationCheckout, dt(item.checkoutTime)),
+      if (tk?.bookingCode?.isNotEmpty == true)
+        (l10n.fieldBookingCode, tk!.bookingCode!),
+      (l10n.eventNote, item.note ?? ''),
+    ];
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (ctx) {
+        final ColorScheme scheme = Theme.of(ctx).colorScheme;
+        final TextTheme text = Theme.of(ctx).textTheme;
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(ctx).size.height * 0.85),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(children: [
+                    Icon(Icons.hotel_outlined, color: scheme.primary),
+                    const SizedBox(width: 10),
+                    Expanded(child: Text(item.name, style: text.titleLarge)),
+                  ]),
+                  const SizedBox(height: 14),
+                  for (final (String label, String value) in rows)
+                    if (value.trim().isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(label,
+                                style: text.labelSmall?.copyWith(
+                                    color: scheme.onSurfaceVariant)),
+                            Text(value, style: text.bodyLarge),
+                          ],
+                        ),
+                      ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);
@@ -50,6 +114,15 @@ class AccommodationScreen extends ConsumerWidget {
         ref.watch(accommodationControllerProvider(tripRid));
     final bool canEdit =
         ref.watch(tripProvider(tripRid)).valueOrNull?.myRole != 'VIEWER';
+    // The caller's ticket per stay — its booking code shows in the read-only detail.
+    final List<Ticket> myTickets =
+        ref.watch(myTicketsControllerProvider(tripRid)).valueOrNull ?? const [];
+    final Map<String, Ticket> myTicketByStay = {};
+    for (final Ticket tk in myTickets) {
+      if (tk.itineraryKind == 'ACCOMMODATION' && tk.itineraryRid != null) {
+        myTicketByStay.putIfAbsent(tk.itineraryRid!, () => tk);
+      }
+    }
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navAccommodation)),
       floatingActionButton: canEdit
@@ -79,6 +152,8 @@ class AccommodationScreen extends ConsumerWidget {
                       separatorBuilder: (_, __) => const SizedBox(height: 10),
                       itemBuilder: (context, i) => _AccommodationCard(
                         item: list[i],
+                        onView: () => _showDetail(
+                            context, list[i], myTicketByStay[list[i].rid]),
                         onMenu: canEdit
                             ? () => _rowActions(context, ref, list[i])
                             : null,
@@ -93,10 +168,13 @@ class AccommodationScreen extends ConsumerWidget {
 }
 
 class _AccommodationCard extends StatelessWidget {
-  const _AccommodationCard({required this.item, this.onMenu});
+  const _AccommodationCard(
+      {required this.item, required this.onView, this.onMenu});
 
   final AccommodationItem item;
-  // null for a VIEWER (read-only) — hides the edit/delete menu.
+  // Read-only detail (tap / the eye icon).
+  final VoidCallback onView;
+  // null for a VIEWER (read-only) — hides the edit/delete menu (long-press).
   final VoidCallback? onMenu;
 
   @override
@@ -124,18 +202,14 @@ class _AccommodationCard extends StatelessWidget {
             ? null
             : Text(subParts.join(' · '),
                 maxLines: 2, overflow: TextOverflow.ellipsis),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (onMenu != null)
-              IconButton(
-                icon: const Icon(Icons.more_vert),
-                tooltip: AppLocalizations.of(context).actionEdit,
-                onPressed: onMenu,
-              ),
-          ],
+        // Tap / eye = read-only detail; long-press = edit/delete (editors only).
+        trailing: IconButton(
+          icon: const Icon(Icons.visibility_outlined),
+          tooltip: AppLocalizations.of(context).actionView,
+          onPressed: onView,
         ),
-        onTap: onMenu,
+        onTap: onView,
+        onLongPress: onMenu,
       ),
     );
   }

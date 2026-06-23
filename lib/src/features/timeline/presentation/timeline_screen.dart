@@ -365,12 +365,14 @@ class TimelineScreen extends ConsumerWidget {
     bool canEdit,
   ) {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    // The caller's ticket for each transport leg — carrier/booking code/seat are read from it (the
-    // leg itself no longer carries them). First mine ticket linked to the leg wins.
-    final Map<String, Ticket> myTicketByLeg = {};
+    // The caller's ticket per itinerary item — carrier/booking code/seat are read from it (the leg
+    // and the stay no longer carry them). Keyed by item rid (rids are unique); first mine wins.
+    final Map<String, Ticket> myTicketByItem = {};
     for (final Ticket tk in myTickets) {
-      if (tk.itineraryKind == 'TRANSPORT' && tk.itineraryRid != null) {
-        myTicketByLeg.putIfAbsent(tk.itineraryRid!, () => tk);
+      if ((tk.itineraryKind == 'TRANSPORT' ||
+              tk.itineraryKind == 'ACCOMMODATION') &&
+          tk.itineraryRid != null) {
+        myTicketByItem.putIfAbsent(tk.itineraryRid!, () => tk);
       }
     }
     final Map<String, PlaceItem> placeByRid = {
@@ -424,7 +426,7 @@ class TimelineScreen extends ConsumerWidget {
       ].join(' → ');
       final num cost = costByItem['TRANSPORT:${t.rid}'] ?? 0;
       // Carrier/booking code/seat come from the caller's own ticket for this leg, if any.
-      final Ticket? tk = myTicketByLeg[t.rid];
+      final Ticket? tk = myTicketByItem[t.rid];
       entries.add(_Entry(
         when: t.departureTime?.toLocal(),
         icon: _transportIcon(t.transportType),
@@ -468,6 +470,8 @@ class TimelineScreen extends ConsumerWidget {
     }
     for (final AccommodationItem a in stays) {
       final num cost = costByItem['ACCOMMODATION:${a.rid}'] ?? 0;
+      // Booking code comes from the caller's own ticket for this stay, if any.
+      final Ticket? atk = myTicketByItem[a.rid];
       entries.add(_Entry(
         when: a.checkinTime?.toLocal(),
         icon: Icons.hotel_outlined,
@@ -483,6 +487,8 @@ class TimelineScreen extends ConsumerWidget {
               (l10n.eventLocation, a.address ?? ''),
               (l10n.accommodationCheckin, _dt(context, a.checkinTime)),
               (l10n.accommodationCheckout, _dt(context, a.checkoutTime)),
+              if (atk?.bookingCode?.isNotEmpty == true)
+                (l10n.fieldBookingCode, atk!.bookingCode!),
               if (cost > 0) (l10n.timelineCosts, Money.format(cost, baseCurrency)),
               (l10n.eventNote, a.note ?? ''),
             ]),

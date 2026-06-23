@@ -127,7 +127,9 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
           qrData: _trim(_code),
           seat: _type == 'TRANSPORT' ? _trim(_seat) : null,
           provider: _type == 'TRANSPORT' ? _trim(_provider) : null,
-          bookingCode: _type == 'TRANSPORT' ? _trim(_bookingCode) : null,
+          bookingCode: (_type == 'TRANSPORT' || _type == 'ACCOMMODATION')
+              ? _trim(_bookingCode)
+              : null,
           itineraryKind: _itineraryKind,
           itineraryRid: _itineraryRid,
           note: _trim(_note),
@@ -141,7 +143,9 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
           qrData: _trim(_code),
           seat: _type == 'TRANSPORT' ? _trim(_seat) : null,
           provider: _type == 'TRANSPORT' ? _trim(_provider) : null,
-          bookingCode: _type == 'TRANSPORT' ? _trim(_bookingCode) : null,
+          bookingCode: (_type == 'TRANSPORT' || _type == 'ACCOMMODATION')
+              ? _trim(_bookingCode)
+              : null,
           itineraryKind: _itineraryKind,
           itineraryRid: _itineraryRid,
           note: _trim(_note),
@@ -229,6 +233,9 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
                         labelText: l10n.transportProvider,
                         prefixIcon: const Icon(Icons.business_outlined)),
                   ),
+                ],
+                // Booking/PNR code applies to both transport and accommodation tickets.
+                if (_type == 'TRANSPORT' || _type == 'ACCOMMODATION') ...[
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _bookingCode,
@@ -237,6 +244,8 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
                         prefixIcon:
                             const Icon(Icons.confirmation_number_outlined)),
                   ),
+                ],
+                if (_type == 'TRANSPORT') ...[
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _seat,
