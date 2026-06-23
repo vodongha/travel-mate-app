@@ -3,13 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api_client.dart';
 
-/// A lodging booking (backend `AccommodationResponse`). A booking voucher/QR is kept as a (group)
-/// ticket linked to this stay, not as a field here.
+/// A lodging booking (backend `AccommodationResponse`). The stay holds only name/where/when; the
+/// booking voucher code + QR live on the (group) ticket linked to this stay, not here.
 class AccommodationItem {
   const AccommodationItem({
     required this.rid,
     required this.name,
-    this.bookingCode,
     this.address,
     this.checkinTime,
     this.checkoutTime,
@@ -18,7 +17,6 @@ class AccommodationItem {
 
   final String rid;
   final String name;
-  final String? bookingCode;
   final String? address;
   final DateTime? checkinTime;
   final DateTime? checkoutTime;
@@ -29,7 +27,6 @@ class AccommodationItem {
     return AccommodationItem(
       rid: json['rid'] as String,
       name: json['name'] as String? ?? '',
-      bookingCode: json['bookingCode'] as String?,
       address: json['address'] as String?,
       checkinTime: parse(json['checkinTime']),
       checkoutTime: parse(json['checkoutTime']),
