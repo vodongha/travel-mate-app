@@ -13,7 +13,6 @@ class AccommodationController
 
   Map<String, dynamic> _body({
     required String name,
-    String? bookingCode,
     String? address,
     DateTime? checkinTimeUtc,
     DateTime? checkoutTimeUtc,
@@ -21,7 +20,6 @@ class AccommodationController
   }) {
     return {
       'name': name,
-      'bookingCode': bookingCode ?? '',
       'address': address ?? '',
       'checkinTime': checkinTimeUtc?.toIso8601String(),
       'checkoutTime': checkoutTimeUtc?.toIso8601String(),
@@ -31,7 +29,6 @@ class AccommodationController
 
   Future<void> create({
     required String name,
-    String? bookingCode,
     String? address,
     DateTime? checkinTimeUtc,
     DateTime? checkoutTimeUtc,
@@ -41,7 +38,6 @@ class AccommodationController
       arg,
       _body(
         name: name,
-        bookingCode: bookingCode,
         address: address,
         checkinTimeUtc: checkinTimeUtc,
         checkoutTimeUtc: checkoutTimeUtc,
@@ -55,7 +51,6 @@ class AccommodationController
   Future<void> edit({
     required String rid,
     required String name,
-    String? bookingCode,
     String? address,
     DateTime? checkinTimeUtc,
     DateTime? checkoutTimeUtc,
@@ -66,7 +61,6 @@ class AccommodationController
       rid,
       _body(
         name: name,
-        bookingCode: bookingCode,
         address: address,
         checkinTimeUtc: checkinTimeUtc,
         checkoutTimeUtc: checkoutTimeUtc,
