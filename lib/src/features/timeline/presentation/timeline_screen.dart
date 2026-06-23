@@ -48,6 +48,73 @@ class TimelineScreen extends ConsumerWidget {
 
   final String tripRid;
 
+  String _dt(BuildContext context, DateTime? t) => t == null
+      ? ''
+      : DateFormat.yMMMEd(Localizations.localeOf(context).toLanguageTag())
+          .add_Hm()
+          .format(t.toLocal());
+
+  /// Read-only detail of an itinerary item (the eye / tap action). Long-press is for edit/delete.
+  /// [rows] are (label, value) pairs; blanks are skipped. An "Open in Maps" button shows when
+  /// [onMaps] is given.
+  void _showDetail(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required List<(String, String)> rows,
+    VoidCallback? onMaps,
+  }) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) {
+        final ColorScheme scheme = Theme.of(ctx).colorScheme;
+        final TextTheme text = Theme.of(ctx).textTheme;
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  Icon(icon, color: scheme.primary),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(title, style: text.titleLarge)),
+                ]),
+                const SizedBox(height: 14),
+                for (final (String label, String value) in rows)
+                  if (value.trim().isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(label,
+                              style: text.labelSmall
+                                  ?.copyWith(color: scheme.onSurfaceVariant)),
+                          Text(value, style: text.bodyLarge),
+                        ],
+                      ),
+                    ),
+                if (onMaps != null)
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      onMaps();
+                    },
+                    icon: const Icon(Icons.map_outlined),
+                    label: Text(l10n.openInMaps),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _eventActions(BuildContext context, WidgetRef ref,
       EventItem event, PlaceItem? place, bool canEdit) async {
     // A VIEWER only ever gets "Open in Google Maps" (read-only); nothing to show
@@ -314,8 +381,21 @@ class TimelineScreen extends ConsumerWidget {
           if (pl != null && pl.name.isNotEmpty) pl.name,
           if (cost > 0) Money.format(cost, baseCurrency),
         ].join(' · '),
-        onTap: () => _eventActions(context, ref, e, pl, canEdit),
-        // Long-press → options menu (Open in Maps when it has a place, Edit, Delete).
+        // Tap = read-only detail (the eye); long-press = the actions menu.
+        onTap: () => _showDetail(context,
+            title: e.title.isEmpty ? Labels.eventType(context, e.eventType) : e.title,
+            icon: _eventIcon(e.eventType),
+            rows: [
+              (l10n.fieldType, Labels.eventType(context, e.eventType)),
+              (l10n.eventStart, _dt(context, e.startTime)),
+              if (pl != null) (l10n.eventLocation, pl.name),
+              if (cost > 0) (l10n.timelineCosts, Money.format(cost, baseCurrency)),
+              (l10n.eventNote, e.note ?? ''),
+            ],
+            onMaps: (pl != null && pl.latitude != null && pl.longitude != null)
+                ? () => openInGoogleMaps(context,
+                    lat: pl.latitude, lng: pl.longitude, query: pl.name)
+                : null),
         onLongPress: () => _eventActions(context, ref, e, pl, canEdit),
       ));
     }
@@ -328,24 +408,27 @@ class TimelineScreen extends ConsumerWidget {
       entries.add(_Entry(
         when: t.departureTime?.toLocal(),
         icon: _transportIcon(t.transportType),
+        // The itinerary shows only what/where/when — the carrier/booking code live in the ticket.
         title: route.isNotEmpty
             ? route
-            : (t.provider?.isNotEmpty == true
-                ? t.provider!
-                : Labels.transportType(context, t.transportType)),
+            : Labels.transportType(context, t.transportType),
         subtitle: [
           l10n.navTransport,
           if (cost > 0) Money.format(cost, baseCurrency),
         ].join(' · '),
-        onTap: () => _itemActions(context, ref,
-            canEdit: canEdit,
-            kind: 'TRANSPORT',
-            rid: t.rid,
-            editPath: '/trips/$tripRid/transports/${t.rid}/edit',
-            editExtra: t,
-            onDelete: () => ref
-                .read(transportControllerProvider(tripRid).notifier)
-                .delete(t.rid)),
+        onTap: () => _showDetail(context,
+            title: route.isNotEmpty
+                ? route
+                : Labels.transportType(context, t.transportType),
+            icon: _transportIcon(t.transportType),
+            rows: [
+              (l10n.fieldType, Labels.transportType(context, t.transportType)),
+              (l10n.transportFrom, t.departurePlace ?? ''),
+              (l10n.transportTo, t.arrivalPlace ?? ''),
+              (l10n.eventStart, _dt(context, t.departureTime)),
+              if (cost > 0) (l10n.timelineCosts, Money.format(cost, baseCurrency)),
+              (l10n.eventNote, t.note ?? ''),
+            ]),
         onLongPress: () => _itemActions(context, ref,
             canEdit: canEdit,
             kind: 'TRANSPORT',
@@ -367,15 +450,16 @@ class TimelineScreen extends ConsumerWidget {
           l10n.accommodationCheckin,
           if (cost > 0) Money.format(cost, baseCurrency),
         ].join(' · '),
-        onTap: () => _itemActions(context, ref,
-            canEdit: canEdit,
-            kind: 'ACCOMMODATION',
-            rid: a.rid,
-            editPath: '/trips/$tripRid/accommodations/${a.rid}/edit',
-            editExtra: a,
-            onDelete: () => ref
-                .read(accommodationControllerProvider(tripRid).notifier)
-                .delete(a.rid)),
+        onTap: () => _showDetail(context,
+            title: a.name,
+            icon: Icons.hotel_outlined,
+            rows: [
+              (l10n.eventLocation, a.address ?? ''),
+              (l10n.accommodationCheckin, _dt(context, a.checkinTime)),
+              (l10n.accommodationCheckout, _dt(context, a.checkoutTime)),
+              if (cost > 0) (l10n.timelineCosts, Money.format(cost, baseCurrency)),
+              (l10n.eventNote, a.note ?? ''),
+            ]),
         onLongPress: () => _itemActions(context, ref,
             canEdit: canEdit,
             kind: 'ACCOMMODATION',
@@ -458,10 +542,18 @@ class TimelineScreen extends ConsumerWidget {
 }
 
 /// Renders entries grouped under day headers, each day a connected vertical rail.
-class _DayTimeline extends StatelessWidget {
+class _DayTimeline extends StatefulWidget {
   const _DayTimeline({required this.entries});
 
   final List<_Entry> entries;
+
+  @override
+  State<_DayTimeline> createState() => _DayTimelineState();
+}
+
+class _DayTimelineState extends State<_DayTimeline> {
+  final GlobalKey _targetKey = GlobalKey();
+  bool _scrolledToNow = false;
 
   @override
   Widget build(BuildContext context) {
@@ -476,7 +568,7 @@ class _DayTimeline extends StatelessWidget {
         a.year == b.year && a.month == b.month && a.day == b.day;
     _Entry? currentEntry;
     _Entry? nextEntry;
-    for (final _Entry e in entries) {
+    for (final _Entry e in widget.entries) {
       final DateTime? w = e.when;
       if (w == null) {
         continue;
@@ -487,6 +579,8 @@ class _DayTimeline extends StatelessWidget {
         currentEntry = e;
       }
     }
+    // On first open, scroll to what's happening now (or the next thing coming up).
+    final _Entry? scrollTarget = currentEntry ?? nextEntry;
 
     // Group consecutive (already time-sorted) entries by calendar day.
     final List<Widget> children = [];
@@ -504,18 +598,21 @@ class _DayTimeline extends StatelessWidget {
       ));
       for (int i = 0; i < bucket.length; i++) {
         final _Entry e = bucket[i];
-        children.add(_TimelineTile(
+        final Widget tile = _TimelineTile(
           entry: e,
           isFirst: i == 0,
           isLast: i == bucket.length - 1,
           isCurrent: identical(e, currentEntry),
           isNext: identical(e, nextEntry),
-        ));
+        );
+        children.add(identical(e, scrollTarget)
+            ? KeyedSubtree(key: _targetKey, child: tile)
+            : tile);
       }
       bucket = [];
     }
 
-    for (final _Entry e in entries) {
+    for (final _Entry e in widget.entries) {
       final String key = e.when == null
           ? '_'
           : '${e.when!.year}-${e.when!.month}-${e.when!.day}';
@@ -526,6 +623,19 @@ class _DayTimeline extends StatelessWidget {
       bucket.add(e);
     }
     flush();
+
+    if (!_scrolledToNow && scrollTarget != null) {
+      _scrolledToNow = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final BuildContext? c = _targetKey.currentContext;
+        if (c != null) {
+          Scrollable.ensureVisible(c,
+              alignment: 0.15,
+              duration: const Duration(milliseconds: 450),
+              curve: Curves.easeInOut);
+        }
+      });
+    }
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
@@ -638,7 +748,7 @@ class _TimelineTile extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  trailing: const Icon(Icons.chevron_right),
+                  trailing: const Icon(Icons.visibility_outlined),
                   onTap: entry.onTap,
                   onLongPress: entry.onLongPress,
                 ),

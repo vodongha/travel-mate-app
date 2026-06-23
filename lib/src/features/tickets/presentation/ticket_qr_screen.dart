@@ -116,10 +116,10 @@ class TicketQrScreen extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.black54, fontSize: 15),
                 ),
-                if (ticket.memberName.isNotEmpty) ...[
+                if (ticket.ownerLabel.isNotEmpty) ...[
                   const SizedBox(height: 2),
                   Text(
-                    ticket.memberName,
+                    ticket.ownerLabel,
                     textAlign: TextAlign.center,
                     style: const TextStyle(color: Colors.black54, fontSize: 14),
                   ),

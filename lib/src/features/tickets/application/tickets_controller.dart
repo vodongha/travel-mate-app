@@ -2,12 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/ticket_repository.dart';
 
-/// Builds the POST/PATCH body for a ticket. `shared` ⇒ a group ticket (no owner, shared by the whole
-/// trip — needs EDITOR). Otherwise `memberRid` blank/omitted ⇒ the ticket is the caller's own (works
-/// at any role); a real memberRid assigns it to another member (needs EDITOR — the server enforces
-/// this and a 403 surfaces as a friendly message).
+/// Builds the POST/PATCH body for a ticket. `shared` ⇒ a group ticket (no specific members, shared by
+/// the whole trip — needs EDITOR). Otherwise `memberRids` lists the covered members (empty ⇒ the
+/// caller's own); assigning to others/the group needs EDITOR (the server enforces it; a 403 surfaces
+/// as a friendly message).
 Map<String, dynamic> ticketBody({
-  String? memberRid,
+  List<String>? memberRids,
   bool shared = false,
   required String title,
   required String ticketType,
@@ -29,8 +29,8 @@ Map<String, dynamic> ticketBody({
   };
   if (shared) {
     body['shared'] = true;
-  } else if (memberRid != null && memberRid.isNotEmpty) {
-    body['memberRid'] = memberRid;
+  } else if (memberRids != null) {
+    body['memberRids'] = memberRids;
   }
   return body;
 }
@@ -62,7 +62,7 @@ class AllTicketsController extends FamilyAsyncNotifier<List<Ticket>, String> {
   }
 
   Future<void> create({
-    String? memberRid,
+    List<String>? memberRids,
     bool shared = false,
     required String title,
     required String ticketType,
@@ -75,7 +75,7 @@ class AllTicketsController extends FamilyAsyncNotifier<List<Ticket>, String> {
     await _repo.create(
       arg,
       ticketBody(
-        memberRid: memberRid,
+        memberRids: memberRids,
         shared: shared,
         title: title,
         ticketType: ticketType,
@@ -92,7 +92,7 @@ class AllTicketsController extends FamilyAsyncNotifier<List<Ticket>, String> {
 
   Future<void> edit({
     required String rid,
-    String? memberRid,
+    List<String>? memberRids,
     bool shared = false,
     required String title,
     required String ticketType,
@@ -106,7 +106,7 @@ class AllTicketsController extends FamilyAsyncNotifier<List<Ticket>, String> {
       arg,
       rid,
       ticketBody(
-        memberRid: memberRid,
+        memberRids: memberRids,
         shared: shared,
         title: title,
         ticketType: ticketType,

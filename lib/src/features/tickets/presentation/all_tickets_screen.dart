@@ -51,9 +51,8 @@ class AllTicketsScreen extends ConsumerWidget {
       List<Ticket> list, String groupLabel) {
     final Map<String, List<Ticket>> byMember = {};
     for (final Ticket t in list) {
-      final String name = t.shared
-          ? groupLabel
-          : (t.memberName.isEmpty ? t.memberRid : t.memberName);
+      final String name =
+          t.shared ? groupLabel : (t.ownerLabel.isEmpty ? groupLabel : t.ownerLabel);
       byMember.putIfAbsent(name, () => <Ticket>[]).add(t);
     }
     final List<MapEntry<String, List<Ticket>>> entries =
@@ -122,7 +121,7 @@ class AllTicketsScreen extends ConsumerWidget {
                               extra: t,
                             ),
                             // You can always manage your own; an editor manages anyone's.
-                            onMenu: (t.mine || isEditor)
+                            onLongPress: (t.mine || isEditor)
                                 ? () => _rowActions(context, ref, t)
                                 : null,
                           ),

@@ -365,13 +365,22 @@ class _TripCard extends StatelessWidget {
     final ({Color bg, Color fg}) statusColors =
         tripStatusColors(context, effectiveStatus);
     final String? countdown = tripCountdown(context, trip);
+    // Make the trips that matter most stand out: an accent border/tint for the one going on now and
+    // the next one coming up, so they're easy to spot and tap.
+    final bool ongoing = effectiveStatus == 'ONGOING';
+    final bool upcoming = effectiveStatus == 'UPCOMING';
+    final bool highlight = ongoing || upcoming;
+    final Color accent = ongoing ? scheme.primary : scheme.tertiary;
 
     return Card(
       clipBehavior: Clip.antiAlias,
-      elevation: 0,
+      elevation: highlight ? 1.5 : 0,
+      color: highlight ? statusColors.bg.withValues(alpha: 0.18) : null,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: scheme.outlineVariant),
+        side: BorderSide(
+            color: highlight ? accent : scheme.outlineVariant,
+            width: highlight ? 1.6 : 1),
       ),
       child: InkWell(
         onTap: () => context.push('/trips/${trip.rid}'),

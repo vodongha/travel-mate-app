@@ -25,13 +25,13 @@ actual spending, manage the shared fund, and view who-owes-whom settlement.
 |---|---|
 | **Auth** | Email/password + **Sign in with Google** → JWT (access + refresh). Email verify & password reset. Token in the OS secure store, auto-resumed on launch. |
 | **Trips** | Create/join trips (link or QR invite), roles `OWNER`/`EDITOR`/`VIEWER`, split with **ghost members**. List **grouped by year** with scroll pagination; auto status (Planning → **Upcoming** → Ongoing → Completed). |
-| **Timeline** | Add via a type chooser — **event / transport / accommodation** — plus places on an **OpenStreetMap** map. Tap/long-press to edit, delete or attach an expense. |
+| **Timeline** | Add via a type chooser — **event / transport / accommodation** — plus places on an **OpenStreetMap** map. **Tap = read-only detail, long-press = edit/delete/attach-expense**; opens scrolled to what's happening now. |
 | **Checklist** | Per-trip to-dos with optional assignee. |
 | **Budget vs actual** | Budget per category vs real expenses; multi-currency with snapshot rates. |
 | **Expenses & split** | Any currency; split `EQUAL`/`EXACT`/`PERCENT`/`SHARES`; attach to any itinerary item. |
 | **Shared fund** | Contributions + fund expenses; derived fund balance. |
 | **Settlement** | Per-member net balance + minimised who-owes-whom transaction list. |
-| **Tickets** | Per-member tickets & QR (stored as strings), plus **group tickets** shared by the whole trip. |
+| **Tickets** | A ticket can cover **several members** or the **whole group**; QR stored as strings. The list is ordered by itinerary time, grouped by day, the in-use/next ticket highlighted & scrolled to, with search + type filter. |
 | **Dashboard & report** | Countdown, budget/fund summary, next event; end-of-trip report. |
 | **Account** | Edit profile, change password, privacy policy, in-app update, delete account. |
 | **Localization** | English + Tiếng Việt, follows the device language. |
