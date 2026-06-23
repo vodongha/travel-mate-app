@@ -6,6 +6,11 @@ import '../../../core/labels.dart';
 String ticketTypeLabel(BuildContext context, String value) =>
     Labels.ticketType(context, value);
 
+/// The ticket categories offered as filter chips on the tickets list.
+const List<String> ticketFilterTypes = <String>[
+  'TRANSPORT', 'ACCOMMODATION', 'SIGHTSEEING', 'ACTIVITY', 'FOOD', 'OTHER', //
+];
+
 /// An icon for a ticket category.
 IconData ticketTypeIcon(String type) {
   switch (type) {

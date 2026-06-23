@@ -272,6 +272,8 @@
   "ticketEditTitle": "Sửa vé",
   "ticketsEmpty": "Chưa có vé nào",
   "ticketsAll": "Tất cả vé",
+  "ticketsSearchHint": "Tìm vé",
+  "ticketsNoMatch": "Không có vé phù hợp",
   "ticketUntitled": "Vé",
   "ticketAssignee": "Thuộc về",
   "ticketAssigneeHint": "Để trống = vé của bạn",
