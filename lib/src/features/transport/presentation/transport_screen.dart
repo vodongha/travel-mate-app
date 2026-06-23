@@ -68,38 +68,45 @@ class TransportScreen extends ConsumerWidget {
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
+      // Grow + scroll so long detail never overflows off the bottom.
+      isScrollControlled: true,
       builder: (ctx) {
         final ColorScheme scheme = Theme.of(ctx).colorScheme;
         final TextTheme text = Theme.of(ctx).textTheme;
         return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(children: [
-                  Icon(_iconOf(item.transportType), color: scheme.primary),
-                  const SizedBox(width: 10),
-                  Expanded(
-                      child: Text(_titleOf(ctx, item), style: text.titleLarge)),
-                ]),
-                const SizedBox(height: 14),
-                for (final (String label, String value) in rows)
-                  if (value.trim().isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(label,
-                              style: text.labelSmall
-                                  ?.copyWith(color: scheme.onSurfaceVariant)),
-                          Text(value, style: text.bodyLarge),
-                        ],
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(ctx).size.height * 0.85),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(children: [
+                    Icon(_iconOf(item.transportType), color: scheme.primary),
+                    const SizedBox(width: 10),
+                    Expanded(
+                        child:
+                            Text(_titleOf(ctx, item), style: text.titleLarge)),
+                  ]),
+                  const SizedBox(height: 14),
+                  for (final (String label, String value) in rows)
+                    if (value.trim().isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(label,
+                                style: text.labelSmall?.copyWith(
+                                    color: scheme.onSurfaceVariant)),
+                            Text(value, style: text.bodyLarge),
+                          ],
+                        ),
                       ),
-                    ),
-              ],
+                ],
+              ),
             ),
           ),
         );

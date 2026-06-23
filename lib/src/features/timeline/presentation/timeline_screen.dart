@@ -70,46 +70,53 @@ class TimelineScreen extends ConsumerWidget {
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
+      // Let the sheet grow with its content and scroll, so long detail (carrier/code/seat/note)
+      // never overflows off the bottom of the screen.
+      isScrollControlled: true,
       builder: (ctx) {
         final ColorScheme scheme = Theme.of(ctx).colorScheme;
         final TextTheme text = Theme.of(ctx).textTheme;
         return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(children: [
-                  Icon(icon, color: scheme.primary),
-                  const SizedBox(width: 10),
-                  Expanded(child: Text(title, style: text.titleLarge)),
-                ]),
-                const SizedBox(height: 14),
-                for (final (String label, String value) in rows)
-                  if (value.trim().isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(label,
-                              style: text.labelSmall
-                                  ?.copyWith(color: scheme.onSurfaceVariant)),
-                          Text(value, style: text.bodyLarge),
-                        ],
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(ctx).size.height * 0.85),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(children: [
+                    Icon(icon, color: scheme.primary),
+                    const SizedBox(width: 10),
+                    Expanded(child: Text(title, style: text.titleLarge)),
+                  ]),
+                  const SizedBox(height: 14),
+                  for (final (String label, String value) in rows)
+                    if (value.trim().isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(label,
+                                style: text.labelSmall?.copyWith(
+                                    color: scheme.onSurfaceVariant)),
+                            Text(value, style: text.bodyLarge),
+                          ],
+                        ),
                       ),
+                  if (onMaps != null)
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        onMaps();
+                      },
+                      icon: const Icon(Icons.map_outlined),
+                      label: Text(l10n.openInMaps),
                     ),
-                if (onMaps != null)
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      onMaps();
-                    },
-                    icon: const Icon(Icons.map_outlined),
-                    label: Text(l10n.openInMaps),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         );
