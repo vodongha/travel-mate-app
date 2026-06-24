@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' as ui;
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart'
@@ -6,6 +7,7 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/config.dart';
+import '../../../core/prefs.dart';
 import '../data/push_repository.dart';
 import 'push_service.dart';
 
@@ -54,12 +56,23 @@ class FirebasePushService implements PushService {
     if (token == null || token.isEmpty) {
       return;
     }
-    await _repo.registerDevice(fcmToken: token, platform: platform);
+    final String locale = _localeCode();
+    await _repo.registerDevice(
+        fcmToken: token, platform: platform, locale: locale);
     _refreshSub ??= messaging.onTokenRefresh.listen((String fresh) {
       _repo
-          .registerDevice(fcmToken: fresh, platform: platform)
+          .registerDevice(
+              fcmToken: fresh, platform: platform, locale: _localeCode())
           .catchError((Object _) {});
     });
+  }
+
+  /// The language to localize push in: the user's chosen app language, or the device's when they
+  /// haven't picked one ("follow the system"). The backend falls back to English for anything else.
+  String _localeCode() {
+    final ui.Locale? chosen = _ref.read(localeControllerProvider);
+    return chosen?.languageCode ??
+        ui.PlatformDispatcher.instance.locale.languageCode;
   }
 
   @override

@@ -14,10 +14,14 @@ class PushRepository {
   Future<void> registerDevice({
     required String fcmToken,
     required String platform,
+    String? locale,
   }) async {
     try {
-      await _dio.post<dynamic>('/users/me/devices',
-          data: {'fcmToken': fcmToken, 'platform': platform});
+      await _dio.post<dynamic>('/users/me/devices', data: {
+        'fcmToken': fcmToken,
+        'platform': platform,
+        if (locale != null && locale.isNotEmpty) 'locale': locale,
+      });
     } on DioException catch (e) {
       throw toApiException(e);
     }
