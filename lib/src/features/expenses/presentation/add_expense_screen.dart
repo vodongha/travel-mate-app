@@ -3,8 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/app_dropdown.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/amount_input.dart';
+import '../../../core/app_dropdown.dart';
 import '../../../core/app_error.dart';
 import '../../../core/app_error_view.dart';
 import '../../../core/currency_picker.dart';
@@ -67,7 +68,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     _itineraryRid = widget.itineraryRid;
   }
 
-  String? _amountPreview() => Money.grouped(_amount.text, _currency ?? 'VND');
+  String? _amountPreview() =>
+      Money.groupedWithCurrency(_amount.text, _currency ?? 'VND');
 
   @override
   void dispose() {
@@ -126,7 +128,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
             category: _category,
             expenseType: _expenseType,
             currency: _currency ?? 'VND',
-            amount: num.parse(_amount.text.trim()),
+            amount: Money.parseAmount(_amount.text)!,
             payerRid: _payerRid!,
             splitType: _splitType,
             participants: participants,
@@ -202,15 +204,16 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
             ),
             const SizedBox(height: 16),
             Row(
+              // Top-align so the currency box lines up with the amount field's box, not pushed down
+              // by the amount's helper-text preview underneath it.
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: TextFormField(
                     controller: _amount,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
-                    ],
+                    inputFormatters: amountInputFormatters(_currency ?? base),
                     onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
                       labelText: l10n.expenseAmount,
@@ -218,7 +221,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                       helperText: _amountPreview(),
                     ),
                     validator: (v) {
-                      final num? n = num.tryParse((v ?? '').trim());
+                      final num? n = Money.parseAmount(v ?? '');
                       return (n == null || n <= 0)
                           ? l10n.validationRequired
                           : null;
