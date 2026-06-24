@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/app_dropdown.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error.dart';
 import '../../../core/form_buttons.dart';
@@ -158,7 +159,7 @@ class _AddTransportScreenState extends ConsumerState<AddTransportScreen> {
             child: ListView(
               padding: const EdgeInsets.all(24),
               children: [
-                DropdownButtonFormField<String>(
+                AppDropdownField<String>(
                   initialValue: _type,
                   decoration: InputDecoration(
                       labelText: l10n.fieldType,

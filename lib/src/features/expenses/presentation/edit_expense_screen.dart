@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/app_dropdown.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error.dart';
 import '../../../core/labels.dart';
@@ -90,7 +91,7 @@ class _EditExpenseScreenState extends ConsumerState<EditExpenseScreen> {
                   validator: (v) => requiredValidator(context, v),
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
+                AppDropdownField<String>(
                   initialValue: _category,
                   decoration: InputDecoration(labelText: l10n.budgetCategory),
                   items: Labels.categories

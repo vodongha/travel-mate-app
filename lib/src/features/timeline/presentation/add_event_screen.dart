@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/app_dropdown.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error.dart';
 import '../../../core/form_buttons.dart';
@@ -195,7 +196,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                   validator: (v) => requiredValidator(context, v),
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
+                AppDropdownField<String>(
                   initialValue: _eventType,
                   decoration: InputDecoration(labelText: l10n.expenseType),
                   // Include the current value even if it's not in the standard list — a legacy event

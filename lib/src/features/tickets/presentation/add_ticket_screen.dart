@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/app_dropdown.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error.dart';
 import '../../../core/form_buttons.dart';
@@ -199,7 +200,7 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
                       : null,
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
+                AppDropdownField<String>(
                   initialValue: _type,
                   decoration: InputDecoration(
                       labelText: l10n.fieldType,
