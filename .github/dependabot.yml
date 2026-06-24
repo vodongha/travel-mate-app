@@ -1,0 +1,20 @@
+version: 2
+updates:
+  # Dart/Flutter dependencies (pubspec.yaml) — weekly, grouped into one PR to keep the noise down.
+  - package-ecosystem: "pub"
+    directory: "/"
+    # Updates go to develop (master is release-only); they ride the next develop -> master release.
+    target-branch: "develop"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      dart-deps:
+        patterns: ["*"]
+  # Keep the GitHub Actions used by CI up to date too.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "develop"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
