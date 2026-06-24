@@ -28,4 +28,11 @@ class Money {
       ..maximumFractionDigits = dec;
     return f.format(n);
   }
+
+  /// Like [grouped] but with the currency code appended — e.g. `446566464` → `446,566,464 VND`.
+  /// For the live preview under an amount input. Returns null for empty/invalid input.
+  static String? groupedWithCurrency(String input, String currency) {
+    final String? g = grouped(input, currency);
+    return g == null ? null : '$g $currency';
+  }
 }
