@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../../../core/app_dropdown.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error.dart';
 import '../../../core/responsive.dart';
@@ -67,7 +68,7 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
             padding: const EdgeInsets.all(24),
             children: [
               if (inv == null) ...[
-                DropdownButtonFormField<String>(
+                AppDropdownField<String>(
                   initialValue: _role,
                   decoration:
                       InputDecoration(labelText: l10n.inviteRoleToGrant),
@@ -82,7 +83,7 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
                   onChanged: (v) => setState(() => _role = v ?? 'VIEWER'),
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<int>(
+                AppDropdownField<int>(
                   initialValue: _maxUses,
                   decoration: InputDecoration(labelText: l10n.inviteMaxUses),
                   items: const [1, 5, 10, 25, 100]

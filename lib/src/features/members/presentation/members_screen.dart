@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/app_dropdown.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error.dart';
 import '../../../core/app_error_view.dart';
@@ -356,7 +357,7 @@ class _ChangeRoleDialogState extends State<_ChangeRoleDialog> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          DropdownButtonFormField<String>(
+          AppDropdownField<String>(
             initialValue: _role,
             decoration: InputDecoration(labelText: l10n.inviteRoleToGrant),
             items: [
@@ -432,7 +433,7 @@ class _AddGhostDialogState extends State<_AddGhostDialog> {
             const SizedBox(height: 12),
             _GhostEmailField(controller: _email, l10n: l10n),
             const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
+            AppDropdownField<String>(
               initialValue: _role,
               decoration: InputDecoration(labelText: l10n.inviteRoleToGrant),
               items: [

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../../core/app_dropdown.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error.dart';
 import '../../../core/form_buttons.dart';
@@ -147,7 +148,7 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
                   validator: (v) => requiredValidator(context, v),
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
+                AppDropdownField<String>(
                   initialValue: _type,
                   decoration: InputDecoration(
                       labelText: l10n.fieldType,

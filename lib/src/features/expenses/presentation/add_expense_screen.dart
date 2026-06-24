@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/app_dropdown.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error.dart';
 import '../../../core/app_error_view.dart';
@@ -246,7 +247,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
+            AppDropdownField<String>(
               initialValue: _category,
               decoration: InputDecoration(labelText: l10n.budgetCategory),
               items: Labels.categories
@@ -256,7 +257,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
               onChanged: (v) => setState(() => _category = v ?? 'OTHER'),
             ),
             const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
+            AppDropdownField<String>(
               initialValue: _payerRid,
               decoration: InputDecoration(labelText: l10n.expensePaidBy),
               items: members
@@ -278,7 +279,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
               onSelectionChanged: (s) => setState(() => _expenseType = s.first),
             ),
             const SizedBox(height: 24),
-            DropdownButtonFormField<String>(
+            AppDropdownField<String>(
               initialValue: _splitType,
               decoration: InputDecoration(labelText: l10n.expenseSplitType),
               items: ['EQUAL', 'EXACT', 'PERCENT', 'SHARES']
