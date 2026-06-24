@@ -12,8 +12,25 @@ String friendlyError(BuildContext context, Object error) {
     if (error.isConnection) {
       return l10n.errorConnection;
     }
+    if (error.isTimeout) {
+      return l10n.errorTimeout;
+    }
+    // A meaningful server-supplied reason (e.g. "Email is already registered.") is the friendliest
+    // message we have — show it as-is.
     if (error.serverDetail) {
       return error.message;
+    }
+    // No server detail: fall back to friendly copy keyed on the status family.
+    switch (error.statusCode) {
+      case 401:
+        return l10n.errorSession;
+      case 403:
+        return l10n.errorForbidden;
+      case 404:
+        return l10n.errorNotFound;
+    }
+    if (error.statusCode != null && error.statusCode! >= 500) {
+      return l10n.errorServer;
     }
   }
   return l10n.errorGeneric;
