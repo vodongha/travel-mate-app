@@ -75,6 +75,13 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+  # Modern, friendly typography applied across the whole app theme (see core/theme.dart).
+  # One variable TTF (wght axis 200–800); Flutter maps fontWeight onto the axis, so every
+  # weight is covered by a single bundled file — no runtime font download.
+  fonts:
+    - family: PlusJakartaSans
+      fonts:
+        - asset: assets/fonts/PlusJakartaSans.ttf
 
 # App launcher icons + web favicon (run: dart run flutter_launcher_icons).
 # Source art lives in assets/icon/ (a location pin on an indigo gradient).
