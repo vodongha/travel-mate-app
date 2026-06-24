@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:travel_mate_app/l10n/app_localizations.dart';
 import 'package:travel_mate_app/src/core/api_client.dart';
 import 'package:travel_mate_app/src/core/app_dropdown.dart';
+import 'package:travel_mate_app/src/core/amount_input.dart';
 import 'package:travel_mate_app/src/core/app_error_view.dart';
 import 'package:travel_mate_app/src/core/money.dart';
 import 'package:travel_mate_app/src/core/theme.dart';
@@ -100,5 +102,27 @@ void main() {
   test('Money.groupedWithCurrency appends the currency code', () {
     expect(Money.groupedWithCurrency('4687767', 'VND'), '4,687,767 VND');
     expect(Money.groupedWithCurrency('', 'VND'), isNull);
+  });
+
+  test('Money.parseAmount strips grouping separators', () {
+    expect(Money.parseAmount('55,665,585'), 55665585);
+    expect(Money.parseAmount('1,234.5'), 1234.5);
+    expect(Money.parseAmount(''), isNull);
+  });
+
+  test('amount formatter groups digits live, respecting currency decimals', () {
+    TextEditingValue typed(String t) => TextEditingValue(
+        text: t, selection: TextSelection.collapsed(offset: t.length));
+    final TextInputFormatter vnd = amountInputFormatters('VND').last;
+    final TextInputFormatter usd = amountInputFormatters('USD').last;
+
+    expect(vnd.formatEditUpdate(TextEditingValue.empty, typed('55665585')).text,
+        '55,665,585');
+    // VND takes no decimals — a typed dot is dropped.
+    expect(vnd.formatEditUpdate(TextEditingValue.empty, typed('1000.5')).text,
+        '1,000');
+    // USD keeps up to two decimals and groups the integer part.
+    expect(usd.formatEditUpdate(TextEditingValue.empty, typed('1234.567')).text,
+        '1,234.56');
   });
 }
