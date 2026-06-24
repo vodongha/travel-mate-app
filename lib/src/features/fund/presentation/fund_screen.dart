@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/app_dropdown.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/actions.dart';
 import '../../../core/app_error.dart';
@@ -297,7 +298,7 @@ class _AddContributionDialogState extends State<_AddContributionDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            DropdownButtonFormField<String>(
+            AppDropdownField<String>(
               initialValue: _memberRid,
               decoration: InputDecoration(labelText: l10n.fundContributor),
               items: widget.members
@@ -374,7 +375,7 @@ class _AddFundExpenseDialogState extends State<_AddFundExpenseDialog> {
                   : null,
             ),
             const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
+            AppDropdownField<String>(
               initialValue: _category,
               decoration: InputDecoration(labelText: l10n.budgetCategory),
               items: Labels.categories

@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:travel_mate_app/l10n/app_localizations.dart';
 import 'package:travel_mate_app/src/core/api_client.dart';
+import 'package:travel_mate_app/src/core/app_dropdown.dart';
 import 'package:travel_mate_app/src/core/app_error_view.dart';
+import 'package:travel_mate_app/src/core/money.dart';
 import 'package:travel_mate_app/src/core/theme.dart';
 import 'package:travel_mate_app/src/features/auth/presentation/login_screen.dart';
 
@@ -66,5 +68,32 @@ void main() {
     expect(find.text('Retrying…'), findsOneWidget);
     final OutlinedButton button = tester.widget(find.byType(OutlinedButton));
     expect(button.onPressed, isNull); // disabled while retrying
+  });
+
+  testWidgets('AppDropdownField opens a rounded menu and selects an item',
+      (tester) async {
+    String? picked;
+    await tester.pumpWidget(_wrap(AppDropdownField<String>(
+      initialValue: 'a',
+      items: const [
+        DropdownMenuItem(value: 'a', child: Text('Apple')),
+        DropdownMenuItem(value: 'b', child: Text('Banana')),
+      ],
+      onChanged: (v) => picked = v,
+    )));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Apple'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Banana').last);
+    await tester.pumpAndSettle();
+
+    expect(picked, 'b');
+  });
+
+  test('Money.grouped adds thousands separators per currency', () {
+    expect(Money.grouped('446566464', 'VND'), '446,566,464');
+    expect(Money.grouped('1234.5', 'USD'), '1,234.5');
+    expect(Money.grouped('', 'VND'), isNull);
   });
 }

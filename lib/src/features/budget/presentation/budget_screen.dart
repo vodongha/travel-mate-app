@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/app_dropdown.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/actions.dart';
 import '../../../core/app_error.dart';
@@ -23,7 +25,7 @@ class BudgetScreen extends ConsumerWidget {
       BuildContext context, WidgetRef ref, String currency) async {
     final _BudgetInput? input = await showDialog<_BudgetInput>(
       context: context,
-      builder: (_) => const _AddBudgetDialog(),
+      builder: (_) => _AddBudgetDialog(currency: currency),
     );
     if (input == null) {
       return;
@@ -40,8 +42,8 @@ class BudgetScreen extends ConsumerWidget {
     }
   }
 
-  Future<void> _rowActions(
-      BuildContext context, WidgetRef ref, Budget budget) async {
+  Future<void> _rowActions(BuildContext context, WidgetRef ref, Budget budget,
+      String currency) async {
     final RowAction? action = await showRowActions(context,
         title: Labels.category(context, budget.category));
     if (action == null || !context.mounted) {
@@ -50,7 +52,7 @@ class BudgetScreen extends ConsumerWidget {
     if (action == RowAction.edit) {
       final _BudgetInput? input = await showDialog<_BudgetInput>(
         context: context,
-        builder: (_) => _AddBudgetDialog(initial: budget),
+        builder: (_) => _AddBudgetDialog(initial: budget, currency: currency),
       );
       if (input == null || !context.mounted) {
         return;
@@ -118,8 +120,9 @@ class BudgetScreen extends ConsumerWidget {
                     itemBuilder: (context, i) {
                       final Budget b = list[i];
                       return GestureDetector(
-                        onLongPress:
-                            canEdit ? () => _rowActions(context, ref, b) : null,
+                        onLongPress: canEdit
+                            ? () => _rowActions(context, ref, b, currency)
+                            : null,
                         child: ListTile(
                           leading: const Icon(Icons.category_outlined),
                           title: Text(Labels.category(context, b.category)),
@@ -133,7 +136,8 @@ class BudgetScreen extends ConsumerWidget {
                                 IconButton(
                                   icon: const Icon(Icons.more_vert),
                                   tooltip: l10n.actionEdit,
-                                  onPressed: () => _rowActions(context, ref, b),
+                                  onPressed: () =>
+                                      _rowActions(context, ref, b, currency),
                                 ),
                             ],
                           ),
@@ -155,7 +159,10 @@ class _BudgetInput {
 }
 
 class _AddBudgetDialog extends StatefulWidget {
-  const _AddBudgetDialog({this.initial});
+  const _AddBudgetDialog({required this.currency, this.initial});
+
+  /// The trip's base currency — shown as the amount field's suffix and used to group its preview.
+  final String currency;
 
   /// When non-null the dialog is in edit mode: the category is fixed (only the
   /// planned amount is mutable on the backend) and the amount is prefilled.
@@ -191,7 +198,7 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            DropdownButtonFormField<String>(
+            AppDropdownField<String>(
               initialValue: _category,
               decoration: InputDecoration(labelText: l10n.budgetCategory),
               items: Labels.categories
@@ -210,7 +217,12 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
               ],
-              decoration: InputDecoration(labelText: l10n.budgetPlanned),
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                labelText: l10n.budgetPlanned,
+                suffixText: widget.currency,
+                helperText: Money.grouped(_amount.text, widget.currency),
+              ),
               validator: (v) {
                 final num? n = num.tryParse((v ?? '').trim());
                 return (n == null || n < 0) ? l10n.validationRequired : null;
