@@ -1,0 +1,26 @@
+name: CI
+
+# Analyze + test the Flutter app. Runs on pushes to develop and on PRs into develop (incl.
+# Dependabot updates) and the release PR into master, so the Dependabot auto-merge has a green
+# gate to key off.
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop, master]
+
+jobs:
+  build:
+    name: Analyze & test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      # AppLocalizations is generated (gitignored) — produce it before analyzing.
+      - run: flutter gen-l10n
+      - run: flutter analyze
+      - run: flutter test
