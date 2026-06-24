@@ -35,6 +35,11 @@ backend at the same origin. Backend spec (source of truth):
 - **firebase_core** + **firebase_messaging** (FCM) for push; **google_sign_in** (+ `google_sign_in_web`) for Sign in with Google
 - **in_app_update** for Google Play in-app updates; **package_info_plus** for the version shown in About
 - **intl** for money/date formatting
+- **Plus Jakarta Sans** (bundled variable TTF in `assets/fonts/`, declared in `pubspec.yaml`) is the
+  app-wide font — set on the `ThemeData` in `core/theme.dart`. Bundled (not `google_fonts`) so it
+  renders offline with no first-paint font flash. The theme seeds from the brand indigo `#4F46E5`
+  (matches the launcher icon) and themes the full M3 component set (nav, FAB, chips, dialogs, sheets,
+  snackbars) for both light and dark.
 
 This mirrors the sibling `family-budget-app` setup; reuse its patterns (Dio client + interceptor,
 `ApiException`, secure token storage, ARB localization, responsive width-cap) where they fit.

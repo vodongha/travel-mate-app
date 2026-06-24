@@ -12,6 +12,7 @@ class ApiException implements Exception {
     this.statusCode,
     this.code,
     this.isConnection = false,
+    this.isTimeout = false,
     this.serverDetail = false,
   });
 
@@ -21,8 +22,11 @@ class ApiException implements Exception {
   /// The backend error `code` (e.g. `VALIDATION_FAILED`, `UNAUTHENTICATED`), when present.
   final String? code;
 
-  /// True when the request never reached the server (offline / timeout / DNS).
+  /// True when the request never reached the server (offline / DNS / connection refused).
   final bool isConnection;
+
+  /// True when the request reached the network but the server didn't answer in time.
+  final bool isTimeout;
 
   /// True when [message] is a meaningful server-supplied reason (problem `detail`); when false the
   /// UI shows a localized generic message instead of this developer-facing fallback.
@@ -50,10 +54,12 @@ ApiException toApiException(Object error) {
         );
       }
     }
-    if (error.type == DioExceptionType.connectionError ||
-        error.type == DioExceptionType.connectionTimeout ||
+    if (error.type == DioExceptionType.connectionTimeout ||
         error.type == DioExceptionType.receiveTimeout ||
         error.type == DioExceptionType.sendTimeout) {
+      return ApiException('timeout', isTimeout: true);
+    }
+    if (error.type == DioExceptionType.connectionError) {
       return ApiException('connection-error', isConnection: true);
     }
     return ApiException('request-failed', statusCode: status);
