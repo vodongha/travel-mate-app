@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/app_dropdown.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/actions.dart';
+import '../../../core/amount_input.dart';
+import '../../../core/app_dropdown.dart';
 import '../../../core/app_error.dart';
 import '../../../core/app_error_view.dart';
 import '../../../core/form_buttons.dart';
@@ -177,7 +176,9 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
   late final TextEditingController _amount = TextEditingController(
       text: widget.initial == null
           ? ''
-          : widget.initial!.plannedAmount.toString());
+          : Money.grouped(
+                  widget.initial!.plannedAmount.toString(), widget.currency) ??
+              '');
   late String _category = widget.initial?.category ?? 'FOOD';
 
   bool get _editing => widget.initial != null;
@@ -214,9 +215,7 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
               controller: _amount,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
-              ],
+              inputFormatters: amountInputFormatters(widget.currency),
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
                 labelText: l10n.budgetPlanned,
@@ -225,7 +224,7 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
                     Money.groupedWithCurrency(_amount.text, widget.currency),
               ),
               validator: (v) {
-                final num? n = num.tryParse((v ?? '').trim());
+                final num? n = Money.parseAmount(v ?? '');
                 return (n == null || n < 0) ? l10n.validationRequired : null;
               },
             ),
@@ -235,7 +234,7 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
               onPrimary: () {
                 if (_formKey.currentState!.validate()) {
                   Navigator.pop(context,
-                      _BudgetInput(_category, num.parse(_amount.text.trim())));
+                      _BudgetInput(_category, Money.parseAmount(_amount.text)!));
                 }
               },
               onCancel: () => Navigator.pop(context),

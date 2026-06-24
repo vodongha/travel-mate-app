@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/app_dropdown.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/actions.dart';
+import '../../../core/amount_input.dart';
+import '../../../core/app_dropdown.dart';
 import '../../../core/app_error.dart';
 import '../../../core/app_error_view.dart';
 import '../../../core/form_buttons.dart';
@@ -38,7 +38,7 @@ class FundScreen extends ConsumerWidget {
     }
     final _ContributionInput? input = await showDialog<_ContributionInput>(
       context: context,
-      builder: (_) => _AddContributionDialog(members: members),
+      builder: (_) => _AddContributionDialog(members: members, currency: base),
     );
     if (input == null) {
       return;
@@ -60,7 +60,7 @@ class FundScreen extends ConsumerWidget {
       BuildContext context, WidgetRef ref, String base) async {
     final _FundExpenseInput? input = await showDialog<_FundExpenseInput>(
       context: context,
-      builder: (_) => const _AddFundExpenseDialog(),
+      builder: (_) => _AddFundExpenseDialog(currency: base),
     );
     if (input == null) {
       return;
@@ -270,8 +270,9 @@ class _ContributionInput {
 }
 
 class _AddContributionDialog extends StatefulWidget {
-  const _AddContributionDialog({required this.members});
+  const _AddContributionDialog({required this.members, required this.currency});
   final List<Member> members;
+  final String currency;
 
   @override
   State<_AddContributionDialog> createState() => _AddContributionDialogState();
@@ -309,7 +310,7 @@ class _AddContributionDialogState extends State<_AddContributionDialog> {
                   setState(() => _memberRid = v ?? widget.members.first.rid),
             ),
             const SizedBox(height: 12),
-            _amountField(context, _amount),
+            _FundAmountField(controller: _amount, currency: widget.currency),
             const SizedBox(height: 20),
             FormButtons(
               primaryLabel: l10n.actionSave,
@@ -318,7 +319,7 @@ class _AddContributionDialogState extends State<_AddContributionDialog> {
                   Navigator.pop(
                       context,
                       _ContributionInput(
-                          _memberRid, num.parse(_amount.text.trim())));
+                          _memberRid, Money.parseAmount(_amount.text)!));
                 }
               },
               onCancel: () => Navigator.pop(context),
@@ -338,7 +339,8 @@ class _FundExpenseInput {
 }
 
 class _AddFundExpenseDialog extends StatefulWidget {
-  const _AddFundExpenseDialog();
+  const _AddFundExpenseDialog({required this.currency});
+  final String currency;
 
   @override
   State<_AddFundExpenseDialog> createState() => _AddFundExpenseDialogState();
@@ -385,7 +387,7 @@ class _AddFundExpenseDialogState extends State<_AddFundExpenseDialog> {
               onChanged: (v) => setState(() => _category = v ?? 'OTHER'),
             ),
             const SizedBox(height: 12),
-            _amountField(context, _amount),
+            _FundAmountField(controller: _amount, currency: widget.currency),
             const SizedBox(height: 20),
             FormButtons(
               primaryLabel: l10n.actionSave,
@@ -394,7 +396,7 @@ class _AddFundExpenseDialogState extends State<_AddFundExpenseDialog> {
                   Navigator.pop(
                       context,
                       _FundExpenseInput(_title.text.trim(), _category,
-                          num.parse(_amount.text.trim())));
+                          Money.parseAmount(_amount.text)!));
                 }
               },
               onCancel: () => Navigator.pop(context),
@@ -406,16 +408,37 @@ class _AddFundExpenseDialogState extends State<_AddFundExpenseDialog> {
   }
 }
 
-Widget _amountField(BuildContext context, TextEditingController controller) {
-  final AppLocalizations l10n = AppLocalizations.of(context);
-  return TextFormField(
-    controller: controller,
-    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))],
-    decoration: InputDecoration(labelText: l10n.expenseAmount),
-    validator: (v) {
-      final num? n = num.tryParse((v ?? '').trim());
-      return (n == null || n <= 0) ? l10n.validationRequired : null;
-    },
-  );
+/// Shared money input for the fund dialogs: live thousands grouping on the field, the currency as a
+/// suffix, and a grouped "amount below" preview that updates as you type.
+class _FundAmountField extends StatefulWidget {
+  const _FundAmountField({required this.controller, required this.currency});
+
+  final TextEditingController controller;
+  final String currency;
+
+  @override
+  State<_FundAmountField> createState() => _FundAmountFieldState();
+}
+
+class _FundAmountFieldState extends State<_FundAmountField> {
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    return TextFormField(
+      controller: widget.controller,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      inputFormatters: amountInputFormatters(widget.currency),
+      onChanged: (_) => setState(() {}),
+      decoration: InputDecoration(
+        labelText: l10n.expenseAmount,
+        suffixText: widget.currency,
+        helperText:
+            Money.groupedWithCurrency(widget.controller.text, widget.currency),
+      ),
+      validator: (v) {
+        final num? n = Money.parseAmount(v ?? '');
+        return (n == null || n <= 0) ? l10n.validationRequired : null;
+      },
+    );
+  }
 }
