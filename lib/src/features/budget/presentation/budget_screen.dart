@@ -221,7 +221,8 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
               decoration: InputDecoration(
                 labelText: l10n.budgetPlanned,
                 suffixText: widget.currency,
-                helperText: Money.grouped(_amount.text, widget.currency),
+                helperText:
+                    Money.groupedWithCurrency(_amount.text, widget.currency),
               ),
               validator: (v) {
                 final num? n = num.tryParse((v ?? '').trim());

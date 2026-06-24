@@ -96,4 +96,9 @@ void main() {
     expect(Money.grouped('1234.5', 'USD'), '1,234.5');
     expect(Money.grouped('', 'VND'), isNull);
   });
+
+  test('Money.groupedWithCurrency appends the currency code', () {
+    expect(Money.groupedWithCurrency('4687767', 'VND'), '4,687,767 VND');
+    expect(Money.groupedWithCurrency('', 'VND'), isNull);
+  });
 }
