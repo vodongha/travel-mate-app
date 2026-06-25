@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/snackbars.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/amount_input.dart';
 import '../../../core/app_dropdown.dart';
@@ -137,6 +138,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
             itineraryRid: _itineraryRid,
           );
       if (mounted) {
+        showOkSnack(context, AppLocalizations.of(context).msgSaved);
         context.canPop()
             ? context.pop()
             : context.go('/trips/${widget.tripRid}/expenses');

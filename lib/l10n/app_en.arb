@@ -97,6 +97,8 @@
   "dashNoEvents": "No upcoming events",
   "comingSoon": "More trip tools are coming soon.",
   "actionSave": "Save",
+  "msgSaved": "Saved",
+  "msgDeleted": "Deleted",
   "navBudget": "Budget",
   "navExpenses": "Expenses",
   "navSettlement": "Settlement",
