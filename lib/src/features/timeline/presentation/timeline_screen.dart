@@ -192,9 +192,9 @@ class TimelineScreen extends ConsumerWidget {
       return;
     }
     if (action == 'ticket') {
-      // Pre-attach the new ticket to this event (same polymorphic link).
+      // Pre-attach the new ticket to this event + default its type to the event's category.
       context.push('/trips/$tripRid/tickets/new',
-          extra: (kind: 'EVENT', rid: event.rid));
+          extra: (kind: 'EVENT', rid: event.rid, type: event.eventType));
       return;
     }
     if (!await confirmDelete(context) || !context.mounted) {
@@ -272,7 +272,9 @@ class TimelineScreen extends ConsumerWidget {
       return;
     }
     if (action == 'ticket') {
-      context.push('/trips/$tripRid/tickets/new', extra: (kind: kind, rid: rid));
+      // For a transport/accommodation leg the ticket's type matches the leg kind.
+      context.push('/trips/$tripRid/tickets/new',
+          extra: (kind: kind, rid: rid, type: kind));
       return;
     }
     if (action == 'edit') {

@@ -97,6 +97,8 @@
   "dashNoEvents": "Chưa có sự kiện sắp tới",
   "comingSoon": "Các công cụ chuyến đi khác sẽ sớm ra mắt.",
   "actionSave": "Lưu",
+  "msgSaved": "Đã lưu",
+  "msgDeleted": "Đã xoá",
   "navBudget": "Ngân sách",
   "navExpenses": "Chi tiêu",
   "navSettlement": "Chia tiền",
