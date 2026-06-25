@@ -119,8 +119,14 @@ final dioProvider = Provider<Dio>((ref) {
           request.headers['Authorization'] = 'Bearer ${tokens['accessToken']}';
           final Response<dynamic> retried = await dio.fetch<dynamic>(request);
           return handler.resolve(retried);
-        } on DioException {
-          await storage.clear(); // refresh failed → session is dead
+        } on DioException catch (refreshError) {
+          // Only treat the session as dead when the server actually *rejects* the refresh token
+          // (a 4xx response). A transient failure (offline, timeout, 5xx, server cold-start) must
+          // NOT clear the tokens — otherwise a brief network blip silently logs the user out.
+          final int? status = refreshError.response?.statusCode;
+          if (status != null && status >= 400 && status < 500) {
+            await storage.clear();
+          }
           return handler.next(error);
         }
       },

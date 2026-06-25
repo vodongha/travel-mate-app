@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/api_client.dart';
 import '../../../core/token_storage.dart';
 import '../../notifications/application/push_service.dart';
 import '../data/auth_repository.dart';
@@ -22,12 +25,33 @@ class AuthController extends AsyncNotifier<AuthUser?> {
       return null;
     }
     try {
-      return await _repo.me();
-    } catch (_) {
-      await _storage.clear();
-      return null;
+      final AuthUser user = await _repo.me();
+      await _cache(user);
+      return user;
+    } catch (error) {
+      // Only a real auth failure (the Dio interceptor already tried to refresh) ends the session.
+      if (_isAuthFailure(error)) {
+        await _storage.clear();
+        return null;
+      }
+      // Transient failure (offline, request timeout, server cold-start): keep the session and fall
+      // back to the cached profile so the user isn't signed out — tokens are long-lived (30d/365d).
+      final String? cached = await _storage.readCachedUser();
+      if (cached != null) {
+        return AuthUser.fromJson(jsonDecode(cached) as Map<String, dynamic>);
+      }
+      rethrow; // nothing to fall back to — surface the error rather than silently logging out
     }
   }
+
+  /// True only for an authentication failure (expired/invalid session), not a network/server error.
+  static bool _isAuthFailure(Object error) {
+    return error is ApiException &&
+        (error.statusCode == 401 || error.code == 'UNAUTHENTICATED');
+  }
+
+  Future<void> _cache(AuthUser user) =>
+      _storage.cacheUser(jsonEncode(user.toJson()));
 
   Future<void> login(String email, String password) async {
     final AuthSession session = await _repo.login(email.trim(), password);
@@ -72,6 +96,7 @@ class AuthController extends AsyncNotifier<AuthUser?> {
   /// Re-fetches the signed-in user from `/users/me` and updates the session.
   Future<void> refreshUser() async {
     final AuthUser user = await _repo.me();
+    await _cache(user);
     state = AsyncData(user);
   }
 
@@ -120,6 +145,7 @@ class AuthController extends AsyncNotifier<AuthUser?> {
   Future<void> _persist(AuthSession session) async {
     await _storage.save(
         access: session.accessToken, refresh: session.refreshToken);
+    await _cache(session.user);
     state = AsyncData(session.user);
     // Best-effort: register this device for push. No-op until FCM is configured.
     try {

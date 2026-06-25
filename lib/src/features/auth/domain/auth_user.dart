@@ -44,6 +44,21 @@ class AuthUser {
     );
   }
 
+  /// For caching the profile locally so a transient `/users/me` failure on startup (offline, server
+  /// cold-start) doesn't sign the user out — the cached copy keeps them in until the next success.
+  Map<String, dynamic> toJson() => {
+        'rid': rid,
+        'email': email,
+        'name': name,
+        'avatar': avatar,
+        'phone': phone,
+        'timezone': timezone,
+        'defaultCurrency': defaultCurrency,
+        'emailVerified': emailVerified,
+        'provider': provider,
+        'hasPassword': hasPassword,
+      };
+
   AuthUser copyWith({String? name, String? phone, String? defaultCurrency}) {
     return AuthUser(
       rid: rid,
