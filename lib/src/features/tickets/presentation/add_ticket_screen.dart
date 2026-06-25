@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/snackbars.dart';
 import '../../../core/app_dropdown.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error.dart';
@@ -32,6 +33,7 @@ class AddTicketScreen extends ConsumerStatefulWidget {
     this.existing,
     this.itineraryKind,
     this.itineraryRid,
+    this.initialType,
   });
 
   final String tripRid;
@@ -41,6 +43,10 @@ class AddTicketScreen extends ConsumerStatefulWidget {
   /// to it. Both null means a standalone ticket. Ignored in edit mode (the existing link wins).
   final String? itineraryKind;
   final String? itineraryRid;
+
+  /// Pre-selected ticket category, matching the itinerary item it was opened from (e.g. TRANSPORT
+  /// for a flight leg, or the event's own category). Null leaves the default.
+  final String? initialType;
 
   @override
   ConsumerState<AddTicketScreen> createState() => _AddTicketScreenState();
@@ -87,9 +93,12 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
       _itineraryKind = t.itineraryKind;
       _itineraryRid = t.itineraryRid;
     } else {
-      // New ticket opened from a timeline item: pre-attach to it.
+      // New ticket opened from a timeline item: pre-attach to it + match its category.
       _itineraryKind = widget.itineraryKind;
       _itineraryRid = widget.itineraryRid;
+      if (widget.initialType != null && Labels.categories.contains(widget.initialType)) {
+        _type = widget.initialType!;
+      }
     }
   }
 
@@ -168,6 +177,7 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
         );
       }
       if (mounted) {
+        showOkSnack(context, AppLocalizations.of(context).msgSaved);
         context.canPop()
             ? context.pop()
             : context.go('/trips/${widget.tripRid}/tickets');

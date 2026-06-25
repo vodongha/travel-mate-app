@@ -258,14 +258,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/trips/:rid/tickets/new',
         builder: (context, state) {
           // Optional: pre-attach to an itinerary item (passed from the timeline long-press as a
-          // (kind, rid) record), same as the expense flow.
+          // (kind, rid, type) record); type pre-selects the ticket category to match the leg/event.
           final Object? extra = state.extra;
-          final ({String kind, String rid})? itin =
-              extra is ({String kind, String rid}) ? extra : null;
+          final ({String kind, String rid, String type})? itin =
+              extra is ({String kind, String rid, String type}) ? extra : null;
           return AddTicketScreen(
             tripRid: state.pathParameters['rid']!,
             itineraryKind: itin?.kind,
             itineraryRid: itin?.rid,
+            initialType: itin?.type,
           );
         },
       ),

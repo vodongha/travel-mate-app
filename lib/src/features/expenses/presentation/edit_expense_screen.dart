@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/snackbars.dart';
 import '../../../core/app_dropdown.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error.dart';
@@ -53,6 +54,7 @@ class _EditExpenseScreenState extends ConsumerState<EditExpenseScreen> {
             expenseType: _expenseType,
           );
       if (mounted) {
+        showOkSnack(context, AppLocalizations.of(context).msgSaved);
         context.canPop()
             ? context.pop()
             : context.go('/trips/${widget.tripRid}/expenses');

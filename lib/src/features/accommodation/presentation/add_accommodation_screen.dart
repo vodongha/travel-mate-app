@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/snackbars.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/app_error.dart';
 import '../../../core/form_buttons.dart';
@@ -130,6 +131,7 @@ class _AddAccommodationScreenState
         );
       }
       if (mounted) {
+        showOkSnack(context, AppLocalizations.of(context).msgSaved);
         context.canPop()
             ? context.pop()
             : context.go('/trips/${widget.tripRid}/accommodations');
