@@ -152,6 +152,11 @@ class TimelineScreen extends ConsumerWidget {
                 onTap: () => Navigator.pop(ctx, 'expense'),
               ),
               ListTile(
+                leading: const Icon(Icons.confirmation_number_outlined),
+                title: Text(l10n.ticketNew),
+                onTap: () => Navigator.pop(ctx, 'ticket'),
+              ),
+              ListTile(
                 leading: const Icon(Icons.edit_outlined),
                 title: Text(l10n.actionEdit),
                 onTap: () => Navigator.pop(ctx, 'edit'),
@@ -183,6 +188,12 @@ class TimelineScreen extends ConsumerWidget {
     if (action == 'expense') {
       // Pre-attach the new expense to this event (polymorphic itinerary link).
       context.push('/trips/$tripRid/expenses/new',
+          extra: (kind: 'EVENT', rid: event.rid));
+      return;
+    }
+    if (action == 'ticket') {
+      // Pre-attach the new ticket to this event (same polymorphic link).
+      context.push('/trips/$tripRid/tickets/new',
           extra: (kind: 'EVENT', rid: event.rid));
       return;
     }
@@ -232,6 +243,11 @@ class TimelineScreen extends ConsumerWidget {
               onTap: () => Navigator.pop(ctx, 'expense'),
             ),
             ListTile(
+              leading: const Icon(Icons.confirmation_number_outlined),
+              title: Text(l10n.ticketNew),
+              onTap: () => Navigator.pop(ctx, 'ticket'),
+            ),
+            ListTile(
               leading: const Icon(Icons.edit_outlined),
               title: Text(l10n.actionEdit),
               onTap: () => Navigator.pop(ctx, 'edit'),
@@ -253,6 +269,10 @@ class TimelineScreen extends ConsumerWidget {
     if (action == 'expense') {
       context
           .push('/trips/$tripRid/expenses/new', extra: (kind: kind, rid: rid));
+      return;
+    }
+    if (action == 'ticket') {
+      context.push('/trips/$tripRid/tickets/new', extra: (kind: kind, rid: rid));
       return;
     }
     if (action == 'edit') {

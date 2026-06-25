@@ -26,10 +26,21 @@ import '../data/ticket_repository.dart';
 /// mobile_scanner or type/paste). EDITOR/OWNER may assign the ticket to several members or make it a
 /// group ticket; everyone else can only manage their own (picker hidden → the caller's own ticket).
 class AddTicketScreen extends ConsumerStatefulWidget {
-  const AddTicketScreen({super.key, required this.tripRid, this.existing});
+  const AddTicketScreen({
+    super.key,
+    required this.tripRid,
+    this.existing,
+    this.itineraryKind,
+    this.itineraryRid,
+  });
 
   final String tripRid;
   final Ticket? existing;
+
+  /// When opened from a timeline item (event / transport / accommodation), the ticket is pre-attached
+  /// to it. Both null means a standalone ticket. Ignored in edit mode (the existing link wins).
+  final String? itineraryKind;
+  final String? itineraryRid;
 
   @override
   ConsumerState<AddTicketScreen> createState() => _AddTicketScreenState();
@@ -75,6 +86,10 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
       }
       _itineraryKind = t.itineraryKind;
       _itineraryRid = t.itineraryRid;
+    } else {
+      // New ticket opened from a timeline item: pre-attach to it.
+      _itineraryKind = widget.itineraryKind;
+      _itineraryRid = widget.itineraryRid;
     }
   }
 
