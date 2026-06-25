@@ -8,6 +8,7 @@ class TokenStorage {
 
   static const String _accessKey = 'access_token';
   static const String _refreshKey = 'refresh_token';
+  static const String _userKey = 'cached_user';
   final FlutterSecureStorage _storage;
 
   Future<String?> readAccess() => _storage.read(key: _accessKey);
@@ -19,9 +20,16 @@ class TokenStorage {
     await _storage.write(key: _refreshKey, value: refresh);
   }
 
+  /// The last known profile JSON, kept so a transient `/users/me` failure on startup (offline /
+  /// server cold-start) doesn't sign the user out — the cached copy keeps them in.
+  Future<String?> readCachedUser() => _storage.read(key: _userKey);
+
+  Future<void> cacheUser(String json) => _storage.write(key: _userKey, value: json);
+
   Future<void> clear() async {
     await _storage.delete(key: _accessKey);
     await _storage.delete(key: _refreshKey);
+    await _storage.delete(key: _userKey);
   }
 }
 
