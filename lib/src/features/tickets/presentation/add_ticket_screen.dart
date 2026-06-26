@@ -96,7 +96,8 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
       // New ticket opened from a timeline item: pre-attach to it + match its category.
       _itineraryKind = widget.itineraryKind;
       _itineraryRid = widget.itineraryRid;
-      if (widget.initialType != null && Labels.categories.contains(widget.initialType)) {
+      if (widget.initialType != null &&
+          Labels.categories.contains(widget.initialType)) {
         _type = widget.initialType!;
       }
     }
@@ -293,7 +294,9 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
                 if (canAssign) const SizedBox(height: 16),
                 TextFormField(
                   controller: _note,
-                  maxLines: 2,
+                  minLines: 2,
+                  maxLines: 5,
+                  keyboardType: TextInputType.multiline,
                   decoration: InputDecoration(
                       labelText: l10n.eventNote,
                       prefixIcon: const Icon(Icons.notes_outlined)),
@@ -431,7 +434,8 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
   /// "Belongs to" — pick several members (checkboxes), or the whole group (a separate, mutually
   /// exclusive option). No members + not group = the caller's own ticket. With many members the list
   /// gets a search box and is height-capped so it scrolls inside the form instead of pushing it down.
-  Widget _assignee(BuildContext context, AppLocalizations l10n, List<Member> list) {
+  Widget _assignee(
+      BuildContext context, AppLocalizations l10n, List<Member> list) {
     final ColorScheme scheme = Theme.of(context).colorScheme;
     // Only bother with search once the list is long enough to be awkward to scan.
     final bool searchable = list.length > 6;
@@ -442,7 +446,8 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(l10n.ticketAssignee, style: Theme.of(context).textTheme.labelLarge),
+        Text(l10n.ticketAssignee,
+            style: Theme.of(context).textTheme.labelLarge),
         // "Cả nhóm" is a distinct option, not a per-member checkbox; turning it on clears members.
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
