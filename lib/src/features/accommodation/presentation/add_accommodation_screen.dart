@@ -213,7 +213,9 @@ class _AddAccommodationScreenState
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _note,
-                  maxLines: 2,
+                  minLines: 2,
+                  maxLines: 5,
+                  keyboardType: TextInputType.multiline,
                   decoration: InputDecoration(
                       labelText: l10n.eventNote,
                       prefixIcon: const Icon(Icons.notes_outlined)),
