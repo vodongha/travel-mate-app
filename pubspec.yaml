@@ -14,13 +14,13 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   # State management — one controller per feature, mirrors the backend service layer.
-  flutter_riverpod: ^2.6.1
+  flutter_riverpod: ^3.3.2
   # HTTP — one configured Dio with a bearer-token + refresh interceptor.
   dio: ^5.7.0
   # Declarative routing with an auth-aware redirect guard.
-  go_router: ^14.6.2
+  go_router: ^17.3.0
   # JWT access + refresh tokens stored encrypted at rest (Keychain / Keystore).
-  flutter_secure_storage: ^9.2.2
+  flutter_secure_storage: ^10.3.1
   # Persists the chosen language.
   shared_preferences: ^2.3.3
   # Money + date formatting (the app only formats; the backend owns the maths).
@@ -37,7 +37,7 @@ dependencies:
   # The web <iframe> platform view (used only by app_web_view_web.dart).
   web: ^1.1.0
   # App version shown on the Settings/About screen.
-  package_info_plus: ^8.1.1
+  package_info_plus: ^10.2.0
   # Phone input with country picker + E.164 validation (mirrors family-budget-app).
   phone_form_field: ^10.0.17
   # Scan a ticket QR into its decoded string (camera). We store the string, render on view.
@@ -47,29 +47,29 @@ dependencies:
   image_picker: ^1.1.2
   # Decode a QR from a picked image in pure Dart — works on web too (mobile_scanner.analyzeImage
   # throws UnsupportedError on web). `image` decodes the file to pixels; `zxing2` reads the QR.
-  image: ^4.2.0
+  image: ^4.8.0
   zxing2: ^0.2.3
   # Request the camera permission at runtime before opening the scanner (else "genericError").
-  permission_handler: ^11.3.1
+  permission_handler: ^12.0.3
   # OpenStreetMap map for trip places (no API key needed). latlong2 supplies LatLng.
-  flutter_map: ^7.0.2
-  latlong2: ^0.9.1
+  flutter_map: ^8.3.1
+  latlong2: ^0.10.1
   # Device location ("my location" on the maps; asks permission at runtime).
-  geolocator: ^13.0.1
+  geolocator: ^14.0.3
   # Google Sign-In: returns a Google ID token the backend verifies (POST /auth/google).
-  google_sign_in: ^6.2.2
+  google_sign_in: ^7.2.0
   # Web Google Sign-In uses Google Identity Services' rendered button (web_only.renderButton).
-  google_sign_in_web: ^0.12.4
+  google_sign_in_web: ^1.1.3
   # Firebase core + Cloud Messaging (push). Config in lib/firebase_options.dart.
-  firebase_core: ^3.6.0
-  firebase_messaging: ^15.1.3
+  firebase_core: ^4.11.0
+  firebase_messaging: ^16.4.1
   # Google Play in-app updates (Play Core) — background flexible / blocking immediate flow.
   in_app_update: ^4.2.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
 
 flutter:
