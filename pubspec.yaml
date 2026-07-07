@@ -1,7 +1,7 @@
 name: travel_mate_app
 description: "TravelMate — group-trip planning & shared-expense (Android + Web)."
 publish_to: "none"
-version: 1.0.0+22
+version: 1.0.0+23
 
 environment:
   sdk: ">=3.5.0 <4.0.0"
@@ -48,8 +48,7 @@ dependencies:
   image_picker: ^1.2.3
   # Decode a QR from a picked image in pure Dart — works on web too (mobile_scanner.analyzeImage
   # throws UnsupportedError on web). `image` decodes the file to pixels; `zxing2` reads the QR.
-  # 4.9.1 exists but flutter_launcher_icons (dev) caps it at 4.8.x.
-  image: ^4.8.0
+  image: ^4.9.1
   zxing2: ^0.2.3
   # Request the camera permission at runtime before opening the scanner (else "genericError").
   permission_handler: ^12.0.3
