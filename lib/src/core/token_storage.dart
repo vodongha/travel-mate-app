@@ -36,8 +36,8 @@ class TokenStorage {
 
 final tokenStorageProvider = Provider<TokenStorage>((ref) {
   return TokenStorage(
-    const FlutterSecureStorage(
-      aOptions: AndroidOptions(encryptedSharedPreferences: true),
-    ),
+    // AndroidOptions defaults now use custom ciphers (the old
+    // encryptedSharedPreferences flag is deprecated and ignored).
+    const FlutterSecureStorage(),
   );
 });
