@@ -80,7 +80,7 @@ class ChecklistScreen extends ConsumerWidget {
         ref.watch(checklistControllerProvider(tripRid));
     // A VIEWER can still tick items off, but can't add/edit/delete them.
     final bool canEdit =
-        ref.watch(tripProvider(tripRid)).valueOrNull?.myRole != 'VIEWER';
+        ref.watch(tripProvider(tripRid)).value?.myRole != 'VIEWER';
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navChecklist)),
       floatingActionButton: canEdit

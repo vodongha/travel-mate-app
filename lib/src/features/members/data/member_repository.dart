@@ -23,8 +23,8 @@ class MemberRepository {
     }
   }
 
-  Future<Member> addGhost(
-      String tripRid, String displayName, String role, {String? email}) async {
+  Future<Member> addGhost(String tripRid, String displayName, String role,
+      {String? email}) async {
     try {
       final Response<dynamic> res = await _dio.post<dynamic>(
         '/trips/$tripRid/members',

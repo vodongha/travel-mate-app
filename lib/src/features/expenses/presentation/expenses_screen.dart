@@ -48,10 +48,10 @@ class ExpensesScreen extends ConsumerWidget {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final AsyncValue<List<ExpenseItem>> expenses =
         ref.watch(expensesControllerProvider(tripRid));
-    final String? myRole = ref.watch(tripProvider(tripRid)).valueOrNull?.myRole;
+    final String? myRole = ref.watch(tripProvider(tripRid)).value?.myRole;
     final bool canEdit = myRole != 'VIEWER';
     final String baseCurrency =
-        ref.watch(tripProvider(tripRid)).valueOrNull?.baseCurrency ?? 'VND';
+        ref.watch(tripProvider(tripRid)).value?.baseCurrency ?? 'VND';
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navExpenses)),
       floatingActionButton: canEdit

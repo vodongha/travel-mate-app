@@ -89,10 +89,10 @@ class BudgetScreen extends ConsumerWidget {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final AsyncValue<List<Budget>> budgets =
         ref.watch(budgetControllerProvider(tripRid));
-    final String? myRole = ref.watch(tripProvider(tripRid)).valueOrNull?.myRole;
+    final String? myRole = ref.watch(tripProvider(tripRid)).value?.myRole;
     final bool canEdit = myRole != 'VIEWER';
     final String currency =
-        ref.watch(tripProvider(tripRid)).valueOrNull?.baseCurrency ?? 'VND';
+        ref.watch(tripProvider(tripRid)).value?.baseCurrency ?? 'VND';
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navBudget)),
       floatingActionButton: canEdit
@@ -233,8 +233,10 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
               primaryLabel: l10n.actionSave,
               onPrimary: () {
                 if (_formKey.currentState!.validate()) {
-                  Navigator.pop(context,
-                      _BudgetInput(_category, Money.parseAmount(_amount.text)!));
+                  Navigator.pop(
+                      context,
+                      _BudgetInput(
+                          _category, Money.parseAmount(_amount.text)!));
                 }
               },
               onCancel: () => Navigator.pop(context),

@@ -2,10 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/ticket_repository.dart';
 
-/// Builds the POST/PATCH body for a ticket. `shared` ⇒ a group ticket (no specific members, shared by
-/// the whole trip — needs EDITOR). Otherwise `memberRids` lists the covered members (empty ⇒ the
-/// caller's own); assigning to others/the group needs EDITOR (the server enforces it; a 403 surfaces
-/// as a friendly message).
+/// Builds the POST/PATCH body for a ticket.
 Map<String, dynamic> ticketBody({
   List<String>? memberRids,
   bool shared = false,
@@ -26,7 +23,6 @@ Map<String, dynamic> ticketBody({
     'seat': seat ?? '',
     'provider': provider ?? '',
     'bookingCode': bookingCode ?? '',
-    // Blank itineraryRid clears the link; a value (re)sets it to that itinerary item.
     'itineraryKind': itineraryKind ?? '',
     'itineraryRid': itineraryRid ?? '',
     'note': note ?? '',
@@ -40,11 +36,14 @@ Map<String, dynamic> ticketBody({
 }
 
 /// The caller's own tickets for one trip (GET /tickets/mine), keyed by trip rid.
-class MyTicketsController extends FamilyAsyncNotifier<List<Ticket>, String> {
+class MyTicketsController extends AsyncNotifier<List<Ticket>> {
+  MyTicketsController(this._tripRid);
+  final String _tripRid;
+
   TicketRepository get _repo => ref.read(ticketRepositoryProvider);
 
   @override
-  Future<List<Ticket>> build(String tripRid) => _repo.listMine(tripRid);
+  Future<List<Ticket>> build() => _repo.listMine(_tripRid);
 }
 
 final myTicketsControllerProvider =
@@ -54,14 +53,17 @@ final myTicketsControllerProvider =
 
 /// Every ticket in one trip (GET /tickets), keyed by trip rid. Mutations live here and invalidate
 /// both this list and the caller's own list.
-class AllTicketsController extends FamilyAsyncNotifier<List<Ticket>, String> {
+class AllTicketsController extends AsyncNotifier<List<Ticket>> {
+  AllTicketsController(this._tripRid);
+  final String _tripRid;
+
   TicketRepository get _repo => ref.read(ticketRepositoryProvider);
 
   @override
-  Future<List<Ticket>> build(String tripRid) => _repo.listAll(tripRid);
+  Future<List<Ticket>> build() => _repo.listAll(_tripRid);
 
   void _invalidateBoth() {
-    ref.invalidate(myTicketsControllerProvider(arg));
+    ref.invalidate(myTicketsControllerProvider(_tripRid));
     ref.invalidateSelf();
   }
 
@@ -79,7 +81,7 @@ class AllTicketsController extends FamilyAsyncNotifier<List<Ticket>, String> {
     String? note,
   }) async {
     await _repo.create(
-      arg,
+      _tripRid,
       ticketBody(
         memberRids: memberRids,
         shared: shared,
@@ -113,7 +115,7 @@ class AllTicketsController extends FamilyAsyncNotifier<List<Ticket>, String> {
     String? note,
   }) async {
     await _repo.update(
-      arg,
+      _tripRid,
       rid,
       ticketBody(
         memberRids: memberRids,
@@ -134,7 +136,7 @@ class AllTicketsController extends FamilyAsyncNotifier<List<Ticket>, String> {
   }
 
   Future<void> remove(String rid) async {
-    await _repo.delete(arg, rid);
+    await _repo.delete(_tripRid, rid);
     _invalidateBoth();
     await future;
   }

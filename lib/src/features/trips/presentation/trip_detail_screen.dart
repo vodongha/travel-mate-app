@@ -41,7 +41,7 @@ class TripDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final AsyncValue<Trip> trip = ref.watch(tripProvider(tripRid));
-    final Trip? loaded = trip.valueOrNull;
+    final Trip? loaded = trip.value;
     final bool isOwner = loaded?.myRole == 'OWNER';
     return Scaffold(
       appBar: AppBar(

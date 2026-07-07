@@ -32,7 +32,7 @@ class FundScreen extends ConsumerWidget {
   Future<void> _addContribution(
       BuildContext context, WidgetRef ref, String base) async {
     final List<Member> members =
-        ref.read(membersControllerProvider(tripRid)).valueOrNull ?? const [];
+        ref.read(membersControllerProvider(tripRid)).value ?? const [];
     if (members.isEmpty) {
       return;
     }
@@ -101,7 +101,7 @@ class FundScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final bool canEdit =
-        ref.watch(tripProvider(tripRid)).valueOrNull?.myRole != 'VIEWER';
+        ref.watch(tripProvider(tripRid)).value?.myRole != 'VIEWER';
     final AsyncValue<FundBalance> balance =
         ref.watch(fundBalanceProvider(tripRid));
     final AsyncValue<List<Contribution>> contributions =
@@ -110,12 +110,11 @@ class FundScreen extends ConsumerWidget {
         ref.watch(fundExpensesProvider(tripRid));
     final Map<String, String> memberNames = {
       for (final Member m
-          in ref.watch(membersControllerProvider(tripRid)).valueOrNull ??
-              const [])
+          in ref.watch(membersControllerProvider(tripRid)).value ?? const [])
         m.rid: m.displayName
     };
     final String base =
-        ref.watch(tripProvider(tripRid)).valueOrNull?.baseCurrency ?? 'VND';
+        ref.watch(tripProvider(tripRid)).value?.baseCurrency ?? 'VND';
 
     return Scaffold(
       appBar: AppBar(

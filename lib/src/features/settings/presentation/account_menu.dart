@@ -17,7 +17,7 @@ class AccountMenu extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    final AuthUser? user = ref.watch(authControllerProvider).valueOrNull;
+    final AuthUser? user = ref.watch(authControllerProvider).value;
     final String name = (user?.name.trim().isNotEmpty == true)
         ? user!.name.trim()
         : (user?.email ?? '?');
@@ -50,7 +50,7 @@ class _AccountSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final ColorScheme cs = Theme.of(context).colorScheme;
-    final AuthUser? user = ref.watch(authControllerProvider).valueOrNull;
+    final AuthUser? user = ref.watch(authControllerProvider).value;
     if (user == null) {
       return const SizedBox.shrink();
     }

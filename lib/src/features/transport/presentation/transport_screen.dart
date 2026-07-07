@@ -51,17 +51,18 @@ class TransportScreen extends ConsumerWidget {
   void _showDetail(BuildContext context, TransportItem item, Ticket? tk) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final String locale = Localizations.localeOf(context).toLanguageTag();
-    String dt(DateTime? t) => t == null
-        ? ''
-        : DateFormat.yMMMEd(locale).add_Hm().format(t.toLocal());
+    String dt(DateTime? t) =>
+        t == null ? '' : DateFormat.yMMMEd(locale).add_Hm().format(t.toLocal());
     final List<(String, String)> rows = [
       (l10n.fieldType, Labels.transportType(context, item.transportType)),
       (l10n.transportFrom, item.departurePlace ?? ''),
       (l10n.transportTo, item.arrivalPlace ?? ''),
       (l10n.transportDeparture, dt(item.departureTime)),
       (l10n.transportArrival, dt(item.arrivalTime)),
-      if (tk?.provider?.isNotEmpty == true) (l10n.transportProvider, tk!.provider!),
-      if (tk?.bookingCode?.isNotEmpty == true) (l10n.fieldBookingCode, tk!.bookingCode!),
+      if (tk?.provider?.isNotEmpty == true)
+        (l10n.transportProvider, tk!.provider!),
+      if (tk?.bookingCode?.isNotEmpty == true)
+        (l10n.fieldBookingCode, tk!.bookingCode!),
       if (tk?.seat?.isNotEmpty == true) (l10n.fieldSeat, tk!.seat!),
       (l10n.eventNote, item.note ?? ''),
     ];
@@ -99,8 +100,8 @@ class TransportScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(label,
-                                style: text.labelSmall?.copyWith(
-                                    color: scheme.onSurfaceVariant)),
+                                style: text.labelSmall
+                                    ?.copyWith(color: scheme.onSurfaceVariant)),
                             Text(value, style: text.bodyLarge),
                           ],
                         ),
@@ -146,10 +147,10 @@ class TransportScreen extends ConsumerWidget {
     final AsyncValue<List<TransportItem>> items =
         ref.watch(transportControllerProvider(tripRid));
     final bool canEdit =
-        ref.watch(tripProvider(tripRid)).valueOrNull?.myRole != 'VIEWER';
+        ref.watch(tripProvider(tripRid)).value?.myRole != 'VIEWER';
     // The caller's ticket per leg — its carrier/booking code/seat show in the read-only detail.
     final List<Ticket> myTickets =
-        ref.watch(myTicketsControllerProvider(tripRid)).valueOrNull ?? const [];
+        ref.watch(myTicketsControllerProvider(tripRid)).value ?? const [];
     final Map<String, Ticket> myTicketByLeg = {};
     for (final Ticket tk in myTickets) {
       if (tk.itineraryKind == 'TRANSPORT' && tk.itineraryRid != null) {

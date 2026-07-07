@@ -50,9 +50,8 @@ class AccommodationScreen extends ConsumerWidget {
   void _showDetail(BuildContext context, AccommodationItem item, Ticket? tk) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final String locale = Localizations.localeOf(context).toLanguageTag();
-    String dt(DateTime? t) => t == null
-        ? ''
-        : DateFormat.yMMMEd(locale).add_Hm().format(t.toLocal());
+    String dt(DateTime? t) =>
+        t == null ? '' : DateFormat.yMMMEd(locale).add_Hm().format(t.toLocal());
     final List<(String, String)> rows = [
       (l10n.fieldAddress, item.address ?? ''),
       (l10n.accommodationCheckin, dt(item.checkinTime)),
@@ -92,8 +91,8 @@ class AccommodationScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(label,
-                                style: text.labelSmall?.copyWith(
-                                    color: scheme.onSurfaceVariant)),
+                                style: text.labelSmall
+                                    ?.copyWith(color: scheme.onSurfaceVariant)),
                             Text(value, style: text.bodyLarge),
                           ],
                         ),
@@ -113,10 +112,10 @@ class AccommodationScreen extends ConsumerWidget {
     final AsyncValue<List<AccommodationItem>> items =
         ref.watch(accommodationControllerProvider(tripRid));
     final bool canEdit =
-        ref.watch(tripProvider(tripRid)).valueOrNull?.myRole != 'VIEWER';
+        ref.watch(tripProvider(tripRid)).value?.myRole != 'VIEWER';
     // The caller's ticket per stay — its booking code shows in the read-only detail.
     final List<Ticket> myTickets =
-        ref.watch(myTicketsControllerProvider(tripRid)).valueOrNull ?? const [];
+        ref.watch(myTicketsControllerProvider(tripRid)).value ?? const [];
     final Map<String, Ticket> myTicketByStay = {};
     for (final Ticket tk in myTickets) {
       if (tk.itineraryKind == 'ACCOMMODATION' && tk.itineraryRid != null) {
