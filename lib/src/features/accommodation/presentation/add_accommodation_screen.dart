@@ -63,7 +63,7 @@ class _AddAccommodationScreenState
 
   Future<DateTime?> _pickDateTime(DateTime? initial) async {
     // Constrain the picker to the trip's date range (and open on it).
-    final trip = ref.read(tripProvider(widget.tripRid)).valueOrNull;
+    final trip = ref.read(tripProvider(widget.tripRid)).value;
     final bounds = tripPickerBounds(
       tripStart: trip?.startDate,
       tripEnd: trip?.endDate,

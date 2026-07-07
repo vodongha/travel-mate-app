@@ -7,12 +7,14 @@ import '../data/expense_repository.dart';
 
 /// Expenses for one trip (by rid). Creating one also invalidates the derived views (settlement +
 /// dashboard) so they reflect the new spend.
-class ExpensesController
-    extends FamilyAsyncNotifier<List<ExpenseItem>, String> {
+class ExpensesController extends AsyncNotifier<List<ExpenseItem>> {
+  ExpensesController(this._tripRid);
+  final String _tripRid;
+
   ExpenseRepository get _repo => ref.read(expenseRepositoryProvider);
 
   @override
-  Future<List<ExpenseItem>> build(String tripRid) => _repo.list(tripRid);
+  Future<List<ExpenseItem>> build() => _repo.list(_tripRid);
 
   Future<void> create({
     required String title,
@@ -28,7 +30,7 @@ class ExpensesController
     String? itineraryRid,
   }) async {
     await _repo.create(
-      arg,
+      _tripRid,
       title: title,
       category: category,
       expenseType: expenseType,
@@ -54,7 +56,7 @@ class ExpensesController
     required String expenseType,
   }) async {
     await _repo.update(
-      arg,
+      _tripRid,
       expenseRid,
       title: title,
       category: category,
@@ -65,7 +67,7 @@ class ExpensesController
   }
 
   Future<void> remove(String expenseRid) async {
-    await _repo.delete(arg, expenseRid);
+    await _repo.delete(_tripRid, expenseRid);
     _invalidateDerived();
     await future;
   }
@@ -73,9 +75,9 @@ class ExpensesController
   /// Expenses feed the settlement, dashboard and report views, so refresh all of them.
   void _invalidateDerived() {
     ref.invalidateSelf();
-    ref.invalidate(settlementProvider(arg));
-    ref.invalidate(dashboardProvider(arg));
-    ref.invalidate(reportProvider(arg));
+    ref.invalidate(settlementProvider(_tripRid));
+    ref.invalidate(dashboardProvider(_tripRid));
+    ref.invalidate(reportProvider(_tripRid));
   }
 }
 

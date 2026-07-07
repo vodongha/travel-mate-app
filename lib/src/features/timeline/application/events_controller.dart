@@ -4,11 +4,14 @@ import '../../dashboard/data/dashboard_repository.dart';
 import '../data/event_repository.dart';
 
 /// Timeline events for one trip (by rid). Creating one refreshes the dashboard (next-event).
-class EventsController extends FamilyAsyncNotifier<List<EventItem>, String> {
+class EventsController extends AsyncNotifier<List<EventItem>> {
+  EventsController(this._tripRid);
+  final String _tripRid;
+
   EventRepository get _repo => ref.read(eventRepositoryProvider);
 
   @override
-  Future<List<EventItem>> build(String tripRid) => _repo.list(tripRid);
+  Future<List<EventItem>> build() => _repo.list(_tripRid);
 
   Future<void> create({
     required String title,
@@ -19,7 +22,7 @@ class EventsController extends FamilyAsyncNotifier<List<EventItem>, String> {
     String? note,
   }) async {
     await _repo.create(
-      arg,
+      _tripRid,
       title: title,
       eventType: eventType,
       startTimeUtc: startTimeUtc,
@@ -28,7 +31,7 @@ class EventsController extends FamilyAsyncNotifier<List<EventItem>, String> {
       note: note,
     );
     ref.invalidateSelf();
-    ref.invalidate(dashboardProvider(arg));
+    ref.invalidate(dashboardProvider(_tripRid));
     await future;
   }
 
@@ -42,7 +45,7 @@ class EventsController extends FamilyAsyncNotifier<List<EventItem>, String> {
     String? note,
   }) async {
     await _repo.update(
-      arg,
+      _tripRid,
       eventRid,
       title: title,
       eventType: eventType,
@@ -52,14 +55,14 @@ class EventsController extends FamilyAsyncNotifier<List<EventItem>, String> {
       note: note,
     );
     ref.invalidateSelf();
-    ref.invalidate(dashboardProvider(arg));
+    ref.invalidate(dashboardProvider(_tripRid));
     await future;
   }
 
   Future<void> delete(String eventRid) async {
-    await _repo.delete(arg, eventRid);
+    await _repo.delete(_tripRid, eventRid);
     ref.invalidateSelf();
-    ref.invalidate(dashboardProvider(arg));
+    ref.invalidate(dashboardProvider(_tripRid));
     await future;
   }
 }

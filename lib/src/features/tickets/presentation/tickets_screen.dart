@@ -35,7 +35,8 @@ class _DatedTicket {
   _DatedTicket(this.ticket, this.when, this.provider);
   final Ticket ticket;
   final DateTime? when; // local time of the linked itinerary item, or null
-  final String? provider; // carrier (transport) shown here, not on the itinerary
+  final String?
+      provider; // carrier (transport) shown here, not on the itinerary
 }
 
 class _TicketsScreenState extends ConsumerState<TicketsScreen> {
@@ -103,17 +104,19 @@ class _TicketsScreenState extends ConsumerState<TicketsScreen> {
   /// on the ticket itself, so it's read straight from the ticket — not derived from the leg.
   List<_DatedTicket> _decorate(BuildContext context, List<Ticket> tickets) {
     final List<EventItem> events =
-        ref.watch(eventsControllerProvider(widget.tripRid)).valueOrNull ??
-            const [];
+        ref.watch(eventsControllerProvider(widget.tripRid)).value ?? const [];
     final List<TransportItem> transports =
-        ref.watch(transportControllerProvider(widget.tripRid)).valueOrNull ??
+        ref.watch(transportControllerProvider(widget.tripRid)).value ??
             const [];
-    final List<AccommodationItem> stays = ref
-            .watch(accommodationControllerProvider(widget.tripRid))
-            .valueOrNull ??
-        const [];
-    final Map<String, DateTime?> eventWhen = {for (final e in events) e.rid: e.startTime};
-    final Map<String, DateTime?> stayWhen = {for (final a in stays) a.rid: a.checkinTime};
+    final List<AccommodationItem> stays =
+        ref.watch(accommodationControllerProvider(widget.tripRid)).value ??
+            const [];
+    final Map<String, DateTime?> eventWhen = {
+      for (final e in events) e.rid: e.startTime
+    };
+    final Map<String, DateTime?> stayWhen = {
+      for (final a in stays) a.rid: a.checkinTime
+    };
     final Map<String, DateTime?> transportWhen = {
       for (final t in transports) t.rid: t.departureTime
     };
@@ -144,7 +147,8 @@ class _TicketsScreenState extends ConsumerState<TicketsScreen> {
           IconButton(
             tooltip: l10n.ticketsAll,
             icon: const Icon(Icons.groups_outlined),
-            onPressed: () => context.push('/trips/${widget.tripRid}/tickets/all'),
+            onPressed: () =>
+                context.push('/trips/${widget.tripRid}/tickets/all'),
           ),
         ],
       ),
@@ -159,8 +163,8 @@ class _TicketsScreenState extends ConsumerState<TicketsScreen> {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => AppErrorView(
                 error: e,
-                onRetry: () =>
-                    ref.invalidate(myTicketsControllerProvider(widget.tripRid))),
+                onRetry: () => ref
+                    .invalidate(myTicketsControllerProvider(widget.tripRid))),
             data: (list) {
               if (list.isEmpty) {
                 return Center(child: Text(l10n.ticketsEmpty));
@@ -186,7 +190,9 @@ class _TicketsScreenState extends ConsumerState<TicketsScreen> {
           d.ticket.ownerLabel.toLowerCase().contains(q) ||
           (d.provider?.toLowerCase().contains(q) ?? false) ||
           (d.ticket.bookingCode?.toLowerCase().contains(q) ?? false) ||
-          ticketTypeLabel(context, d.ticket.ticketType).toLowerCase().contains(q);
+          ticketTypeLabel(context, d.ticket.ticketType)
+              .toLowerCase()
+              .contains(q);
     }).toList()
       ..sort((a, b) {
         if (a.when == null && b.when == null) return 0;
@@ -465,7 +471,8 @@ class TicketCard extends StatelessWidget {
             Flexible(
               child: Text(
                   ticket.title.isEmpty ? l10n.ticketUntitled : ticket.title,
-                  maxLines: 1, overflow: TextOverflow.ellipsis),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis),
             ),
             if (highlight)
               Padding(
@@ -489,7 +496,8 @@ class TicketCard extends StatelessWidget {
 }
 
 class _Badge extends StatelessWidget {
-  const _Badge({required this.label, required this.color, required this.onColor});
+  const _Badge(
+      {required this.label, required this.color, required this.onColor});
 
   final String label;
   final Color color;

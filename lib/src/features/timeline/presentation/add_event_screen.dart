@@ -63,7 +63,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
 
   Future<DateTime?> _pickDateTime(DateTime? initial) async {
     // Constrain the picker to the trip's date range (and open on it).
-    final trip = ref.read(tripProvider(widget.tripRid)).valueOrNull;
+    final trip = ref.read(tripProvider(widget.tripRid)).value;
     final bounds = tripPickerBounds(
       tripStart: trip?.startDate,
       tripEnd: trip?.endDate,
@@ -167,8 +167,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
             .add_Hm();
     // Resolve the linked place's name for display (the event only stores its rid).
     final List<dynamic> places =
-        ref.watch(placeControllerProvider(widget.tripRid)).valueOrNull ??
-            const [];
+        ref.watch(placeControllerProvider(widget.tripRid)).value ?? const [];
     String? placeName;
     if (_placeRid != null) {
       for (final p in places) {

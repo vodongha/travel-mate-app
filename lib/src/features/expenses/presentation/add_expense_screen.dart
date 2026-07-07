@@ -161,8 +161,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     final AsyncValue<List<Member>> members =
         ref.watch(membersControllerProvider(widget.tripRid));
     final String baseCurrency =
-        ref.watch(tripProvider(widget.tripRid)).valueOrNull?.baseCurrency ??
-            'VND';
+        ref.watch(tripProvider(widget.tripRid)).value?.baseCurrency ?? 'VND';
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.expenseNew)),
@@ -314,15 +313,13 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   /// The combined itinerary (events + transport + accommodation) the expense can attach to.
   List<ItineraryRef> _itineraryRefs() {
     final List<EventItem> events =
-        ref.watch(eventsControllerProvider(widget.tripRid)).valueOrNull ??
-            const [];
+        ref.watch(eventsControllerProvider(widget.tripRid)).value ?? const [];
     final List<TransportItem> transports =
-        ref.watch(transportControllerProvider(widget.tripRid)).valueOrNull ??
+        ref.watch(transportControllerProvider(widget.tripRid)).value ??
             const [];
-    final List<AccommodationItem> stays = ref
-            .watch(accommodationControllerProvider(widget.tripRid))
-            .valueOrNull ??
-        const [];
+    final List<AccommodationItem> stays =
+        ref.watch(accommodationControllerProvider(widget.tripRid)).value ??
+            const [];
     return buildItineraryRefs(context, events, transports, stays);
   }
 

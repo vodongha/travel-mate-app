@@ -3,13 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/accommodation_repository.dart';
 
 /// Accommodations for one trip (by rid). Times are stored UTC; the UI converts to/from local.
-class AccommodationController
-    extends FamilyAsyncNotifier<List<AccommodationItem>, String> {
+class AccommodationController extends AsyncNotifier<List<AccommodationItem>> {
+  AccommodationController(this._tripRid);
+  final String _tripRid;
+
   AccommodationRepository get _repo =>
       ref.read(accommodationRepositoryProvider);
 
   @override
-  Future<List<AccommodationItem>> build(String tripRid) => _repo.list(tripRid);
+  Future<List<AccommodationItem>> build() => _repo.list(_tripRid);
 
   Map<String, dynamic> _body({
     required String name,
@@ -35,7 +37,7 @@ class AccommodationController
     String? note,
   }) async {
     await _repo.create(
-      arg,
+      _tripRid,
       _body(
         name: name,
         address: address,
@@ -57,7 +59,7 @@ class AccommodationController
     String? note,
   }) async {
     await _repo.update(
-      arg,
+      _tripRid,
       rid,
       _body(
         name: name,
@@ -72,7 +74,7 @@ class AccommodationController
   }
 
   Future<void> delete(String rid) async {
-    await _repo.delete(arg, rid);
+    await _repo.delete(_tripRid, rid);
     ref.invalidateSelf();
     await future;
   }
