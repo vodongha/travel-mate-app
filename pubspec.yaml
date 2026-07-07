@@ -1,7 +1,7 @@
 name: travel_mate_app
 description: "TravelMate — group-trip planning & shared-expense (Android + Web)."
 publish_to: "none"
-version: 1.0.0+21
+version: 1.0.0+22
 
 environment:
   sdk: ">=3.5.0 <4.0.0"
@@ -16,7 +16,7 @@ dependencies:
   # State management — one controller per feature, mirrors the backend service layer.
   flutter_riverpod: ^3.3.2
   # HTTP — one configured Dio with a bearer-token + refresh interceptor.
-  dio: ^5.7.0
+  dio: ^5.10.0
   # Declarative routing with an auth-aware redirect guard.
   go_router: ^17.3.0
   # JWT access + refresh tokens stored encrypted at rest (Keychain / Keystore).
@@ -24,7 +24,8 @@ dependencies:
   # Persists the chosen language.
   shared_preferences: ^2.3.3
   # Money + date formatting (the app only formats; the backend owns the maths).
-  intl: any
+  # Pinned to the version flutter_localizations allows (it caps intl below 0.20.3).
+  intl: ^0.20.2
   # QR: render an invite/ticket from its string; scan a QR into its decoded string
   # (SPEC §2.7 — we store strings, never images).
   qr_flutter: ^4.1.0
@@ -44,10 +45,11 @@ dependencies:
   mobile_scanner: ^7.2.0
   # Pick an image from the gallery to scan a QR out of it (works where the live camera can't —
   # notably web). Uses the Android Photo Picker, so no storage permission is needed.
-  image_picker: ^1.1.2
+  image_picker: ^1.2.3
   # Decode a QR from a picked image in pure Dart — works on web too (mobile_scanner.analyzeImage
   # throws UnsupportedError on web). `image` decodes the file to pixels; `zxing2` reads the QR.
-  image: ^4.2.0
+  # 4.9.1 exists but flutter_launcher_icons (dev) caps it at 4.8.x.
+  image: ^4.8.0
   zxing2: ^0.2.3
   # Request the camera permission at runtime before opening the scanner (else "genericError").
   permission_handler: ^12.0.3
