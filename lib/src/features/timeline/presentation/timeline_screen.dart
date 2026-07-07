@@ -100,8 +100,8 @@ class TimelineScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(label,
-                                style: text.labelSmall?.copyWith(
-                                    color: scheme.onSurfaceVariant)),
+                                style: text.labelSmall
+                                    ?.copyWith(color: scheme.onSurfaceVariant)),
                             Text(value, style: text.bodyLarge),
                           ],
                         ),
@@ -425,13 +425,16 @@ class TimelineScreen extends ConsumerWidget {
         ].join(' · '),
         // Tap = read-only detail (the eye); long-press = the actions menu.
         onTap: () => _showDetail(context,
-            title: e.title.isEmpty ? Labels.eventType(context, e.eventType) : e.title,
+            title: e.title.isEmpty
+                ? Labels.eventType(context, e.eventType)
+                : e.title,
             icon: _eventIcon(e.eventType),
             rows: [
               (l10n.fieldType, Labels.eventType(context, e.eventType)),
               (l10n.eventStart, _dt(context, e.startTime)),
               if (pl != null) (l10n.eventLocation, pl.name),
-              if (cost > 0) (l10n.timelineCosts, Money.format(cost, baseCurrency)),
+              if (cost > 0)
+                (l10n.timelineCosts, Money.format(cost, baseCurrency)),
               (l10n.eventNote, e.note ?? ''),
             ],
             onMaps: (pl != null && pl.latitude != null && pl.longitude != null)
@@ -476,7 +479,8 @@ class TimelineScreen extends ConsumerWidget {
               if (tk?.bookingCode?.isNotEmpty == true)
                 (l10n.fieldBookingCode, tk!.bookingCode!),
               if (tk?.seat?.isNotEmpty == true) (l10n.fieldSeat, tk!.seat!),
-              if (cost > 0) (l10n.timelineCosts, Money.format(cost, baseCurrency)),
+              if (cost > 0)
+                (l10n.timelineCosts, Money.format(cost, baseCurrency)),
               (l10n.eventNote, t.note ?? ''),
             ]),
         onLongPress: () => _itemActions(context, ref,
@@ -511,7 +515,8 @@ class TimelineScreen extends ConsumerWidget {
               (l10n.accommodationCheckout, _dt(context, a.checkoutTime)),
               if (atk?.bookingCode?.isNotEmpty == true)
                 (l10n.fieldBookingCode, atk!.bookingCode!),
-              if (cost > 0) (l10n.timelineCosts, Money.format(cost, baseCurrency)),
+              if (cost > 0)
+                (l10n.timelineCosts, Money.format(cost, baseCurrency)),
               (l10n.eventNote, a.note ?? ''),
             ]),
         onLongPress: () => _itemActions(context, ref,
@@ -542,17 +547,16 @@ class TimelineScreen extends ConsumerWidget {
     final AsyncValue<List<EventItem>> events =
         ref.watch(eventsControllerProvider(tripRid));
     final List<TransportItem> transports =
-        ref.watch(transportControllerProvider(tripRid)).valueOrNull ?? const [];
+        ref.watch(transportControllerProvider(tripRid)).value ?? const [];
     final List<AccommodationItem> stays =
-        ref.watch(accommodationControllerProvider(tripRid)).valueOrNull ??
-            const [];
+        ref.watch(accommodationControllerProvider(tripRid)).value ?? const [];
     final List<PlaceItem> places =
-        ref.watch(placeControllerProvider(tripRid)).valueOrNull ?? const [];
+        ref.watch(placeControllerProvider(tripRid)).value ?? const [];
     final List<ExpenseItem> expenses =
-        ref.watch(expensesControllerProvider(tripRid)).valueOrNull ?? const [];
+        ref.watch(expensesControllerProvider(tripRid)).value ?? const [];
     final List<Ticket> myTickets =
-        ref.watch(myTicketsControllerProvider(tripRid)).valueOrNull ?? const [];
-    final trip = ref.watch(tripProvider(tripRid)).valueOrNull;
+        ref.watch(myTicketsControllerProvider(tripRid)).value ?? const [];
+    final trip = ref.watch(tripProvider(tripRid)).value;
     final String baseCurrency = trip?.baseCurrency ?? 'VND';
     final bool canEdit = trip?.myRole != 'VIEWER';
 
@@ -574,8 +578,16 @@ class TimelineScreen extends ConsumerWidget {
                 onRetry: () =>
                     ref.invalidate(eventsControllerProvider(tripRid))),
             data: (list) {
-              final List<_Entry> entries = _entries(context, ref, list,
-                  transports, stays, places, expenses, myTickets, baseCurrency,
+              final List<_Entry> entries = _entries(
+                  context,
+                  ref,
+                  list,
+                  transports,
+                  stays,
+                  places,
+                  expenses,
+                  myTickets,
+                  baseCurrency,
                   canEdit);
               if (entries.isEmpty) {
                 return Center(child: Text(l10n.timelineEmpty));

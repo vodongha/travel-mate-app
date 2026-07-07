@@ -69,7 +69,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (auth.isLoading) {
         return '/splash';
       }
-      final bool loggedIn = auth.valueOrNull != null;
+      final bool loggedIn = auth.value != null;
       final String loc = state.matchedLocation;
       final bool atAuth = loc == '/login' || loc == '/register';
       if (!loggedIn) {

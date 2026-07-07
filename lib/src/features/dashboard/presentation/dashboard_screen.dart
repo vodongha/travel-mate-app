@@ -23,7 +23,7 @@ class DashboardScreen extends ConsumerWidget {
     final AsyncValue<Dashboard> dashboard =
         ref.watch(dashboardProvider(tripRid));
     // The trip's dates drive the status so an ended trip no longer reads as "in progress".
-    final Trip? trip = ref.watch(tripProvider(tripRid)).valueOrNull;
+    final Trip? trip = ref.watch(tripProvider(tripRid)).value;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navDashboard)),
       body: SafeArea(
@@ -76,7 +76,8 @@ class DashboardScreen extends ConsumerWidget {
 }
 
 class _CountdownCard extends StatelessWidget {
-  const _CountdownCard({required this.days, required this.trip, required this.l10n});
+  const _CountdownCard(
+      {required this.days, required this.trip, required this.l10n});
 
   final int? days;
   final Trip? trip;

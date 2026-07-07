@@ -132,8 +132,7 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
       return;
     }
     setState(() => _submitting = true);
-    final String? myRole =
-        ref.read(tripProvider(widget.tripRid)).valueOrNull?.myRole;
+    final String? myRole = ref.read(tripProvider(widget.tripRid)).value?.myRole;
     final bool canAssign = myRole == 'OWNER' || myRole == 'EDITOR';
     // Only an EDITOR/OWNER controls who a ticket covers; otherwise it's the caller's own (don't send
     // members, so an edit leaves them unchanged and a create defaults to the caller).
@@ -199,7 +198,7 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final String? myRole =
-        ref.watch(tripProvider(widget.tripRid)).valueOrNull?.myRole;
+        ref.watch(tripProvider(widget.tripRid)).value?.myRole;
     final bool canAssign = myRole == 'OWNER' || myRole == 'EDITOR';
     final AsyncValue<List<Member>> members =
         ref.watch(membersControllerProvider(widget.tripRid));
@@ -320,15 +319,13 @@ class _AddTicketScreenState extends ConsumerState<AddTicketScreen> {
   /// The combined itinerary (events + transport + accommodation) the ticket can attach to.
   List<ItineraryRef> _itineraryRefs() {
     final List<EventItem> events =
-        ref.watch(eventsControllerProvider(widget.tripRid)).valueOrNull ??
-            const [];
+        ref.watch(eventsControllerProvider(widget.tripRid)).value ?? const [];
     final List<TransportItem> transports =
-        ref.watch(transportControllerProvider(widget.tripRid)).valueOrNull ??
+        ref.watch(transportControllerProvider(widget.tripRid)).value ??
             const [];
-    final List<AccommodationItem> stays = ref
-            .watch(accommodationControllerProvider(widget.tripRid))
-            .valueOrNull ??
-        const [];
+    final List<AccommodationItem> stays =
+        ref.watch(accommodationControllerProvider(widget.tripRid)).value ??
+            const [];
     return buildItineraryRefs(context, events, transports, stays);
   }
 

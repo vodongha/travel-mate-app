@@ -15,7 +15,7 @@ import '../../auth/domain/auth_user.dart';
 /// own screen now — see EditProfileScreen.)
 
 Future<void> showChangePassword(BuildContext context, WidgetRef ref) async {
-  final AuthUser? user = ref.read(authControllerProvider).valueOrNull;
+  final AuthUser? user = ref.read(authControllerProvider).value;
   if (user == null) {
     return;
   }

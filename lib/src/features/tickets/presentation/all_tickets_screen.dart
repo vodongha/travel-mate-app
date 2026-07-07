@@ -51,8 +51,9 @@ class AllTicketsScreen extends ConsumerWidget {
       List<Ticket> list, String groupLabel) {
     final Map<String, List<Ticket>> byMember = {};
     for (final Ticket t in list) {
-      final String name =
-          t.shared ? groupLabel : (t.ownerLabel.isEmpty ? groupLabel : t.ownerLabel);
+      final String name = t.shared
+          ? groupLabel
+          : (t.ownerLabel.isEmpty ? groupLabel : t.ownerLabel);
       byMember.putIfAbsent(name, () => <Ticket>[]).add(t);
     }
     final List<MapEntry<String, List<Ticket>>> entries =
@@ -72,7 +73,7 @@ class AllTicketsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    final String? myRole = ref.watch(tripProvider(tripRid)).valueOrNull?.myRole;
+    final String? myRole = ref.watch(tripProvider(tripRid)).value?.myRole;
     final bool isEditor = myRole == 'OWNER' || myRole == 'EDITOR';
     final AsyncValue<List<Ticket>> tickets =
         ref.watch(allTicketsControllerProvider(tripRid));

@@ -24,7 +24,8 @@ class TokenStorage {
   /// server cold-start) doesn't sign the user out — the cached copy keeps them in.
   Future<String?> readCachedUser() => _storage.read(key: _userKey);
 
-  Future<void> cacheUser(String json) => _storage.write(key: _userKey, value: json);
+  Future<void> cacheUser(String json) =>
+      _storage.write(key: _userKey, value: json);
 
   Future<void> clear() async {
     await _storage.delete(key: _accessKey);

@@ -38,10 +38,17 @@ class _FakeRepo extends AuthRepository {
 }
 
 AuthUser _user() => const AuthUser(
-      rid: 'r1', email: 'a@x.com', name: 'Aki', timezone: 'Asia/Ho_Chi_Minh',
-      defaultCurrency: 'VND', emailVerified: true, provider: 'LOCAL', hasPassword: true);
+    rid: 'r1',
+    email: 'a@x.com',
+    name: 'Aki',
+    timezone: 'Asia/Ho_Chi_Minh',
+    defaultCurrency: 'VND',
+    emailVerified: true,
+    provider: 'LOCAL',
+    hasPassword: true);
 
-ProviderContainer _container(_FakeStorage storage, _FakeRepo repo) => ProviderContainer(
+ProviderContainer _container(_FakeStorage storage, _FakeRepo repo) =>
+    ProviderContainer(
       overrides: [
         tokenStorageProvider.overrideWithValue(storage),
         authRepositoryProvider.overrideWithValue(repo),
@@ -54,14 +61,17 @@ void main() {
     expect(await c.read(authControllerProvider.future), isNull);
   });
 
-  test('a transient /users/me failure keeps the session via the cached user', () async {
+  test('a transient /users/me failure keeps the session via the cached user',
+      () async {
     final storage = _FakeStorage();
     await storage.save(access: 'tok', refresh: 'ref');
     await storage.cacheUser('{"rid":"r1","email":"a@x.com","name":"Aki",'
         '"timezone":"Asia/Ho_Chi_Minh","defaultCurrency":"VND",'
         '"emailVerified":true,"provider":"LOCAL","hasPassword":true}');
-    final c = _container(storage,
-        _FakeRepo(() async => throw ApiException('offline', isConnection: true)));
+    final c = _container(
+        storage,
+        _FakeRepo(
+            () async => throw ApiException('offline', isConnection: true)));
 
     final AuthUser? user = await c.read(authControllerProvider.future);
     expect(user, isNotNull);

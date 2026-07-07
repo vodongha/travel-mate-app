@@ -3,26 +3,29 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/budget_repository.dart';
 
 /// Budgets for one trip (by rid). Mutations reload the list.
-class BudgetController extends FamilyAsyncNotifier<List<Budget>, String> {
+class BudgetController extends AsyncNotifier<List<Budget>> {
+  BudgetController(this._tripRid);
+  final String _tripRid;
+
   BudgetRepository get _repo => ref.read(budgetRepositoryProvider);
 
   @override
-  Future<List<Budget>> build(String tripRid) => _repo.list(tripRid);
+  Future<List<Budget>> build() => _repo.list(_tripRid);
 
   Future<void> add(String category, num plannedAmount) async {
-    await _repo.create(arg, category, plannedAmount);
+    await _repo.create(_tripRid, category, plannedAmount);
     ref.invalidateSelf();
     await future;
   }
 
   Future<void> edit(String budgetRid, num plannedAmount) async {
-    await _repo.update(arg, budgetRid, plannedAmount);
+    await _repo.update(_tripRid, budgetRid, plannedAmount);
     ref.invalidateSelf();
     await future;
   }
 
   Future<void> remove(String budgetRid) async {
-    await _repo.delete(arg, budgetRid);
+    await _repo.delete(_tripRid, budgetRid);
     ref.invalidateSelf();
     await future;
   }

@@ -84,7 +84,7 @@ class PlacesScreen extends ConsumerWidget {
     final AsyncValue<List<PlaceItem>> items =
         ref.watch(placeControllerProvider(tripRid));
     final bool canEdit =
-        ref.watch(tripProvider(tripRid)).valueOrNull?.myRole != 'VIEWER';
+        ref.watch(tripProvider(tripRid)).value?.myRole != 'VIEWER';
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.navPlaces),
@@ -152,7 +152,8 @@ class PlacesScreen extends ConsumerWidget {
                             ),
                             onTap: () => _openMaps(context, p),
                             onLongPress: canEdit
-                                ? () => _rowActions(context, ref, p, canEdit: canEdit)
+                                ? () => _rowActions(context, ref, p,
+                                    canEdit: canEdit)
                                 : null,
                           ),
                         );

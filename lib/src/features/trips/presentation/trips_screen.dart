@@ -130,7 +130,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
       ),
       // Only show the FAB once at least one trip exists — the empty state has
       // its own "create trip" button, so showing both would be redundant.
-      floatingActionButton: (trips.valueOrNull?.isNotEmpty ?? false)
+      floatingActionButton: (trips.value?.isNotEmpty ?? false)
           ? FloatingActionButton.extended(
               onPressed: () => context.push('/trips/new'),
               icon: const Icon(Icons.add),

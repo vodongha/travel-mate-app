@@ -48,9 +48,10 @@ class MembersScreen extends ConsumerWidget {
       return;
     }
     try {
-      await ref
-          .read(membersControllerProvider(tripRid).notifier)
-          .editGhost(member.rid, displayName: result.name, email: result.email ?? '');
+      await ref.read(membersControllerProvider(tripRid).notifier).editGhost(
+          member.rid,
+          displayName: result.name,
+          email: result.email ?? '');
     } catch (error) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -175,7 +176,7 @@ class MembersScreen extends ConsumerWidget {
     final AsyncValue<List<Member>> members =
         ref.watch(membersControllerProvider(tripRid));
     final bool isOwner =
-        ref.watch(tripProvider(tripRid)).valueOrNull?.myRole == 'OWNER';
+        ref.watch(tripProvider(tripRid)).value?.myRole == 'OWNER';
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.navMembers),
@@ -275,16 +276,17 @@ class _MemberTile extends StatelessWidget {
           ),
           if (member.ghost && (member.email?.isNotEmpty ?? false))
             Text(member.email!,
-                style: TextStyle(
-                    fontSize: 12, color: scheme.onSurfaceVariant)),
+                style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
         ],
       ),
       // No ⋮ button — long-press opens the actions sheet, consistent across the app.
-      onLongPress: showActions ? () => _showActions(context, l10n, scheme) : null,
+      onLongPress:
+          showActions ? () => _showActions(context, l10n, scheme) : null,
     );
   }
 
-  void _showActions(BuildContext context, AppLocalizations l10n, ColorScheme scheme) {
+  void _showActions(
+      BuildContext context, AppLocalizations l10n, ColorScheme scheme) {
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -449,8 +451,10 @@ class _AddGhostDialogState extends State<_AddGhostDialog> {
               primaryLabel: l10n.actionAdd,
               onPrimary: () {
                 if (_formKey.currentState!.validate()) {
-                  Navigator.pop(context,
-                      _AddGhostResult(_name.text.trim(), _email.text.trim(), _role));
+                  Navigator.pop(
+                      context,
+                      _AddGhostResult(
+                          _name.text.trim(), _email.text.trim(), _role));
                 }
               },
               onCancel: () => Navigator.pop(context),
@@ -512,8 +516,10 @@ class _EditGhostDialogState extends State<_EditGhostDialog> {
               primaryLabel: l10n.actionSave,
               onPrimary: () {
                 if (_formKey.currentState!.validate()) {
-                  Navigator.pop(context,
-                      _AddGhostResult(_name.text.trim(), _email.text.trim(), widget.member.role));
+                  Navigator.pop(
+                      context,
+                      _AddGhostResult(_name.text.trim(), _email.text.trim(),
+                          widget.member.role));
                 }
               },
               onCancel: () => Navigator.pop(context),
@@ -548,9 +554,7 @@ class _GhostEmailField extends StatelessWidget {
         if (s.isEmpty) {
           return null; // optional
         }
-        return s.contains('@') && s.contains('.')
-            ? null
-            : l10n.validationEmail;
+        return s.contains('@') && s.contains('.') ? null : l10n.validationEmail;
       },
     );
   }

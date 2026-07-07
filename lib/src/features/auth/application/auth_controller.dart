@@ -125,7 +125,7 @@ class AuthController extends AsyncNotifier<AuthUser?> {
       newPassword: newPassword,
     );
     // hasPassword may have flipped from false → true; reflect it.
-    final AuthUser? current = state.valueOrNull;
+    final AuthUser? current = state.value;
     if (current != null && !current.hasPassword) {
       try {
         await refreshUser();

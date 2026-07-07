@@ -20,23 +20,23 @@ class _WebGoogleButton extends StatefulWidget {
 }
 
 class _WebGoogleButtonState extends State<_WebGoogleButton> {
-  late final GoogleSignIn _google = GoogleSignIn(
-    clientId: AppConfig.googleServerClientId,
-    scopes: const ['email', 'profile'],
-  );
-
   @override
   void initState() {
     super.initState();
-    _google.onCurrentUserChanged.listen((GoogleSignInAccount? account) async {
-      if (account == null) {
-        return;
-      }
-      final GoogleSignInAuthentication auth = await account.authentication;
-      final String? idToken = auth.idToken;
-      if (idToken != null && idToken.isNotEmpty) {
-        await widget.onIdToken(idToken);
-      }
+    // Initialize the singleton with the web client id (no-op if already done).
+    GoogleSignIn.instance
+        .initialize(clientId: AppConfig.googleServerClientId)
+        .then((_) {
+      // authenticationEvents replaces onCurrentUserChanged in google_sign_in 7.
+      GoogleSignIn.instance.authenticationEvents
+          .listen((GoogleSignInAuthenticationEvent event) async {
+        if (event is! GoogleSignInAuthenticationEventSignIn) return;
+        final GoogleSignInAuthentication auth = event.user.authentication;
+        final String? idToken = auth.idToken;
+        if (idToken != null && idToken.isNotEmpty) {
+          await widget.onIdToken(idToken);
+        }
+      });
     });
     // Deliberately NO signInSilently() here: it would silently log the user in
     // with whatever Google account is already in the browser session, with no
