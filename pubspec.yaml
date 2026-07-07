@@ -1,7 +1,7 @@
 name: travel_mate_app
 description: "TravelMate — group-trip planning & shared-expense (Android + Web)."
 publish_to: "none"
-version: 1.0.0+23
+version: 1.0.0+22
 
 environment:
   sdk: ">=3.5.0 <4.0.0"
@@ -22,7 +22,7 @@ dependencies:
   # JWT access + refresh tokens stored encrypted at rest (Keychain / Keystore).
   flutter_secure_storage: ^10.3.1
   # Persists the chosen language.
-  shared_preferences: ^2.3.3
+  shared_preferences: ^2.5.5
   # Money + date formatting (the app only formats; the backend owns the maths).
   # Pinned to the version flutter_localizations allows (it caps intl below 0.20.3).
   intl: ^0.20.2
@@ -30,13 +30,13 @@ dependencies:
   # (SPEC §2.7 — we store strings, never images).
   qr_flutter: ^4.1.0
   # Open the privacy policy + community forum in the browser / a new tab.
-  url_launcher: ^6.3.1
+  url_launcher: ^6.3.2
   # In-app WebView (About → website, community/support) on Android/iOS. Never
   # imported on a web-reachable path — web uses an <iframe> via package:web and
   # opens external sites in a new tab via url_launcher.
-  webview_flutter: ^4.10.0
+  webview_flutter: ^4.14.0
   # The web <iframe> platform view (used only by app_web_view_web.dart).
-  web: ^1.1.0
+  web: ^1.1.1
   # App version shown on the Settings/About screen.
   package_info_plus: ^10.2.0
   # Phone input with country picker + E.164 validation (mirrors family-budget-app).
@@ -49,7 +49,7 @@ dependencies:
   # Decode a QR from a picked image in pure Dart — works on web too (mobile_scanner.analyzeImage
   # throws UnsupportedError on web). `image` decodes the file to pixels; `zxing2` reads the QR.
   image: ^4.9.1
-  zxing2: ^0.2.3
+  zxing2: ^0.2.4
   # Request the camera permission at runtime before opening the scanner (else "genericError").
   permission_handler: ^12.0.3
   # OpenStreetMap map for trip places (no API key needed). latlong2 supplies LatLng.
