@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api_client.dart';
@@ -20,6 +21,11 @@ class AuthController extends AsyncNotifier<AuthUser?> {
 
   @override
   Future<AuthUser?> build() async {
+    // On web, do not auto-restore a persisted session: always land on the login screen so a
+    // different account can be signed in. Native keeps the long-lived session (30d/365d tokens).
+    if (kIsWeb) {
+      return null;
+    }
     final String? access = await _storage.readAccess();
     if (access == null || access.isEmpty) {
       return null;
