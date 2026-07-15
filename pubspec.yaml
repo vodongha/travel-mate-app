@@ -42,7 +42,7 @@ dependencies:
   # Phone input with country picker + E.164 validation (mirrors family-budget-app).
   phone_form_field: ^10.0.18
   # Scan a ticket QR into its decoded string (camera). We store the string, render on view.
-  mobile_scanner: 7.2.0
+  mobile_scanner: 7.2.1
   # Pick an image from the gallery to scan a QR out of it (works where the live camera can't —
   # notably web). Uses the Android Photo Picker, so no storage permission is needed.
   image_picker: ^1.2.3
