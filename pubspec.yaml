@@ -1,7 +1,7 @@
 name: travel_mate_app
 description: "TravelMate — group-trip planning & shared-expense (Android + Web)."
 publish_to: "none"
-version: 1.0.0+23
+version: 1.0.0+24
 
 environment:
   sdk: ">=3.5.0 <4.0.0"
@@ -34,15 +34,15 @@ dependencies:
   # In-app WebView (About → website, community/support) on Android/iOS. Never
   # imported on a web-reachable path — web uses an <iframe> via package:web and
   # opens external sites in a new tab via url_launcher.
-  webview_flutter: ^4.14.0
+  webview_flutter: ^4.14.1
   # The web <iframe> platform view (used only by app_web_view_web.dart).
   web: ^1.1.1
   # App version shown on the Settings/About screen.
   package_info_plus: ^10.2.0
   # Phone input with country picker + E.164 validation (mirrors family-budget-app).
-  phone_form_field: ^10.0.17
+  phone_form_field: ^10.0.18
   # Scan a ticket QR into its decoded string (camera). We store the string, render on view.
-  mobile_scanner: ^7.2.0
+  mobile_scanner: 7.2.0
   # Pick an image from the gallery to scan a QR out of it (works where the live camera can't —
   # notably web). Uses the Android Photo Picker, so no storage permission is needed.
   image_picker: ^1.2.3
@@ -62,8 +62,8 @@ dependencies:
   # Web Google Sign-In uses Google Identity Services' rendered button (web_only.renderButton).
   google_sign_in_web: ^1.1.3
   # Firebase core + Cloud Messaging (push). Config in lib/firebase_options.dart.
-  firebase_core: ^4.11.0
-  firebase_messaging: ^16.4.1
+  firebase_core: ^4.12.1
+  firebase_messaging: ^16.4.3
   # Google Play in-app updates (Play Core) — background flexible / blocking immediate flow.
   in_app_update: ^5.0.0
 
