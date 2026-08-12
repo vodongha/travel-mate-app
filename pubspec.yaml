@@ -20,7 +20,7 @@ dependencies:
   # Declarative routing with an auth-aware redirect guard.
   go_router: ^17.3.0
   # JWT access + refresh tokens stored encrypted at rest (Keychain / Keystore).
-  flutter_secure_storage: ^10.3.1
+  flutter_secure_storage: ^11.0.0
   # Persists the chosen language.
   shared_preferences: ^2.5.5
   # Money + date formatting (the app only formats; the backend owns the maths).
