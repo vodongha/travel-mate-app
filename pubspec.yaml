@@ -18,7 +18,7 @@ dependencies:
   # HTTP — one configured Dio with a bearer-token + refresh interceptor.
   dio: ^5.10.0
   # Declarative routing with an auth-aware redirect guard.
-  go_router: ^17.3.0
+  go_router: ^18.0.2
   # JWT access + refresh tokens stored encrypted at rest (Keychain / Keystore).
   flutter_secure_storage: ^11.0.0
   # Persists the chosen language.
@@ -40,9 +40,9 @@ dependencies:
   # App version shown on the Settings/About screen.
   package_info_plus: ^10.2.0
   # Phone input with country picker + E.164 validation (mirrors family-budget-app).
-  phone_form_field: ^10.0.18
+  phone_form_field: ^12.0.1
   # Scan a ticket QR into its decoded string (camera). We store the string, render on view.
-  mobile_scanner: 7.4.0
+  mobile_scanner: 7.4.2
   # Pick an image from the gallery to scan a QR out of it (works where the live camera can't —
   # notably web). Uses the Android Photo Picker, so no storage permission is needed.
   image_picker: ^1.2.3
